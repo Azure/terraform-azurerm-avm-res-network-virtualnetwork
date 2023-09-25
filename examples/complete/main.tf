@@ -31,10 +31,10 @@ module "vnet" {
     subnet1 = azurerm_network_security_group.nsg1.id
   }
 
-   subnet_service_endpoints = {
+  subnet_service_endpoints = {
     subnet1 = ["Microsoft.Storage"]
     subnet2 = ["Microsoft.Sql", "Microsoft.AzureActiveDirectory"]
- 
+
   }
   subnet_delegation = {
     subnet1 = [
@@ -56,7 +56,7 @@ module "vnet" {
         }
       }
     ]
-    
+
   }
 
 

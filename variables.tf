@@ -77,7 +77,7 @@ variable "private_link_endpoint_network_policies_enabled" {
   description = <<DESCRIPTION
 A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link endpoint on the subnet. Default value is false.
 DESCRIPTION
-} 
+}
 
 variable "private_link_service_network_policies_enabled" {
   type        = map(bool)
@@ -174,7 +174,7 @@ DESCRIPTION
     }))
     default  = {}
     nullable = false
-  
+
     validation {
       condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
       error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
@@ -185,31 +185,31 @@ DESCRIPTION
 }
 
 variable "role_assignments" {
-    type = map(object({
-      role_definition_id_or_name             = string
-      principal_id                           = string
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, true)
-      condition                              = optional(string)
-      condition_version                      = optional(string, "2.0")
-      delegated_managed_identity_resource_id = optional(string)
-    }))
-    default = {}
-  }
+  type = map(object({
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, true)
+    condition                              = optional(string)
+    condition_version                      = optional(string, "2.0")
+    delegated_managed_identity_resource_id = optional(string)
+  }))
+  default = {}
+}
 
-  variable "lock" {
-    type = object({
-      name = optional(string, null)
-      kind = optional(string, "None")
-    })
-    default = {}
-  
-    validation {
-      condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.type)
-      error_message = "Lock type must be one of: CanNotDelete, ReadOnly, None."
-    }
+variable "lock" {
+  type = object({
+    name = optional(string, null)
+    kind = optional(string, "None")
+  })
+  default = {}
+
+  validation {
+    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.type)
+    error_message = "Lock type must be one of: CanNotDelete, ReadOnly, None."
   }
-  variable "tags" {
+}
+variable "tags" {
   type = map(any)
   default = {
 
@@ -221,22 +221,22 @@ DESCRIPTION
 
 
 variable "private_endpoints" {
-    type = map(object({
-      role_assignments                        = map(object({}))        # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
-      lock                                    = object({})             # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
-      tags                                    = optional(map(any), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
-      service                                 = string
-      subnet_resource_id                      = string
-      private_dns_zone_group_name             = optional(string, null)
-      private_dns_zone_resource_ids           = optional(set(string), [])
-      application_security_group_resource_ids = optional(set(string), [])
-      network_interface_name                  = optional(string, null)
-      ip_configurations = optional(map(object({
-        name               = string
-        group_id           = optional(string, null)
-        member_name        = optional(string, null)
-        private_ip_address = string
-      })), {})
-    }))
-    default = {}
-  }
+  type = map(object({
+    role_assignments                        = map(object({}))        # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
+    lock                                    = object({})             # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
+    tags                                    = optional(map(any), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
+    service                                 = string
+    subnet_resource_id                      = string
+    private_dns_zone_group_name             = optional(string, null)
+    private_dns_zone_resource_ids           = optional(set(string), [])
+    application_security_group_resource_ids = optional(set(string), [])
+    network_interface_name                  = optional(string, null)
+    ip_configurations = optional(map(object({
+      name               = string
+      group_id           = optional(string, null)
+      member_name        = optional(string, null)
+      private_ip_address = string
+    })), {})
+  }))
+  default = {}
+}

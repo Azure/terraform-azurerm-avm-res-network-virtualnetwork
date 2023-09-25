@@ -28,10 +28,10 @@ module "vnet" {
   }
 }
 
- data "curl" "public_ip" {
+data "curl" "public_ip" {
   http_method = "GET"
   uri         = "https://api.ipify.org?format=json"
-} 
+}
 
 resource "azurerm_network_security_group" "ssh" {
   location            = azurerm_resource_group.example.location
