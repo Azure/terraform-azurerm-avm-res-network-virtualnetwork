@@ -1,9 +1,9 @@
 <!-- BEGIN_TF_DOCS -->
 # terraform-azurerm-avm-template
 
-This is a template repo for Terraform Azure Verified Modules.
+Module to deploy a Virtual Network in Azure along with subnets, NSGs and Route Tables and the ability to integrate existing DDOS protections plans to VNets.
 
-TODO: Provide instructions or links to spec to explain how to use this template.
+Note that this module requires an existing resource group.
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
