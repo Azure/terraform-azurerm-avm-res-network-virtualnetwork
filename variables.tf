@@ -15,7 +15,7 @@ The name of the resource group where the resources will be deployed.
 DESCRIPTION
 }
 
-variable "vnet_name" {
+variable "name" {
   type        = string
   default     = "acctvnet"
   description = <<DESCRIPTION
@@ -158,31 +158,32 @@ Default prefix for generated tracing tags.
 DESCRIPTION
   nullable    = false
 
-  //required AVM interfaces
-
-  variable "diagnostic_settings" {
-    type = map(object({
-      name                                     = optional(string, null)
-      log_categories_and_groups                = optional(set(string), ["allLogs"])
-      metric_categories                        = optional(set(string), ["AllMetrics"])
-      log_analytics_destination_type           = optional(string, "Dedicated")
-      workspace_resource_id                    = optional(string, null)
-      storage_account_resource_id              = optional(string, null)
-      event_hub_authorization_rule_resource_id = optional(string, null)
-      event_hub_name                           = optional(string, null)
-      marketplace_partner_resource_id          = optional(string, null)
-    }))
-    default  = {}
-    nullable = false
-
-    validation {
-      condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
-      error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
-    }
-  }
-
-
 }
+
+
+//required AVM interfaces
+
+variable "diagnostic_settings" {
+  type = map(object({
+    name                                     = optional(string, null)
+    log_categories_and_groups                = optional(set(string), ["allLogs"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
+    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
+  }
+}
+
 
 variable "role_assignments" {
   type = map(object({
@@ -190,7 +191,7 @@ variable "role_assignments" {
     principal_id                           = string
     description                            = optional(string, null)
     skip_service_principal_aad_check       = optional(bool, true)
-    condition                              = optional(string)
+    condition                              = optional(string, null)
     condition_version                      = optional(string, "2.0")
     delegated_managed_identity_resource_id = optional(string)
   }))
@@ -201,14 +202,21 @@ variable "lock" {
   type = object({
     name = optional(string, null)
     kind = optional(string, "None")
-  })
-  default = {}
 
+
+  })
+  description = "The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
+  default     = {}
+  nullable    = false
   validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.type)
-    error_message = "Lock type must be one of: CanNotDelete, ReadOnly, None."
+    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
+    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
   }
 }
+
+
+# Example resource implementation
+
 variable "tags" {
   type = map(any)
   default = {
@@ -238,5 +246,24 @@ variable "private_endpoints" {
       private_ip_address = string
     })), {})
   }))
-  default = {}
+  default     = {}
+  description = <<DESCRIPTION
+A map of private endpoints to create on the Virtual Network. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
+- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
+- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
+- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
+- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
+- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
+- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
+- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
+- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
+- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the Key Vault.
+- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  - `name` - The name of the IP configuration.
+  - `private_ip_address` - The private IP address of the IP configuration.
+DESCRIPTION
 }
