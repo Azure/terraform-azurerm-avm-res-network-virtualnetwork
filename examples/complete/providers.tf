@@ -1,23 +1,13 @@
 terraform {
-  required_version = ">=1.2"
+  required_version = ">= 1.0.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">=3.11.0, <4.0"
+      version = ">= 3.7.0, < 4.0.0"
     }
-    random = {
-      source = "hashicorp/random"
 
-    }
   }
 }
-
 provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
+  features {}
 }
-
-provider "random" {}
