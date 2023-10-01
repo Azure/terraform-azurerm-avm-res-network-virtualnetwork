@@ -56,6 +56,22 @@ The location/region where the virtual network is created. Changing this forces a
 DESCRIPTION
 }
 
+variable "subnet_names" {
+  type        = list(string)
+  default     = ["subnet1"]
+  description = <<DESCRIPTION
+A list of public subnets inside the vNet.
+DESCRIPTION
+}
+
+variable "subnet_prefixes" {
+  type        = list(string)
+  default     = ["10.0.1.0/24"]
+  description = <<DESCRIPTION
+The address prefix to use for the subnet.
+DESCRIPTION
+}
+
 variable "subnet_delegation" {
   type = map(list(object({
     name = string
@@ -86,23 +102,6 @@ variable "private_link_service_network_policies_enabled" {
 A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link service on the subnet. Default value is false.
 DESCRIPTION
 }
-
-variable "subnet_names" {
-  type        = list(string)
-  default     = ["subnet1"]
-  description = <<DESCRIPTION
-A list of public subnets inside the vNet.
-DESCRIPTION
-}
-
-variable "subnet_prefixes" {
-  type        = list(string)
-  default     = ["10.0.1.0/24"]
-  description = <<DESCRIPTION
-The address prefix to use for the subnet.
-DESCRIPTION
-}
-
 variable "subnet_service_endpoints" {
   type        = map(list(string))
   default     = {}
@@ -161,12 +160,22 @@ DESCRIPTION
 }
 
 
+variable "tags" {
+  type = map(any)
+  default = {
+
+  }
+  description = <<DESCRIPTION
+The tags to associate with your network and subnets.
+DESCRIPTION
+}
+
 //required AVM interfaces
 
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["allLogs"])
+    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
@@ -212,58 +221,4 @@ variable "lock" {
     condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
     error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
   }
-}
-
-
-# Example resource implementation
-
-variable "tags" {
-  type = map(any)
-  default = {
-
-  }
-  description = <<DESCRIPTION
-The tags to associate with your network and subnets.
-DESCRIPTION
-}
-
-
-variable "private_endpoints" {
-  type = map(object({
-    role_assignments                        = map(object({}))        # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
-    lock                                    = object({})             # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
-    tags                                    = optional(map(any), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
-    service                                 = string
-    subnet_resource_id                      = string
-    private_dns_zone_group_name             = optional(string, null)
-    private_dns_zone_resource_ids           = optional(set(string), [])
-    application_security_group_resource_ids = optional(set(string), [])
-    network_interface_name                  = optional(string, null)
-    ip_configurations = optional(map(object({
-      name               = string
-      group_id           = optional(string, null)
-      member_name        = optional(string, null)
-      private_ip_address = string
-    })), {})
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-A map of private endpoints to create on the Virtual Network. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the Key Vault.
-- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `name` - The name of the IP configuration.
-  - `private_ip_address` - The private IP address of the IP configuration.
-DESCRIPTION
 }

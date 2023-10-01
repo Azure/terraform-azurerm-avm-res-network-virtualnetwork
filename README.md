@@ -1,7 +1,42 @@
 <!-- BEGIN_TF_DOCS -->
-# Azure Verified Module for Azure Virtual Network
+# Azure Verified Module for Azure Virtual Networks
 
-Module to deploy a Virtual Network in Azure along with subnets, NSGs and Route Tables and the ability to integrate existing DDOS protections plans to VNets.
+This module provides a generic way to create and manage Azure Virtual Networks (vNet) and their associated resources.
+
+## Resources Created
+
+ -Azure Virtual Network (vNet): A virtual network with the specified configurations.
+
+ -Subnets: Subnets within the created virtual network.
+
+ -Network Security Group Association: Associates Network Security Groups to the created subnets.
+
+-Route Table Association: Associates Route Tables to the created subnets.
+
+-Management Lock: Applies a management lock to the virtual network if specified.
+
+-Role Assignment: Assigns roles to the virtual network based on the provided configurations.
+
+-Diagnostic Settings: Creates diagnostic settings for the virtual network.
+Usage
+
+To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
+
+```
+
+module "azure_vnet" {
+  source = "./path_to_this_module"
+
+  address_spaces = ["10.0.0.0/16"]
+  vnet_location  = "East US"
+  name           = "myVNet"
+  resource_group_name = "myResourceGroup"
+  // ... other required variables ...
+}
+
+```
+
+
 
 
 <!-- markdownlint-disable MD033 -->
