@@ -35,7 +35,7 @@ Ensure you have Terraform installed and the Azure CLI authenticated to your Azur
 Define the necessary variables:
 
     var.rg_location
-    var.vnet_location.
+    var.vnet_location
 
 Navigate to the directory containing this configuration and run:
 

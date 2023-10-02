@@ -4,7 +4,7 @@ This sample create an Azure Virtual Network along with subnets,delegations and n
 
 ## Resources Provisioned
 
-Azure Resource Group:
+    Azure Resource Group:
 
     Location: Defined by the variable var.rg_location.
 
