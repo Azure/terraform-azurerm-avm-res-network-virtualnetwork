@@ -199,12 +199,13 @@ variable "role_assignments" {
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, true)
+    skip_service_principal_aad_check       = optional(bool, false)
     condition                              = optional(string, null)
-    condition_version                      = optional(string, "2.0")
-    delegated_managed_identity_resource_id = optional(string)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
   }))
-  default = {}
+  default     = {}
+
 }
 
 variable "lock" {
