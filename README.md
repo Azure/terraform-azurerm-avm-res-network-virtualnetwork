@@ -1,15 +1,15 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Verified Module for Azure Virtual Networks
 
-This module provides a generic way to create and manage Azure Virtual Networks (vNet) and their associated resources.
+This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
 ## Resources Created
 
- -Azure Virtual Network (vNet): A virtual network with the specified configurations.
+-Azure Virtual Network (vNet): A virtual network with the specified configurations.
 
- -Subnets: Subnets within the created virtual network.
+-Subnets: Subnets within the created virtual network.
 
- -Network Security Group Association: Associates Network Security Groups to the created subnets.
+-Network Security Group Association: Associates Network Security Groups to the created subnets.
 
 -Route Table Association: Associates Route Tables to the created subnets.
 
@@ -17,13 +17,11 @@ This module provides a generic way to create and manage Azure Virtual Networks (
 
 -Role Assignment: Assigns roles to the virtual network based on the provided configurations.
 
--Diagnostic Settings: Creates diagnostic settings for the virtual network.
-Usage
+-Diagnostic Settings: Creates diagnostic settings for the virtual network. Usage
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
 
 ```
-
 module "azure_vnet" {
   source = "./path_to_this_module"
 
@@ -33,11 +31,7 @@ module "azure_vnet" {
   resource_group_name = "myResourceGroup"
   // ... other required variables ...
 }
-
 ```
-
-
-
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
@@ -63,6 +57,7 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
+- [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
@@ -126,7 +121,7 @@ Type:
 ```hcl
 map(object({
     name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["allLogs"])
+    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
@@ -187,50 +182,6 @@ Default: `"acctvnet"`
 Description: A map of subnet name to Network Security Group IDs.
 
 Type: `map(string)`
-
-Default: `{}`
-
-### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
-
-Description: A map of private endpoints to create on the Virtual Network. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the Key Vault.
-- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `name` - The name of the IP configuration.
-  - `private_ip_address` - The private IP address of the IP configuration.
-
-Type:
-
-```hcl
-map(object({
-    role_assignments                        = map(object({}))        # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
-    lock                                    = object({})             # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
-    tags                                    = optional(map(any), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
-    service                                 = string
-    subnet_resource_id                      = string
-    private_dns_zone_group_name             = optional(string, null)
-    private_dns_zone_resource_ids           = optional(set(string), [])
-    application_security_group_resource_ids = optional(set(string), [])
-    network_interface_name                  = optional(string, null)
-    ip_configurations = optional(map(object({
-      name               = string
-      group_id           = optional(string, null)
-      member_name        = optional(string, null)
-      private_ip_address = string
-    })), {})
-  }))
-```
 
 Default: `{}`
 
@@ -368,9 +319,21 @@ Default: `null`
 
 The following outputs are exported:
 
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The name of the newly created vNet
+
+### <a name="output_subnet_address_prefixes"></a> [subnet\_address\_prefixes](#output\_subnet\_address\_prefixes)
+
+Description: The address prefixes of the newly created subnets
+
 ### <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids)
 
 Description: The ids of the newly created subnets
+
+### <a name="output_subnet_names"></a> [subnet\_names](#output\_subnet\_names)
+
+Description: The names of the newly created subnets
 
 ### <a name="output_vnet_address_space"></a> [vnet\_address\_space](#output\_vnet\_address\_space)
 
@@ -383,10 +346,6 @@ Description: The id of the newly created vNet
 ### <a name="output_vnet_location"></a> [vnet\_location](#output\_vnet\_location)
 
 Description: The location of the newly created vNet
-
-### <a name="output_vnet_name"></a> [vnet\_name](#output\_vnet\_name)
-
-Description: The name of the newly created vNet
 
 ## Modules
 
