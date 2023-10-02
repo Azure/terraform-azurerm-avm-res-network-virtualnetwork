@@ -87,19 +87,19 @@ resource "azurerm_role_assignment" "this" {
 resource "azurerm_monitor_diagnostic_setting" "example" {
   # Filter out entries that don't have any of the required attributes set
   for_each = {
-    for key, value in var.diagnostic_settings : key => value 
+    for key, value in var.diagnostic_settings : key => value
     if value.workspace_resource_id != null || value.storage_account_resource_id != null || value.event_hub_authorization_rule_resource_id != null
   }
 
-  name                = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
-  target_resource_id  = azurerm_virtual_network.vnet.id
-  
-  log_analytics_workspace_id = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null
-  storage_account_id  = each.value.storage_account_resource_id != null ? each.value.storage_account_resource_id : null
-  eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
-  eventhub_name       = each.value.event_hub_name != null ? each.value.event_hub_name : null
+  name               = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
+  target_resource_id = azurerm_virtual_network.vnet.id
 
-    dynamic "enabled_log" {
+  log_analytics_workspace_id     = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null
+  storage_account_id             = each.value.storage_account_resource_id != null ? each.value.storage_account_resource_id : null
+  eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
+  eventhub_name                  = each.value.event_hub_name != null ? each.value.event_hub_name : null
+
+  dynamic "enabled_log" {
     for_each = each.value.log_categories_and_groups
     content {
       category = enabled_log.value

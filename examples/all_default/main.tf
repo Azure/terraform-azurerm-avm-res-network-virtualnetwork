@@ -24,12 +24,12 @@ module "vnet" {
     kind = "ReadOnly"
   } */
 
-# 
+  # 
   /* diagnostic_settings = {
   vnet_diag = {
     name                        = "vnet-diag"
-    workspace_resource_id       = "/subscriptions/47d02a61-9001-41bd-b4e7-6be9289027f4/resourceGroups/nvm-diagnostics-rg/providers/Microsoft.OperationalInsights/workspaces/nvm-workspace"
-    storage_account_resource_id = "/subscriptions/47d02a61-9001-41bd-b4e7-6be9289027f4/resourceGroups/nvm-diagnostics-rg/providers/Microsoft.Storage/storageAccounts/nvmdiagnosticsstr"
+    workspace_resource_id       = "/subscriptions/<subscription _id>/resourceGroups/<resource_group_name>/providers/Microsoft.OperationalInsights/workspaces/<log_analytiics_workspace_name>"
+    storage_account_resource_id = "/subscriptions/<subscription _id>/resourceGroups/<resource_group_name>/providers/Microsoft.Storage/storageAccounts/<storage_account_name>"
   } 
 } */
 }

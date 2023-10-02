@@ -1,6 +1,54 @@
-# Examples
+# Create Azure Virtual Network with NSG
 
-Create a directory for each example.
-Create a README.md file in each directory to help consumers understand the example.
+This sample code creates a Azure Virtual Network with a Netwrok Security Group (NSG) with SSH access. 
 
-> **Note:** Examples must be deployable and idempotent. Ensure that no input variables are requried to run the example and that random values are used to ensure unique resource names. E.g. use `random_pet` to generate a unique name for a resource.
+## Resources Provisioned
+
+    Azure Resource Group
+
+    Azure Virtual Network
+
+    Telemetry: Defined by the variable var.enable_telemetry.
+
+    Subnets: Three subnets with specified address prefixes and names.
+
+    Network Security Group Association: The same NSG is associated with all three subnets.
+
+    Public IP Data Source
+
+    Azure Network Security Group (NSG) with SSH Access
+
+    Security Rule: Allows SSH access (port 22) from the executor's IP address.
+
+
+
+## Outputs
+
+name: The name of the newly created vNet.
+
+vnet_id: The ID of the newly created vNet.
+
+vnet_address_space: The address space of the newly created vNet.
+
+subnet_names: The names of the newly created subnets.
+
+subnet_address_prefixes: The address prefixes of the newly created subnets.
+
+vnet_location: The location of the newly created vNet.
+
+## Usage
+
+Ensure you have Terraform installed and the Azure CLI authenticated to your Azure subscription.
+
+Define the necessary variables:
+
+    var.rg_location
+    var.vnet_location.
+
+Navigate to the directory containing this configuration and run:
+
+```
+terraform init
+terraform plan
+terraform apply
+```

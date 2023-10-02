@@ -27,7 +27,7 @@ output "subnet_names" {
 
 output "subnet_address_prefixes" {
   description = "The address prefixes of the newly created subnets"
-  value = flatten([for s in values(azurerm_subnet.subnet) : s.address_prefixes])
+  value       = flatten([for s in values(azurerm_subnet.subnet) : s.address_prefixes])
 }
 
 

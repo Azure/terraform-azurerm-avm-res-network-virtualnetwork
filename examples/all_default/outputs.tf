@@ -16,12 +16,12 @@ output "vnet_address_space" {
 
 output "subnet_names" {
   description = "The names of the newly created subnets"
-  value = { for name in module.vnet.subnet_names: name => name }
-} 
+  value       = { for name in module.vnet.subnet_names : name => name }
+}
 
 output "subnet_address_prefixes" {
   description = "The address prefixes of the newly created subnets"
-  value = { for prefix in module.vnet.subnet_address_prefixes: prefix => prefix }
+  value       = { for prefix in module.vnet.subnet_address_prefixes : prefix => prefix }
 }
 
 
