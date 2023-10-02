@@ -204,7 +204,7 @@ variable "role_assignments" {
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
   }))
-  default     = {}
+  default = {}
 
 }
 

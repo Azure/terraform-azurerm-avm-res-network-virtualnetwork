@@ -86,4 +86,5 @@ module "vnet" {
   private_link_service_network_policies_enabled = {
     subnet3 = true
   }
+
 }

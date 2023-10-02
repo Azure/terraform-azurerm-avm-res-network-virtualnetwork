@@ -1,5 +1,17 @@
-# terraform-azurerm-avm-template
+# Azure Verified Module for Azure Virtual Networks
 
-This is a template repo for Terraform Azure Verified Modules.
+This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
-TODO: Provide instructions or links to spec to explain how to use this template.
+To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
+
+```
+module "azure_vnet" {
+  source = "./path_to_this_module"
+
+  address_spaces = ["10.0.0.0/16"]
+  vnet_location  = "East US"
+  name           = "myVNet"
+  resource_group_name = "myResourceGroup"
+  // ... other required variables ...
+}
+```

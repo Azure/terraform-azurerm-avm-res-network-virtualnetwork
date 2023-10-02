@@ -18,20 +18,7 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.example.name
   vnet_location       = var.vnet_location
 
-  # Uncomment the below block to apply a ReadOnly lock to the virtual network.
-  /* lock = {
-    name = "test-lock"
-    kind = "ReadOnly"
-  } */
 
-  # 
-  /* diagnostic_settings = {
-  vnet_diag = {
-    name                        = "vnet-diag"
-    workspace_resource_id       = "/subscriptions/<subscription _id>/resourceGroups/<resource_group_name>/providers/Microsoft.OperationalInsights/workspaces/<log_analytiics_workspace_name>"
-    storage_account_resource_id = "/subscriptions/<subscription _id>/resourceGroups/<resource_group_name>/providers/Microsoft.Storage/storageAccounts/<storage_account_name>"
-  } 
-} */
 }
 
 

@@ -3,22 +3,6 @@
 
 This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
-## Resources Created
-
--Azure Virtual Network (vNet): A virtual network with the specified configurations.
-
--Subnets: Subnets within the created virtual network.
-
--Network Security Group Association: Associates Network Security Groups to the created subnets.
-
--Route Table Association: Associates Route Tables to the created subnets.
-
--Management Lock: Applies a management lock to the virtual network if specified.
-
--Role Assignment: Assigns roles to the virtual network based on the provided configurations.
-
--Diagnostic Settings: Creates diagnostic settings for the virtual network. Usage
-
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
 
 ```
@@ -212,10 +196,10 @@ map(object({
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, true)
+    skip_service_principal_aad_check       = optional(bool, false)
     condition                              = optional(string, null)
-    condition_version                      = optional(string, "2.0")
-    delegated_managed_identity_resource_id = optional(string)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
   }))
 ```
 
@@ -351,5 +335,15 @@ Description: The location of the newly created vNet
 
 No modules.
 
+## Usage
 
+Ensure you have Terraform installed and the Azure CLI authenticated to your Azure subscription.
+
+Navigate to the directory containing this configuration and run:
+
+```
+terraform init
+terraform plan
+terraform apply
+```
 <!-- END_TF_DOCS -->
