@@ -1,4 +1,4 @@
-ame: AVM Mandatory Files Policy
+name: AVM Mandatory Files Policy
 description: This policy will ensure the presence of AVM mandatory files into the repos
 
 resource: repository
