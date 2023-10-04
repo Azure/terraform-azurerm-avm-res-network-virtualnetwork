@@ -1,10 +1,8 @@
----
 name: linting
 
 on:
   pull_request:
     types: ['opened', 'reopened', 'synchronize']
-  merge_group:
   workflow_dispatch:
 
 permissions:
@@ -22,10 +20,24 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: check docs
-        uses: Azure/terraform-azurerm-avm-template/.github/actions/docs-check@main
-
-      - name: lint terraform
-        uses: Azure/terraform-azurerm-avm-template/.github/actions/linting@main
+      - name: Setup Go
+        uses: actions/setup-go@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          go-version: 1.21.x
+          check-latest: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cache: true
+
+      - name: Install terrafmt
+        run: go install github.com/katbyte/terrafmt@latest
+
+      - name: Check current directory
+        run: |
+          pwd
+          ls -al
+
+      - name: Fix Terraform code with terraform fmt
+        run: terraform fmt -recursive
+
+      - name: Fix embedded Terraform with terrafmt
+        run: terrafmt fmt .
