@@ -1,3 +1,4 @@
+author: AVM
 name: linting
 description: Tests the example supplied in the input. Needs checkout and Azure login prior.
 inputs:
