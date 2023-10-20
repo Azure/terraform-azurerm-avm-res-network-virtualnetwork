@@ -21,18 +21,19 @@ resource "azurerm_virtual_network" "vnet" {
 
 # Creating Subnets within the Virtual Network.
 resource "azurerm_subnet" "subnet" {
-  for_each                                      = toset(var.subnet_names)
-  address_prefixes                              = [local.subnet_names_prefixes_map[each.value]]
-  name                                          = each.value
+  for_each = { for subnet in var.subnets : subnet.name => subnet }
+
+  name                                          = each.value.name
+  address_prefixes                              = [each.value.address_prefix]
   resource_group_name                           = var.resource_group_name
   virtual_network_name                          = azurerm_virtual_network.vnet.name
-  private_endpoint_network_policies_enabled     = lookup(var.private_link_endpoint_network_policies_enabled, each.value, false)
-  private_link_service_network_policies_enabled = lookup(var.private_link_service_network_policies_enabled, each.value, false)
-  service_endpoints                             = lookup(var.subnet_service_endpoints, each.value, [])
+  private_endpoint_network_policies_enabled     = each.value.private_endpoint_network_policies_enabled
+  private_link_service_network_policies_enabled = each.value.private_link_service_network_policies_enabled
+  service_endpoints                             = each.value.service_endpoints
 
-  # Configuring Subnet Delegation if provided.
+
   dynamic "delegation" {
-    for_each = lookup(var.subnet_delegation, each.value, [])
+    for_each = each.value.delegation != null ? each.value.delegation : []
     content {
       name = delegation.value.name
       service_delegation {
@@ -43,24 +44,22 @@ resource "azurerm_subnet" "subnet" {
   }
 }
 
-# Creating a local map of subnet names to their IDs.
-locals {
-  azurerm_subnets_name_id_map = { for s in azurerm_subnet.subnet : s.name => s.id }
+resource "azurerm_subnet_route_table_association" "association" {
+  for_each = { for subnet in var.subnets : subnet.name => subnet if subnet.route_table_id != null && subnet.route_table_id != "" }
+
+  subnet_id      = azurerm_subnet.subnet[each.value.name].id
+  route_table_id = each.value.route_table_id
 }
 
-# Associating Network Security Groups to Subnets.
-resource "azurerm_subnet_network_security_group_association" "vnet" {
-  for_each                  = var.nsg_ids
-  network_security_group_id = each.value
-  subnet_id                 = local.azurerm_subnets_name_id_map[each.key]
+resource "azurerm_subnet_network_security_group_association" "subnet_nsg_association" {
+  for_each = { for subnet in var.subnets : subnet.name => subnet if lookup(subnet, "nsg_id", null) != null && subnet.nsg_id != "" }
+  subnet_id                  = azurerm_subnet.subnet[each.key].id
+  network_security_group_id  = each.value.nsg_id
 }
 
-# Associating Route Tables to Subnets.
-resource "azurerm_subnet_route_table_association" "vnet" {
-  for_each       = var.route_tables_ids
-  route_table_id = each.value
-  subnet_id      = local.azurerm_subnets_name_id_map[each.key]
-}
+
+
+
 
 # Applying Management Lock to the Virtual Network if specified.
 resource "azurerm_management_lock" "this" {

@@ -17,6 +17,7 @@ module "vnet" {
   enable_telemetry    = true
   resource_group_name = azurerm_resource_group.example.name
   vnet_location       = var.vnet_location
+  dns_servers = [ "10.0.0.1", "10.0.0.2" ]
 
 
 }

@@ -55,80 +55,27 @@ variable "vnet_location" {
 The location/region where the virtual network is created. Changing this forces a new resource to be created.
 DESCRIPTION
 }
-
-variable "subnet_names" {
-  type        = list(string)
-  default     = ["subnet1"]
-  description = <<DESCRIPTION
-A list of public subnets inside the vNet.
-DESCRIPTION
+variable "subnets" {
+  description = "Configuration for each subnet."
+  type = list(object({
+    name                                          = string
+    address_prefix                              = string
+    nsg_id                                        = optional(string,"")
+    route_table_id                                = optional(string,"")
+    private_endpoint_network_policies_enabled     = optional(bool,"false")
+    private_link_service_network_policies_enabled = optional(bool,"false")
+    service_endpoints                             = optional(list(string))
+    route_table_id      = optional(string)
+    delegation = optional(list(object({
+      name = string
+      service_delegation = object({
+        name    = string
+        actions = optional(list(string))
+      })
+    })))
+  }))
+  default = []
 }
-
-variable "subnet_prefixes" {
-  type        = list(string)
-  default     = ["10.0.1.0/24"]
-  description = <<DESCRIPTION
-The address prefix to use for the subnet.
-DESCRIPTION
-}
-
-variable "subnet_delegation" {
-  type = map(list(object({
-    name = string
-    service_delegation = object({
-      name    = string
-      actions = optional(list(string))
-    })
-  })))
-  default     = {}
-  description = <<DESCRIPTION
-`service_delegation` blocks for `azurerm_subnet` resource, subnet names as keys, list of delegation blocks as value, more details about delegation block could be found at the [document](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet#delegation).
-DESCRIPTION
-  nullable    = false
-}
-
-variable "private_link_endpoint_network_policies_enabled" {
-  type        = map(bool)
-  default     = {}
-  description = <<DESCRIPTION
-A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link endpoint on the subnet. Default value is false.
-DESCRIPTION
-}
-
-variable "private_link_service_network_policies_enabled" {
-  type        = map(bool)
-  default     = {}
-  description = <<DESCRIPTION
-A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link service on the subnet. Default value is false.
-DESCRIPTION
-}
-variable "subnet_service_endpoints" {
-  type        = map(list(string))
-  default     = {}
-  description = <<DESCRIPTION
-A map with key (string) `subnet name`, value (list(string)) to indicate enabled service endpoints on the subnet. Default value is [].
-DESCRIPTION
-}
-
-variable "nsg_ids" {
-  type = map(string)
-  default = {
-  }
-  description = <<DESCRIPTION
-A map of subnet name to Network Security Group IDs.
-DESCRIPTION
-}
-
-
-
-variable "route_tables_ids" {
-  type        = map(string)
-  default     = {}
-  description = <<DESCRIPTION
-A map of subnet name to Route table ids.
-DESCRIPTION
-}
-
 variable "ddos_protection_plan" {
   type = object({
     enable = bool
