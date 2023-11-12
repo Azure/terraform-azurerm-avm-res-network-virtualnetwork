@@ -42,12 +42,16 @@ The following resources are used by this module:
 
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
+- [azurerm_network_ddos_protection_plan.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_ddos_protection_plan) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_subnet_nat_gateway_association.nat_gw](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
 - [azurerm_subnet_network_security_group_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) (resource)
 - [azurerm_subnet_route_table_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_route_table_association) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_virtual_network_dns_servers.vnet_dns](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_dns_servers) (resource)
+- [azurerm_virtual_network_peering.vnet_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -61,40 +65,53 @@ Description: The name of the resource group where the resources will be deployed
 
 Type: `string`
 
-## Optional Inputs
+### <a name="input_subnets"></a> [subnets](#input\_subnets)
 
-The following input variables are optional (have default values):
-
-### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
-
-Description: The address space that is used by the virtual network.
-
-Type: `string`
-
-Default: `"10.0.0.0/16"`
-
-### <a name="input_address_spaces"></a> [address\_spaces](#input\_address\_spaces)
-
-Description: The list of the address spaces that is used by the virtual network.
-
-Type: `list(string)`
-
-Default: `[]`
-
-### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
-
-Description: The set of DDoS protection plan configuration.
+Description: Subnets to create
 
 Type:
 
 ```hcl
-object({
-    enable = bool
-    id     = string
-  })
+map(object(
+    {
+      address_prefixes = list(string) # (Required) The address prefixes to use for the subnet.
+      nat_gateway = optional(object({
+        id = string # (Required) The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
+      }))
+      network_security_group = optional(object({
+        id = string # (Required) The ID of the Network Security Group which should be associated with the Subnet. Changing this forces a new association to be created.
+      }))
+      private_endpoint_network_policies_enabled     = optional(bool, true) # (Optional) Enable or Disable network policies for the private endpoint on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+      private_link_service_network_policies_enabled = optional(bool, true) # (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+      route_table = optional(object({
+        id = string # (Required) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
+      }))
+      service_endpoints           = optional(set(string)) # (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage` and `Microsoft.Web`.
+      service_endpoint_policy_ids = optional(set(string)) # (Optional) The list of IDs of Service Endpoint Policies to associate with the subnet.
+      delegations = optional(list(
+        object(
+          {
+            name = string # (Required) A name for this delegation.
+            service_delegation = object({
+              name    = string                 # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
+              actions = optional(list(string)) # (Optional) A list of Actions which should be delegated. This list is specific to the service to delegate to. Possible values include `Microsoft.Network/networkinterfaces/*`, `Microsoft.Network/virtualNetworks/subnets/action`, `Microsoft.Network/virtualNetworks/subnets/join/action`, `Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action` and `Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action`.
+            })
+          }
+        )
+      ))
+    }
+  ))
 ```
 
-Default: `null`
+### <a name="input_virtual_network_address_space"></a> [virtual\_network\_address\_space](#input\_virtual\_network\_address\_space)
+
+Description:  (Required) The address space that is used the virtual network. You can supply more than one address space.
+
+Type: `list(string)`
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
@@ -117,15 +134,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_dns_servers"></a> [dns\_servers](#input\_dns\_servers)
-
-Description: The DNS servers to be used with vNet.  
-If no values are specified, this defaults to Azure DNS.
-
-Type: `list(string)`
-
-Default: `[]`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -153,37 +161,34 @@ object({
 
 Default: `{}`
 
-### <a name="input_name"></a> [name](#input\_name)
+### <a name="input_new_network_ddos_protection_plan"></a> [new\_network\_ddos\_protection\_plan](#input\_new\_network\_ddos\_protection\_plan)
 
-Description: The name of the virtual network to create.
+Description: - `name` - (Required) Specifies the name of the Network DDoS Protection Plan. Changing this forces a new resource to be created.
+- `tags` - (Optional) A mapping of tags to assign to the resource.
 
-Type: `string`
+---
+`timeouts` block supports the following:
+- `create` - (Defaults to 30 minutes) Used when creating the DDoS Protection Plan.
+- `delete` - (Defaults to 30 minutes) Used when deleting the DDoS Protection Plan.
+- `read` - (Defaults to 5 minutes) Used when retrieving the DDoS Protection Plan.
+- `update` - (Defaults to 30 minutes) Used when updating the DDoS Protection Plan.
 
-Default: `"acctvnet"`
+Type:
 
-### <a name="input_nsg_ids"></a> [nsg\_ids](#input\_nsg\_ids)
+```hcl
+object({
+    name = string
+    tags = optional(map(string))
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
+  })
+```
 
-Description: A map of subnet name to Network Security Group IDs.
-
-Type: `map(string)`
-
-Default: `{}`
-
-### <a name="input_private_link_endpoint_network_policies_enabled"></a> [private\_link\_endpoint\_network\_policies\_enabled](#input\_private\_link\_endpoint\_network\_policies\_enabled)
-
-Description: A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link endpoint on the subnet. Default value is false.
-
-Type: `map(bool)`
-
-Default: `{}`
-
-### <a name="input_private_link_service_network_policies_enabled"></a> [private\_link\_service\_network\_policies\_enabled](#input\_private\_link\_service\_network\_policies\_enabled)
-
-Description: A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link service on the subnet. Default value is false.
-
-Type: `map(bool)`
-
-Default: `{}`
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -202,68 +207,6 @@ map(object({
     delegated_managed_identity_resource_id = optional(string, null)
   }))
 ```
-
-Default: `{}`
-
-### <a name="input_route_tables_ids"></a> [route\_tables\_ids](#input\_route\_tables\_ids)
-
-Description: A map of subnet name to Route table ids.
-
-Type: `map(string)`
-
-Default: `{}`
-
-### <a name="input_subnet_delegation"></a> [subnet\_delegation](#input\_subnet\_delegation)
-
-Description: `service_delegation` blocks for `azurerm_subnet` resource, subnet names as keys, list of delegation blocks as value, more details about delegation block could be found at the [document](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet#delegation).
-
-Type:
-
-```hcl
-map(list(object({
-    name = string
-    service_delegation = object({
-      name    = string
-      actions = optional(list(string))
-    })
-  })))
-```
-
-Default: `{}`
-
-### <a name="input_subnet_names"></a> [subnet\_names](#input\_subnet\_names)
-
-Description: A list of public subnets inside the vNet.
-
-Type: `list(string)`
-
-Default:
-
-```json
-[
-  "subnet1"
-]
-```
-
-### <a name="input_subnet_prefixes"></a> [subnet\_prefixes](#input\_subnet\_prefixes)
-
-Description: The address prefix to use for the subnet.
-
-Type: `list(string)`
-
-Default:
-
-```json
-[
-  "10.0.1.0/24"
-]
-```
-
-### <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints)
-
-Description: A map with key (string) `subnet name`, value (list(string)) to indicate enabled service endpoints on the subnet. Default value is [].
-
-Type: `map(list(string))`
 
 Default: `{}`
 
@@ -291,6 +234,35 @@ Type: `string`
 
 Default: `"avm_"`
 
+### <a name="input_virtual_network_ddos_protection_plan"></a> [virtual\_network\_ddos\_protection\_plan](#input\_virtual\_network\_ddos\_protection\_plan)
+
+Description: AzureNetwork DDoS Protection Plan.
+
+Type:
+
+```hcl
+object({
+    id     = string #  (Required) The ID of DDoS Protection Plan.
+    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+  })
+```
+
+Default: `null`
+
+### <a name="input_virtual_network_dns_servers"></a> [virtual\_network\_dns\_servers](#input\_virtual\_network\_dns\_servers)
+
+Description: (Optional) List of IP addresses of DNS servers
+
+Type:
+
+```hcl
+object({
+    dns_servers = list(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
 
 Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
@@ -298,6 +270,31 @@ Description: The location/region where the virtual network is created. Changing 
 Type: `string`
 
 Default: `null`
+
+### <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name)
+
+Description: The name of the virtual network to create.
+
+Type: `string`
+
+Default: `"acctvnet"`
+
+### <a name="input_vnet_peering_config"></a> [vnet\_peering\_config](#input\_vnet\_peering\_config)
+
+Description: A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+
+Type:
+
+```hcl
+map(object({
+    remote_vnet_id                  = string
+    allow_forwarded_traffic         = bool
+    allow_gateway_transit           = bool
+    use_remote_gateways             = bool
+  }))
+```
+
+Default: `{}`
 
 ## Outputs
 

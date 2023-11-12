@@ -10,90 +10,122 @@ module "naming" {
   version = "0.3.0"
 }
 
+resource "random_id" "rg_name" {
+  byte_length = 8
+}
+
 // Creating a resource group with a unique name in the specified location.
 resource "azurerm_resource_group" "example" {
   location = var.rg_location
   name     = module.naming.resource_group.name_unique
 }
 
-// Creating a Network Security Group with a unique name in the specified resource group and location.
 resource "azurerm_network_security_group" "nsg1" {
   location            = var.vnet_location
-  name                = module.naming.network_security_group.name
+  name                = "test-${random_id.rg_name.hex}-nsg"
   resource_group_name = azurerm_resource_group.example.name
 }
 
-// Creating a Route Table with a unique name in the specified resource group and location.
 resource "azurerm_route_table" "rt1" {
   location            = var.vnet_location
-  name                = module.naming.route_table.name
+  name                = "test-${random_id.rg_name.hex}-rt"
   resource_group_name = azurerm_resource_group.example.name
 }
 
-// Creating a virtual network with specified configurations, subnets, delegations, and network policies.
-module "vnet" {
+resource "azurerm_network_ddos_protection_plan" "example" {
+  location            = var.vnet_location
+  name                = "example-protection-plan"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+resource "azurerm_nat_gateway" "example" {
+  location            = var.vnet_location
+  name                = "example-natgateway"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+module "vnet-1" {
   source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = true
   resource_group_name = azurerm_resource_group.example.name
-  address_space       = "10.0.0.0/16"
-  subnet_prefixes     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  subnet_names        = ["subnet1", "subnet2", "subnet3"]
-  vnet_location       = var.vnet_location
 
-  // Associating Network Security Group to subnet1.
-  nsg_ids = {
-    subnet1 = azurerm_network_security_group.nsg1.id
+  subnets = {
+    subnet0 = {
+      address_prefixes = ["192.168.0.0/16"]
+
+    }
   }
 
-  // Enabling specific service endpoints on subnet1 and subnet2.
-  subnet_service_endpoints = {
-    subnet1 = ["Microsoft.Storage"]
-    subnet2 = ["Microsoft.Sql", "Microsoft.AzureActiveDirectory"]
-  }
-
-  // Configuring service delegation for subnet1 and subnet2.
-  subnet_delegation = {
-    subnet1 = [
-      {
-        name = "Microsoft.Web/serverFarms"
-        service_delegation = {
-          name    = "Microsoft.Web/serverFarms"
-          actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-        }
-      }
-    ]
-    subnet2 = [
-      {
-        name = "Microsoft.Sql/managedInstances"
-        service_delegation = {
-          name    = "Microsoft.Sql/managedInstances"
-          actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-        }
-      }
-    ]
-  }
-
-  // Associating Route Table to subnet1.
-  route_tables_ids = {
-    subnet1 = azurerm_route_table.rt1.id
-  }
-
-  // Applying tags to the virtual network.
-  tags = {
-    environment = "dev"
-    costcenter  = "it"
-  }
-
-  // Enabling private link endpoint network policies on subnet2 and subnet3.
-  private_link_endpoint_network_policies_enabled = {
-    subnet2 = true
-  }
-  private_link_service_network_policies_enabled = {
-    subnet3 = true
-  }
+  virtual_network_address_space = ["192.168.0.0/16"]
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "accttest-vnet-peer"
 
 }
+
+module "vnet-2" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.example.name
+
+  subnets = {
+    subnet0 = {
+      address_prefixes                          = ["10.0.0.0/24"]
+      private_endpoint_network_policies_enabled = false
+      service_endpoints = [
+        "Microsoft.Storage", "Microsoft.Sql"
+      ]
+      delegations = [
+        {
+          name = "Microsoft.Sql.managedInstances"
+          service_delegation = {
+            name = "Microsoft.Sql/managedInstances"
+            actions = [
+              "Microsoft.Network/virtualNetworks/subnets/join/action",
+              "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
+              "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action",
+            ]
+          }
+        }
+      ]
+    }
+    subnet1 = {
+      address_prefixes                          = ["10.0.1.0/24"]
+      private_endpoint_network_policies_enabled = false
+      service_endpoints                         = ["Microsoft.AzureActiveDirectory"]
+    }
+    subnet2 = {
+      address_prefixes = ["10.0.2.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
+      network_security_group = {
+        id = azurerm_network_security_group.nsg1.id
+      }
+      route_table = {
+        id = azurerm_route_table.rt1.id
+      }
+    }
+  }
+  virtual_network_dns_servers = {
+    dns_servers = ["8.8.8.8"]
+  }
+  virtual_network_ddos_protection_plan = {
+    id     = azurerm_network_ddos_protection_plan.example.id
+    enable = true
+  }
+  //creates a 1 way vnet peering from vnet-2 to vnet-1
+  vnet_peering_config = {
+    peering1 = {
+      remote_vnet_id          = module.vnet-1.vnet_id
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    }
+  }
+
+  virtual_network_address_space = ["10.0.0.0/16"]
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "accttest-vnet"
+}
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -111,13 +143,18 @@ The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
 
+- <a name="provider_random"></a> [random](#provider\_random)
+
 ## Resources
 
 The following resources are used by this module:
 
+- [azurerm_nat_gateway.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
+- [azurerm_network_ddos_protection_plan.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_ddos_protection_plan) (resource)
 - [azurerm_network_security_group.nsg1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_route_table.rt1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/route_table) (resource)
+- [random_id.rg_name](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -194,7 +231,13 @@ Source: Azure/naming/azurerm
 
 Version: 0.3.0
 
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
+### <a name="module_vnet-1"></a> [vnet-1](#module\_vnet-1)
+
+Source: ../../
+
+Version:
+
+### <a name="module_vnet-2"></a> [vnet-2](#module\_vnet-2)
 
 Source: ../../
 
