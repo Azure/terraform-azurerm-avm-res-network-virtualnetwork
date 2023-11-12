@@ -29,33 +29,35 @@ resource "azurerm_network_security_group" "ssh" {
   }
 }
 
+
+locals {
+  subnets = {
+    for i in range(3) :
+    "subnet${i}" => {
+      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+      network_security_group = {
+        id = azurerm_network_security_group.ssh.id
+      }
+    }
+  }
+  virtual_network_address_space = "10.0.0.0/16"
+}
+
 // Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
 module "vnet" {
-  source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = var.enable_telemetry
-  resource_group_name = azurerm_resource_group.example.name
-  vnet_location       = var.vnet_location
-  address_space       = "10.0.0.0/16"
-  subnets = [
-    {
-      name           = "subnet1"
-      address_prefix = "10.0.1.0/24"
-      nsg_id         = azurerm_network_security_group.ssh.id
+  source                        = "../../"
+  resource_group_name           = azurerm_resource_group.example.name
+  virtual_network_address_space = ["10.0.0.0/16"]
+  subnets                       = local.subnets
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "azure-subnets-vnet"
 
-    }
-  ]
-  // Applying tags to the virtual network.
-  tags = {
-    environment = "dev"
-    costcenter  = "it"
-  }
 }
 
 // Fetching the public IP address of the Terraform executor.
 data "curl" "public_ip" {
   http_method = "GET"
-  uri         = "https://api.ipify.org?format=json"
+  uri         = "http://api.ipify.org?format=json"
 }
 
 

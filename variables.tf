@@ -15,7 +15,7 @@ The name of the resource group where the resources will be deployed.
 DESCRIPTION
 }
 
-variable "name" {
+variable "vnet_name" {
   type        = string
   default     = "acctvnet"
   description = <<DESCRIPTION
@@ -23,29 +23,25 @@ The name of the virtual network to create.
 DESCRIPTION
 }
 
-variable "address_space" {
-  type        = string
-  default     = "10.0.0.0/16"
-  description = <<DESCRIPTION
-The address space that is used by the virtual network.
-DESCRIPTION
+variable "virtual_network_address_space" {
+  type        = list(string)
+  description = " (Required) The address space that is used the virtual network. You can supply more than one address space."
+  nullable    = false
+
+  validation {
+    condition     = length(var.virtual_network_address_space) > 0
+    error_message = "Please provide at least one cidr as address space."
+  }
 }
 
-variable "address_spaces" {
-  type        = list(string)
-  default     = []
-  description = <<DESCRIPTION
-The list of the address spaces that is used by the virtual network.
-DESCRIPTION
-}
 
-variable "dns_servers" {
-  type        = list(string)
-  default     = []
-  description = <<DESCRIPTION
-The DNS servers to be used with vNet.
-If no values are specified, this defaults to Azure DNS.
-DESCRIPTION
+
+variable "virtual_network_dns_servers" {
+  type = object({
+    dns_servers = list(string)
+  })
+  default     = null
+  description = "(Optional) List of IP addresses of DNS servers"
 }
 
 variable "vnet_location" {
@@ -56,36 +52,71 @@ The location/region where the virtual network is created. Changing this forces a
 DESCRIPTION
 }
 variable "subnets" {
-  description = "Configuration for each subnet."
-  type = list(object({
-    name                                          = string
-    address_prefix                              = string
-    nsg_id                                        = optional(string,"")
-    route_table_id                                = optional(string,"")
-    private_endpoint_network_policies_enabled     = optional(bool,"false")
-    private_link_service_network_policies_enabled = optional(bool,"false")
-    service_endpoints                             = optional(list(string))
-    route_table_id      = optional(string)
-    delegation = optional(list(object({
-      name = string
-      service_delegation = object({
-        name    = string
-        actions = optional(list(string))
-      })
-    })))
-  }))
-  default = []
+  type = map(object(
+    {
+      address_prefixes = list(string) # (Required) The address prefixes to use for the subnet.
+      nat_gateway = optional(object({
+        id = string # (Required) The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
+      }))
+      network_security_group = optional(object({
+        id = string # (Required) The ID of the Network Security Group which should be associated with the Subnet. Changing this forces a new association to be created.
+      }))
+      private_endpoint_network_policies_enabled     = optional(bool, true) # (Optional) Enable or Disable network policies for the private endpoint on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+      private_link_service_network_policies_enabled = optional(bool, true) # (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+      route_table = optional(object({
+        id = string # (Required) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
+      }))
+      service_endpoints           = optional(set(string)) # (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage` and `Microsoft.Web`.
+      service_endpoint_policy_ids = optional(set(string)) # (Optional) The list of IDs of Service Endpoint Policies to associate with the subnet.
+      delegations = optional(list(
+        object(
+          {
+            name = string # (Required) A name for this delegation.
+            service_delegation = object({
+              name    = string                 # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
+              actions = optional(list(string)) # (Optional) A list of Actions which should be delegated. This list is specific to the service to delegate to. Possible values include `Microsoft.Network/networkinterfaces/*`, `Microsoft.Network/virtualNetworks/subnets/action`, `Microsoft.Network/virtualNetworks/subnets/join/action`, `Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action` and `Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action`.
+            })
+          }
+        )
+      ))
+    }
+  ))
+  description = "Subnets to create"
 }
-variable "ddos_protection_plan" {
+variable "new_network_ddos_protection_plan" {
   type = object({
-    enable = bool
-    id     = string
+    name = string
+    tags = optional(map(string))
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
   })
   default     = null
-  description = <<DESCRIPTION
-The set of DDoS protection plan configuration.
-DESCRIPTION
+  description = <<-EOT
+ - `name` - (Required) Specifies the name of the Network DDoS Protection Plan. Changing this forces a new resource to be created.
+ - `tags` - (Optional) A mapping of tags to assign to the resource.
+
+ ---
+ `timeouts` block supports the following:
+ - `create` - (Defaults to 30 minutes) Used when creating the DDoS Protection Plan.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the DDoS Protection Plan.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the DDoS Protection Plan.
+ - `update` - (Defaults to 30 minutes) Used when updating the DDoS Protection Plan.
+EOT
 }
+
+variable "virtual_network_ddos_protection_plan" {
+  type = object({
+    id     = string #  (Required) The ID of DDoS Protection Plan.
+    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+  })
+  default     = null
+  description = "AzureNetwork DDoS Protection Plan."
+}
+
 
 variable "tracing_tags_enabled" {
   type        = bool

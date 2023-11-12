@@ -1,61 +1,122 @@
 # Azure Generic vNet Module
 
 # Creating a Virtual Network with the specified configurations.
-resource "azurerm_virtual_network" "vnet" {
-  address_space       = length(var.address_spaces) == 0 ? [var.address_space] : var.address_spaces
+
+resource "azurerm_network_ddos_protection_plan" "this" {
+  count = var.new_network_ddos_protection_plan == null ? 0 : 1
+
   location            = var.vnet_location
-  name                = var.name
+  name                = var.new_network_ddos_protection_plan.name
   resource_group_name = var.resource_group_name
-  dns_servers         = var.dns_servers
+  
+  dynamic "timeouts" {
+    for_each = var.new_network_ddos_protection_plan.timeouts == null ? [] : [var.new_network_ddos_protection_plan.timeouts]
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+}
+resource "azurerm_virtual_network" "vnet" {
+  address_space       = var.virtual_network_address_space
+  location            = var.vnet_location
+  name                = var.vnet_name
+  resource_group_name = var.resource_group_name
   tags                = var.tags
 
   # Configuring DDoS protection plan if provided.
   dynamic "ddos_protection_plan" {
-    for_each = var.ddos_protection_plan != null ? [var.ddos_protection_plan] : []
+    for_each = var.virtual_network_ddos_protection_plan != null ? [var.virtual_network_ddos_protection_plan] : []
+
     content {
       enable = ddos_protection_plan.value.enable
       id     = ddos_protection_plan.value.id
     }
   }
+  dynamic "ddos_protection_plan" {
+    for_each = azurerm_network_ddos_protection_plan.this
+    content {
+      enable = true
+      id     = ddos_protection_plan.value.id
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.virtual_network_ddos_protection_plan == null || var.new_network_ddos_protection_plan == null
+      error_message = "Cannot set both of `var.virtual_network_ddos_protection_plan` and `var.new_network_ddos_protection_plan`"
+    }
+  }
 }
+
+resource "azurerm_virtual_network_dns_servers" "vnet_dns" {
+  count = var.virtual_network_dns_servers == null ? 0 : 1
+
+  virtual_network_id = azurerm_virtual_network.vnet.id
+  dns_servers        = var.virtual_network_dns_servers.dns_servers
+}
+
 
 # Creating Subnets within the Virtual Network.
 resource "azurerm_subnet" "subnet" {
-  for_each = { for subnet in var.subnets : subnet.name => subnet }
+  for_each = var.subnets
 
-  name                                          = each.value.name
-  address_prefixes                              = [each.value.address_prefix]
+  address_prefixes                              = each.value.address_prefixes
+  name                                          = each.key
   resource_group_name                           = var.resource_group_name
   virtual_network_name                          = azurerm_virtual_network.vnet.name
   private_endpoint_network_policies_enabled     = each.value.private_endpoint_network_policies_enabled
   private_link_service_network_policies_enabled = each.value.private_link_service_network_policies_enabled
+  service_endpoint_policy_ids                   = each.value.service_endpoint_policy_ids
   service_endpoints                             = each.value.service_endpoints
 
-
   dynamic "delegation" {
-    for_each = each.value.delegation != null ? each.value.delegation : []
+    for_each = each.value.delegations == null ? [] : each.value.delegations
+
     content {
       name = delegation.value.name
+
       service_delegation {
         name    = delegation.value.service_delegation.name
         actions = delegation.value.service_delegation.actions
       }
     }
   }
+
+  # Do not remove this `depends_on` or we'll met a parallel related issue that failed the creation of `azurerm_subnet_route_table_association` and `azurerm_subnet_network_security_group_association`
+  depends_on = [azurerm_virtual_network_dns_servers.vnet_dns]
 }
 
-resource "azurerm_subnet_route_table_association" "association" {
-  for_each = { for subnet in var.subnets : subnet.name => subnet if subnet.route_table_id != null && subnet.route_table_id != "" }
-
-  subnet_id      = azurerm_subnet.subnet[each.value.name].id
-  route_table_id = each.value.route_table_id
+locals {
+  azurerm_subnet_name2id = {
+    for index, subnet in azurerm_subnet.subnet :
+    subnet.name => subnet.id
+  }
 }
 
-resource "azurerm_subnet_network_security_group_association" "subnet_nsg_association" {
-  for_each = { for subnet in var.subnets : subnet.name => subnet if lookup(subnet, "nsg_id", null) != null && subnet.nsg_id != "" }
-  subnet_id                  = azurerm_subnet.subnet[each.key].id
-  network_security_group_id  = each.value.nsg_id
+resource "azurerm_subnet_network_security_group_association" "vnet" {
+  for_each = local.subnet_with_network_security_group
+
+  network_security_group_id = each.value
+  subnet_id                 = local.azurerm_subnet_name2id[each.key]
 }
+
+resource "azurerm_subnet_route_table_association" "vnet" {
+  for_each = local.subnets_with_route_table
+
+  route_table_id = each.value
+  subnet_id      = local.azurerm_subnet_name2id[each.key]
+}
+
+resource "azurerm_subnet_nat_gateway_association" "nat_gw" {
+  for_each = local.subnet_with_nat_gateway
+
+  nat_gateway_id = each.value
+  subnet_id      = local.azurerm_subnet_name2id[each.key]
+}
+
 
 
 
@@ -64,7 +125,7 @@ resource "azurerm_subnet_network_security_group_association" "subnet_nsg_associa
 # Applying Management Lock to the Virtual Network if specified.
 resource "azurerm_management_lock" "this" {
   count      = var.lock.kind != "None" ? 1 : 0
-  name       = coalesce(var.lock.name, "lock-${var.name}")
+  name       = coalesce(var.lock.name, "lock-${var.vnet_name}")
   scope      = azurerm_virtual_network.vnet.id
   lock_level = var.lock.kind
 }

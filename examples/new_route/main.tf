@@ -4,49 +4,48 @@ module "naming" {
   version = "0.3.0"
 }
 
+resource "random_id" "rg_name" {
+  byte_length = 8
+}
+
 // Creating a resource group with a unique name in the specified location.
 resource "azurerm_resource_group" "example" {
   location = var.rg_location
   name     = module.naming.resource_group.name_unique
 }
+locals {
+  subnets = {
+    for i in range(3) :
+    "subnet${i}" => {
+      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+      route_table = {
+        id = azurerm_route_table.example.id
+      }
+    }
+  }
+  virtual_network_address_space = "10.0.0.0/16"
+}
 
+module "vnet" {
+  source                        = "../../"
+  resource_group_name           = azurerm_resource_group.example.name
+  virtual_network_address_space = ["10.0.0.0/16"]
+  subnets                       = local.subnets
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "azure-subnets-vnet"
 
-// Creating a Route Table in the same location and resource group.
+}
+
 resource "azurerm_route_table" "example" {
   location            = azurerm_resource_group.example.location
   name                = "MyRouteTable"
   resource_group_name = azurerm_resource_group.example.name
 }
 
-// Adding a route to the created Route Table.
 resource "azurerm_route" "example" {
-  address_prefix      = "10.1.0.0/16"
+  address_prefix      = local.virtual_network_address_space
   name                = "acceptanceTestRoute1"
   next_hop_type       = "VnetLocal"
   resource_group_name = azurerm_resource_group.example.name
   route_table_name    = azurerm_route_table.example.name
-}
-
-// Creating a virtual network with specified configurations, subnets, and route tables.
-module "vnet" {
-  source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = var.enable_telemetry
-  resource_group_name = azurerm_resource_group.example.name
-  vnet_location       = var.vnet_location
-  address_space       = "10.0.0.0/16"
-  subnets = [
-    {
-      name           = "subnet1"
-      address_prefix = "10.0.1.0/24"
-      route_table_id = azurerm_route_table.example.id
-
-    }
-  ]
-
-  // Applying tags to the virtual network.
-  tags = {
-    environment = "dev"
-    costcenter  = "it"
-  }
 }
