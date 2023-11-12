@@ -117,6 +117,19 @@ variable "virtual_network_ddos_protection_plan" {
   description = "AzureNetwork DDoS Protection Plan."
 }
 
+variable "vnet_peering_config" {
+  description = <<DESCRIPTION
+A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+DESCRIPTION
+  type = map(object({
+    remote_vnet_id                  = string
+    allow_forwarded_traffic         = bool
+    allow_gateway_transit           = bool
+    use_remote_gateways             = bool
+  }))
+  default = {}
+}
+
 
 variable "tracing_tags_enabled" {
   type        = bool

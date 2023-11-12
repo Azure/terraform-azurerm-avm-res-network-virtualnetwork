@@ -38,7 +38,24 @@ resource "azurerm_nat_gateway" "example" {
   resource_group_name = azurerm_resource_group.example.name
 }
 
-module "vnet" {
+module "vnet-1" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.example.name
+
+  subnets = {
+    subnet0 = {
+      address_prefixes = ["192.168.0.0/16"]
+
+    }
+  }
+
+  virtual_network_address_space = ["192.168.0.0/16"]
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "accttest-vnet-peer"
+
+}
+
+module "vnet-2" {
   source              = "../../"
   resource_group_name = azurerm_resource_group.example.name
 
@@ -88,10 +105,18 @@ module "vnet" {
     id     = azurerm_network_ddos_protection_plan.example.id
     enable = true
   }
+  //creates a 1 way vnet peering from vnet-2 to vnet-1
+  vnet_peering_config = {
+    peering1 = {
+      remote_vnet_id          = module.vnet-1.vnet_id
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    }
+  }
 
-  virtual_network_address_space = ["10.0.0.0/16","192.168.0.0/24"]
-  vnet_location = azurerm_resource_group.example.location
-  vnet_name     = "accttest-vnet"
-
-
+  virtual_network_address_space = ["10.0.0.0/16"]
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "accttest-vnet"
 }
+

@@ -31,7 +31,6 @@ output "subnet_address_prefixes" {
 }
 
 
-
 output "vnet_location" {
   description = "The location of the newly created vNet"
   value       = azurerm_virtual_network.vnet.location

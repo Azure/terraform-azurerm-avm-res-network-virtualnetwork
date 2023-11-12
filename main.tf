@@ -117,6 +117,19 @@ resource "azurerm_subnet_nat_gateway_association" "nat_gw" {
   subnet_id      = local.azurerm_subnet_name2id[each.key]
 }
 
+resource "azurerm_virtual_network_peering" "vnet_peering" {
+  for_each = var.vnet_peering_config
+
+  name                  = "peering-${each.key}"
+  resource_group_name   = var.resource_group_name  # Assuming you have a variable for the resource group
+  virtual_network_name  = azurerm_virtual_network.vnet.name  # Reference to your virtual network
+  remote_virtual_network_id = each.value.remote_vnet_id
+  allow_forwarded_traffic   = each.value.allow_forwarded_traffic
+  allow_gateway_transit     = each.value.allow_gateway_transit
+  use_remote_gateways       = each.value.use_remote_gateways
+}
+
+
 
 
 
