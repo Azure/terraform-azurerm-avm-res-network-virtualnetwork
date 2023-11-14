@@ -122,31 +122,7 @@ Default: `"westus"`
 
 ## Outputs
 
-The following outputs are exported:
-
-### <a name="output_name"></a> [name](#output\_name)
-
-Description: The name of the newly created vNet
-
-### <a name="output_subnet_address_prefixes"></a> [subnet\_address\_prefixes](#output\_subnet\_address\_prefixes)
-
-Description: The address prefixes of the newly created subnets
-
-### <a name="output_subnet_names"></a> [subnet\_names](#output\_subnet\_names)
-
-Description: The names of the newly created subnets
-
-### <a name="output_vnet_address_space"></a> [vnet\_address\_space](#output\_vnet\_address\_space)
-
-Description: The address space of the newly created vNet
-
-### <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id)
-
-Description: The id of the newly created vNet
-
-### <a name="output_vnet_location"></a> [vnet\_location](#output\_vnet\_location)
-
-Description: The location of the newly created vNet
+No outputs.
 
 ## Modules
 

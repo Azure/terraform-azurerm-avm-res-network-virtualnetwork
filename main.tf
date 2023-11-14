@@ -8,7 +8,7 @@ resource "azurerm_network_ddos_protection_plan" "this" {
   location            = var.vnet_location
   name                = var.new_network_ddos_protection_plan.name
   resource_group_name = var.resource_group_name
-  
+
   dynamic "timeouts" {
     for_each = var.new_network_ddos_protection_plan.timeouts == null ? [] : [var.new_network_ddos_protection_plan.timeouts]
     content {
@@ -63,9 +63,9 @@ resource "azurerm_virtual_network_dns_servers" "vnet_dns" {
 resource "azurerm_virtual_network_peering" "vnet_peering" {
   for_each = var.vnet_peering_config
 
-  name                  = "peering-${each.key}"
-  resource_group_name   = var.resource_group_name  # Assuming you have a variable for the resource group
-  virtual_network_name  = azurerm_virtual_network.vnet.name  # Reference to your virtual network
+  name                      = "peering-${each.key}"
+  resource_group_name       = var.resource_group_name           # Assuming you have a variable for the resource group
+  virtual_network_name      = azurerm_virtual_network.vnet.name # Reference to your virtual network
   remote_virtual_network_id = each.value.remote_vnet_id
   allow_forwarded_traffic   = each.value.allow_forwarded_traffic
   allow_gateway_transit     = each.value.allow_gateway_transit
