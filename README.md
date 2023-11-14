@@ -288,10 +288,10 @@ Type:
 
 ```hcl
 map(object({
-    remote_vnet_id                  = string
-    allow_forwarded_traffic         = bool
-    allow_gateway_transit           = bool
-    use_remote_gateways             = bool
+    remote_vnet_id          = string
+    allow_forwarded_traffic = bool
+    allow_gateway_transit   = bool
+    use_remote_gateways     = bool
   }))
 ```
 
