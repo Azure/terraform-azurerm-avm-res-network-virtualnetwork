@@ -38,3 +38,7 @@ output "vnet_location" {
 
 
 
+output "resource" {
+  value       = azurerm_virtual_network.vnet
+  description = "This is the full resource output for the virtual network resource."
+}
