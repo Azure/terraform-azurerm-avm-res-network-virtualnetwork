@@ -22,7 +22,7 @@ module "azure_vnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.3.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71.0)
 
@@ -42,7 +42,6 @@ The following resources are used by this module:
 
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_network_ddos_protection_plan.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_ddos_protection_plan) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.subnet-level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.vnet-level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
@@ -162,35 +161,6 @@ object({
 
 Default: `{}`
 
-### <a name="input_new_network_ddos_protection_plan"></a> [new\_network\_ddos\_protection\_plan](#input\_new\_network\_ddos\_protection\_plan)
-
-Description: - `name` - (Required) Specifies the name of the Network DDoS Protection Plan. Changing this forces a new resource to be created.
-- `tags` - (Optional) A mapping of tags to assign to the resource.
-
----
-`timeouts` block supports the following:
-- `create` - (Defaults to 30 minutes) Used when creating the DDoS Protection Plan.
-- `delete` - (Defaults to 30 minutes) Used when deleting the DDoS Protection Plan.
-- `read` - (Defaults to 5 minutes) Used when retrieving the DDoS Protection Plan.
-- `update` - (Defaults to 30 minutes) Used when updating the DDoS Protection Plan.
-
-Type:
-
-```hcl
-object({
-    name = string
-    tags = optional(map(string))
-    timeouts = optional(object({
-      create = optional(string)
-      delete = optional(string)
-      read   = optional(string)
-      update = optional(string)
-    }))
-  })
-```
-
-Default: `null`
-
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description: n/a
@@ -301,51 +271,24 @@ Default: `{}`
 
 The following outputs are exported:
 
-### <a name="output_name"></a> [name](#output\_name)
+### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
-Description: The name of the newly created vNet
+Description: Information about the subnets created in the module.
 
-### <a name="output_resource"></a> [resource](#output\_resource)
+### <a name="output_vnet-resource"></a> [vnet-resource](#output\_vnet-resource)
 
-Description: This is the full resource output for the virtual network resource.
-
-### <a name="output_subnet_address_prefixes"></a> [subnet\_address\_prefixes](#output\_subnet\_address\_prefixes)
-
-Description: The address prefixes of the newly created subnets
-
-### <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids)
-
-Description: The ids of the newly created subnets
-
-### <a name="output_subnet_names"></a> [subnet\_names](#output\_subnet\_names)
-
-Description: The names of the newly created subnets
-
-### <a name="output_vnet_address_space"></a> [vnet\_address\_space](#output\_vnet\_address\_space)
-
-Description: The address space of the newly created vNet
-
-### <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id)
-
-Description: The id of the newly created vNet
-
-### <a name="output_vnet_location"></a> [vnet\_location](#output\_vnet\_location)
-
-Description: The location of the newly created vNet
+Description: The Azure Virtual Network resource
 
 ## Modules
 
 No modules.
 
-## Usage
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
 
-Ensure you have Terraform installed and the Azure CLI authenticated to your Azure subscription.
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
-Navigate to the directory containing this configuration and run:
+## AVM Versioning Notice
 
-```
-terraform init
-terraform plan
-terraform apply
-```
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
 <!-- END_TF_DOCS -->

@@ -58,7 +58,7 @@ module "vnet-1" {
   vnet_location                 = azurerm_resource_group.example.location
   vnet_name                     = "accttest-vnet-peer"
 
- 
+
 }
 
 // Defining the second virtual network (vnet-2) with its subnets and settings.
