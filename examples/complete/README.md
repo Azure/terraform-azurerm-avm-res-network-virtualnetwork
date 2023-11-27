@@ -3,137 +3,12 @@
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
-```hcl
-// Importing the Azure naming module to ensure resources have unique CAF compliant names.
-module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.3.0"
-}
-
-resource "random_id" "rg_name" {
-  byte_length = 8
-}
-
-// Creating a resource group with a unique name in the specified location.
-resource "azurerm_resource_group" "example" {
-  location = var.rg_location
-  name     = module.naming.resource_group.name_unique
-}
-
-resource "azurerm_network_security_group" "nsg1" {
-  location            = var.vnet_location
-  name                = "test-${random_id.rg_name.hex}-nsg"
-  resource_group_name = azurerm_resource_group.example.name
-}
-
-resource "azurerm_route_table" "rt1" {
-  location            = var.vnet_location
-  name                = "test-${random_id.rg_name.hex}-rt"
-  resource_group_name = azurerm_resource_group.example.name
-}
-
-resource "azurerm_network_ddos_protection_plan" "example" {
-  location            = var.vnet_location
-  name                = "example-protection-plan"
-  resource_group_name = azurerm_resource_group.example.name
-}
-
-resource "azurerm_nat_gateway" "example" {
-  location            = var.vnet_location
-  name                = "example-natgateway"
-  resource_group_name = azurerm_resource_group.example.name
-}
-
-module "vnet-1" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.example.name
-
-  subnets = {
-    subnet0 = {
-      address_prefixes = ["192.168.0.0/16"]
-
-    }
-  }
-
-  virtual_network_address_space = ["192.168.0.0/16"]
-  vnet_location                 = azurerm_resource_group.example.location
-  vnet_name                     = "accttest-vnet-peer"
-
-}
-
-module "vnet-2" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.example.name
-
-  subnets = {
-    subnet0 = {
-      address_prefixes                          = ["10.0.0.0/24"]
-      private_endpoint_network_policies_enabled = false
-      service_endpoints = [
-        "Microsoft.Storage", "Microsoft.Sql"
-      ]
-      delegations = [
-        {
-          name = "Microsoft.Sql.managedInstances"
-          service_delegation = {
-            name = "Microsoft.Sql/managedInstances"
-            actions = [
-              "Microsoft.Network/virtualNetworks/subnets/join/action",
-              "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
-              "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action",
-            ]
-          }
-        }
-      ]
-    }
-    subnet1 = {
-      address_prefixes                          = ["10.0.1.0/24"]
-      private_endpoint_network_policies_enabled = false
-      service_endpoints                         = ["Microsoft.AzureActiveDirectory"]
-    }
-    subnet2 = {
-      address_prefixes = ["10.0.2.0/24"]
-      nat_gateway = {
-        id = azurerm_nat_gateway.example.id
-      }
-      network_security_group = {
-        id = azurerm_network_security_group.nsg1.id
-      }
-      route_table = {
-        id = azurerm_route_table.rt1.id
-      }
-    }
-  }
-  virtual_network_dns_servers = {
-    dns_servers = ["8.8.8.8"]
-  }
-  virtual_network_ddos_protection_plan = {
-    id     = azurerm_network_ddos_protection_plan.example.id
-    enable = true
-  }
-  //creates a 1 way vnet peering from vnet-2 to vnet-1
-  vnet_peering_config = {
-    peering1 = {
-      remote_vnet_id          = module.vnet-1.vnet_id
-      allow_forwarded_traffic = true
-      allow_gateway_transit   = false
-      use_remote_gateways     = false
-    }
-  }
-
-  virtual_network_address_space = ["10.0.0.0/16"]
-  vnet_location                 = azurerm_resource_group.example.location
-  vnet_name                     = "accttest-vnet"
-}
-
-```
-
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.0.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
 
@@ -195,31 +70,7 @@ Default: `"westus"`
 
 ## Outputs
 
-The following outputs are exported:
-
-### <a name="output_name"></a> [name](#output\_name)
-
-Description: The name of the newly created vNet
-
-### <a name="output_subnet_address_prefixes"></a> [subnet\_address\_prefixes](#output\_subnet\_address\_prefixes)
-
-Description: The address prefixes of the newly created subnets
-
-### <a name="output_subnet_names"></a> [subnet\_names](#output\_subnet\_names)
-
-Description: The names of the newly created subnets
-
-### <a name="output_vnet_address_space"></a> [vnet\_address\_space](#output\_vnet\_address\_space)
-
-Description: The address space of the newly created vNet
-
-### <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id)
-
-Description: The id of the newly created vNet
-
-### <a name="output_vnet_location"></a> [vnet\_location](#output\_vnet\_location)
-
-Description: The location of the newly created vNet
+No outputs.
 
 ## Modules
 
@@ -254,4 +105,13 @@ terraform init
 terraform plan
 terraform apply
 ```
+
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+
+## AVM Versioning Notice
+
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
 <!-- END_TF_DOCS -->
