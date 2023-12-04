@@ -10,17 +10,33 @@ resource "azurerm_resource_group" "example" {
   name     = module.naming.resource_group.name_unique
 }
 
+locals {
+  subnets = {
+    for i in range(3) : "subnet${i}" => {
+      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+    }
+  }
+  virtual_network_address_space = "10.0.0.0/16"
+
+}
+
 # Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
 module "vnet" {
   source              = "../../"
-  name                = module.naming.virtual_network.name
+  vnet_name           = module.naming.virtual_network.name
   enable_telemetry    = true
   resource_group_name = azurerm_resource_group.example.name
   vnet_location       = var.vnet_location
+  subnets             = local.subnets
 
-  # Uncomment the below block to apply a ReadOnly lock to the virtual network.
-  /* lock = {
-    name = "test-lock"
-    kind = "ReadOnly"
-  } */
+
+  virtual_network_dns_servers = {
+    dns_servers = ["8.8.8.8"]
+  }
+
+  virtual_network_address_space = ["10.0.0.0/16"]
+
 }
+
+
+

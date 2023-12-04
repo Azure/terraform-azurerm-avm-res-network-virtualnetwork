@@ -1,20 +1,32 @@
 <!-- BEGIN_TF_DOCS -->
-# terraform-azurerm-avm-template
+# Azure Verified Module for Azure Virtual Networks
 
-Module to deploy a Virtual Network in Azure along with subnets, NSGs and Route Tables and the ability to integrate existing DDOS protections plans to VNets.
+This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
-Note that this module requires an existing resource group.
+To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
+
+```
+module "azure_vnet" {
+  source = "./path_to_this_module"
+
+  address_spaces = ["10.0.0.0/16"]
+  vnet_location  = "East US"
+  name           = "myVNet"
+  resource_group_name = "myResourceGroup"
+  // ... other required variables ...
+}
+```
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.0.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71.0)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
 
 ## Providers
 
@@ -29,12 +41,17 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
+- [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
-- [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.subnet-level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.vnet-level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_subnet_nat_gateway_association.nat_gw](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
 - [azurerm_subnet_network_security_group_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) (resource)
 - [azurerm_subnet_route_table_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_route_table_association) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_virtual_network_dns_servers.vnet_dns](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_dns_servers) (resource)
+- [azurerm_virtual_network_peering.vnet_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -48,40 +65,53 @@ Description: The name of the resource group where the resources will be deployed
 
 Type: `string`
 
-## Optional Inputs
+### <a name="input_subnets"></a> [subnets](#input\_subnets)
 
-The following input variables are optional (have default values):
-
-### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
-
-Description: The address space that is used by the virtual network.
-
-Type: `string`
-
-Default: `"10.0.0.0/16"`
-
-### <a name="input_address_spaces"></a> [address\_spaces](#input\_address\_spaces)
-
-Description: The list of the address spaces that is used by the virtual network.
-
-Type: `list(string)`
-
-Default: `[]`
-
-### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
-
-Description: The set of DDoS protection plan configuration.
+Description: Subnets to create
 
 Type:
 
 ```hcl
-object({
-    enable = bool
-    id     = string
-  })
+map(object(
+    {
+      address_prefixes = list(string) # (Required) The address prefixes to use for the subnet.
+      nat_gateway = optional(object({
+        id = string # (Required) The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
+      }))
+      network_security_group = optional(object({
+        id = string # (Required) The ID of the Network Security Group which should be associated with the Subnet. Changing this forces a new association to be created.
+      }))
+      private_endpoint_network_policies_enabled     = optional(bool, true) # (Optional) Enable or Disable network policies for the private endpoint on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+      private_link_service_network_policies_enabled = optional(bool, true) # (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+      route_table = optional(object({
+        id = string # (Required) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
+      }))
+      service_endpoints           = optional(set(string)) # (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage` and `Microsoft.Web`.
+      service_endpoint_policy_ids = optional(set(string)) # (Optional) The list of IDs of Service Endpoint Policies to associate with the subnet.
+      delegations = optional(list(
+        object(
+          {
+            name = string # (Required) A name for this delegation.
+            service_delegation = object({
+              name    = string                 # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
+              actions = optional(list(string)) # (Optional) A list of Actions which should be delegated. This list is specific to the service to delegate to. Possible values include `Microsoft.Network/networkinterfaces/*`, `Microsoft.Network/virtualNetworks/subnets/action`, `Microsoft.Network/virtualNetworks/subnets/join/action`, `Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action` and `Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action`.
+            })
+          }
+        )
+      ))
+    }
+  ))
 ```
 
-Default: `null`
+### <a name="input_virtual_network_address_space"></a> [virtual\_network\_address\_space](#input\_virtual\_network\_address\_space)
+
+Description:  (Required) The address space that is used the virtual network. You can supply more than one address space.
+
+Type: `list(string)`
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
@@ -92,7 +122,7 @@ Type:
 ```hcl
 map(object({
     name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["allLogs"])
+    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
@@ -104,15 +134,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_dns_servers"></a> [dns\_servers](#input\_dns\_servers)
-
-Description: The DNS servers to be used with vNet.  
-If no values are specified, this defaults to Azure DNS.
-
-Type: `list(string)`
-
-Default: `[]`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -140,82 +161,6 @@ object({
 
 Default: `{}`
 
-### <a name="input_name"></a> [name](#input\_name)
-
-Description: The name of the virtual network to create.
-
-Type: `string`
-
-Default: `"acctvnet"`
-
-### <a name="input_nsg_ids"></a> [nsg\_ids](#input\_nsg\_ids)
-
-Description: A map of subnet name to Network Security Group IDs.
-
-Type: `map(string)`
-
-Default: `{}`
-
-### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
-
-Description: A map of private endpoints to create on the Virtual Network. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the Key Vault.
-- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `name` - The name of the IP configuration.
-  - `private_ip_address` - The private IP address of the IP configuration.
-
-Type:
-
-```hcl
-map(object({
-    role_assignments                        = map(object({}))        # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
-    lock                                    = object({})             # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
-    tags                                    = optional(map(any), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
-    service                                 = string
-    subnet_resource_id                      = string
-    private_dns_zone_group_name             = optional(string, null)
-    private_dns_zone_resource_ids           = optional(set(string), [])
-    application_security_group_resource_ids = optional(set(string), [])
-    network_interface_name                  = optional(string, null)
-    ip_configurations = optional(map(object({
-      name               = string
-      group_id           = optional(string, null)
-      member_name        = optional(string, null)
-      private_ip_address = string
-    })), {})
-  }))
-```
-
-Default: `{}`
-
-### <a name="input_private_link_endpoint_network_policies_enabled"></a> [private\_link\_endpoint\_network\_policies\_enabled](#input\_private\_link\_endpoint\_network\_policies\_enabled)
-
-Description: A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link endpoint on the subnet. Default value is false.
-
-Type: `map(bool)`
-
-Default: `{}`
-
-### <a name="input_private_link_service_network_policies_enabled"></a> [private\_link\_service\_network\_policies\_enabled](#input\_private\_link\_service\_network\_policies\_enabled)
-
-Description: A map with key (string) `subnet name`, value (bool) `true` or `false` to indicate enable or disable network policies for the private link service on the subnet. Default value is false.
-
-Type: `map(bool)`
-
-Default: `{}`
-
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description: n/a
@@ -227,74 +172,12 @@ map(object({
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, true)
+    skip_service_principal_aad_check       = optional(bool, false)
     condition                              = optional(string, null)
-    condition_version                      = optional(string, "2.0")
-    delegated_managed_identity_resource_id = optional(string)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
   }))
 ```
-
-Default: `{}`
-
-### <a name="input_route_tables_ids"></a> [route\_tables\_ids](#input\_route\_tables\_ids)
-
-Description: A map of subnet name to Route table ids.
-
-Type: `map(string)`
-
-Default: `{}`
-
-### <a name="input_subnet_delegation"></a> [subnet\_delegation](#input\_subnet\_delegation)
-
-Description: `service_delegation` blocks for `azurerm_subnet` resource, subnet names as keys, list of delegation blocks as value, more details about delegation block could be found at the [document](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet#delegation).
-
-Type:
-
-```hcl
-map(list(object({
-    name = string
-    service_delegation = object({
-      name    = string
-      actions = optional(list(string))
-    })
-  })))
-```
-
-Default: `{}`
-
-### <a name="input_subnet_names"></a> [subnet\_names](#input\_subnet\_names)
-
-Description: A list of public subnets inside the vNet.
-
-Type: `list(string)`
-
-Default:
-
-```json
-[
-  "subnet1"
-]
-```
-
-### <a name="input_subnet_prefixes"></a> [subnet\_prefixes](#input\_subnet\_prefixes)
-
-Description: The address prefix to use for the subnet.
-
-Type: `list(string)`
-
-Default:
-
-```json
-[
-  "10.0.1.0/24"
-]
-```
-
-### <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints)
-
-Description: A map with key (string) `subnet name`, value (list(string)) to indicate enabled service endpoints on the subnet. Default value is [].
-
-Type: `map(list(string))`
 
 Default: `{}`
 
@@ -322,6 +205,35 @@ Type: `string`
 
 Default: `"avm_"`
 
+### <a name="input_virtual_network_ddos_protection_plan"></a> [virtual\_network\_ddos\_protection\_plan](#input\_virtual\_network\_ddos\_protection\_plan)
+
+Description: AzureNetwork DDoS Protection Plan.
+
+Type:
+
+```hcl
+object({
+    id     = string #  (Required) The ID of DDoS Protection Plan.
+    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+  })
+```
+
+Default: `null`
+
+### <a name="input_virtual_network_dns_servers"></a> [virtual\_network\_dns\_servers](#input\_virtual\_network\_dns\_servers)
+
+Description: (Optional) List of IP addresses of DNS servers
+
+Type:
+
+```hcl
+object({
+    dns_servers = list(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
 
 Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
@@ -330,33 +242,53 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name)
+
+Description: The name of the virtual network to create.
+
+Type: `string`
+
+Default: `"acctvnet"`
+
+### <a name="input_vnet_peering_config"></a> [vnet\_peering\_config](#input\_vnet\_peering\_config)
+
+Description: A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+
+Type:
+
+```hcl
+map(object({
+    remote_vnet_id          = string
+    allow_forwarded_traffic = bool
+    allow_gateway_transit   = bool
+    use_remote_gateways     = bool
+  }))
+```
+
+Default: `{}`
+
 ## Outputs
 
 The following outputs are exported:
 
-### <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids)
+### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
-Description: The ids of the newly created subnets
+Description: Information about the subnets created in the module.
 
-### <a name="output_vnet_address_space"></a> [vnet\_address\_space](#output\_vnet\_address\_space)
+### <a name="output_vnet-resource"></a> [vnet-resource](#output\_vnet-resource)
 
-Description: The address space of the newly created vNet
-
-### <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id)
-
-Description: The id of the newly created vNet
-
-### <a name="output_vnet_location"></a> [vnet\_location](#output\_vnet\_location)
-
-Description: The location of the newly created vNet
-
-### <a name="output_vnet_name"></a> [vnet\_name](#output\_vnet\_name)
-
-Description: The name of the newly created vNet
+Description: The Azure Virtual Network resource
 
 ## Modules
 
 No modules.
 
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
 
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+
+## AVM Versioning Notice
+
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
 <!-- END_TF_DOCS -->

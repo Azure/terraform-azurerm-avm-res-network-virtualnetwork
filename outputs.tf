@@ -1,25 +1,21 @@
-output "vnet_address_space" {
-  description = "The address space of the newly created vNet"
-  value       = azurerm_virtual_network.vnet.address_space
+
+
+output "subnets" {
+  value = {
+    for s in azurerm_subnet.subnet : s.name => {
+      id               = s.id
+      address_prefixes = s.address_prefixes
+      resource_group   = s.resource_group_name
+      virtual_network  = s.virtual_network_name
+
+    }
+  }
+  description = "Information about the subnets created in the module."
 }
 
-output "vnet_id" {
-  description = "The id of the newly created vNet"
-  value       = azurerm_virtual_network.vnet.id
-}
 
-output "vnet_location" {
-  description = "The location of the newly created vNet"
-  value       = azurerm_virtual_network.vnet.location
-}
 
-output "vnet_name" {
-  description = "The name of the newly created vNet"
-  value       = azurerm_virtual_network.vnet.name
-}
-
-//output subnet ids
-output "subnet_ids" {
-  description = "The ids of the newly created subnets"
-  value       = { for k, v in azurerm_subnet.subnet : k => v.id }
+output "vnet-resource" {
+  value       = azurerm_virtual_network.vnet
+  description = "The Azure Virtual Network resource"
 }

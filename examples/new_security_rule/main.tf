@@ -10,37 +10,6 @@ resource "azurerm_resource_group" "example" {
   name     = module.naming.resource_group.name_unique
 }
 
-// Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
-module "vnet" {
-  source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = var.enable_telemetry
-  resource_group_name = azurerm_resource_group.example.name
-  vnet_location       = var.vnet_location
-  address_space       = "10.0.0.0/16"
-  subnet_prefixes     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  subnet_names        = ["subnet1", "subnet2", "subnet3"]
-
-  // Associating the same Network Security Group to all subnets.
-  nsg_ids = {
-    subnet1 = azurerm_network_security_group.ssh.id
-    subnet2 = azurerm_network_security_group.ssh.id
-    subnet3 = azurerm_network_security_group.ssh.id
-  }
-
-  // Applying tags to the virtual network.
-  tags = {
-    environment = "dev"
-    costcenter  = "it"
-  }
-}
-
-// Fetching the public IP address of the Terraform executor.
-data "curl" "public_ip" {
-  http_method = "GET"
-  uri         = "https://api.ipify.org?format=json"
-}
-
 // Creating a Network Security Group with a rule allowing SSH access from the executor's IP address.
 resource "azurerm_network_security_group" "ssh" {
   location            = azurerm_resource_group.example.location
@@ -59,3 +28,36 @@ resource "azurerm_network_security_group" "ssh" {
     source_port_range          = "*"
   }
 }
+
+
+locals {
+  subnets = {
+    for i in range(3) :
+    "subnet${i}" => {
+      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+      network_security_group = {
+        id = azurerm_network_security_group.ssh.id
+      }
+    }
+  }
+  virtual_network_address_space = "10.0.0.0/16"
+}
+
+// Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
+module "vnet" {
+  source                        = "../../"
+  resource_group_name           = azurerm_resource_group.example.name
+  virtual_network_address_space = ["10.0.0.0/16"]
+  subnets                       = local.subnets
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "azure-subnets-vnet"
+
+}
+
+// Fetching the public IP address of the Terraform executor.
+data "curl" "public_ip" {
+  http_method = "GET"
+  uri         = "http://api.ipify.org?format=json"
+}
+
+

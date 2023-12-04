@@ -1,77 +1,58 @@
 # Azure Generic vNet Module
-
 # Creating a Virtual Network with the specified configurations.
 resource "azurerm_virtual_network" "vnet" {
-  address_space       = length(var.address_spaces) == 0 ? [var.address_space] : var.address_spaces
+  address_space       = var.virtual_network_address_space
   location            = var.vnet_location
-  name                = var.name
+  name                = var.vnet_name
   resource_group_name = var.resource_group_name
-  dns_servers         = var.dns_servers
   tags                = var.tags
 
   # Configuring DDoS protection plan if provided.
   dynamic "ddos_protection_plan" {
-    for_each = var.ddos_protection_plan != null ? [var.ddos_protection_plan] : []
+    for_each = var.virtual_network_ddos_protection_plan != null ? [var.virtual_network_ddos_protection_plan] : []
+
     content {
       enable = ddos_protection_plan.value.enable
       id     = ddos_protection_plan.value.id
     }
   }
+
+
 }
 
-# Creating Subnets within the Virtual Network.
-resource "azurerm_subnet" "subnet" {
-  for_each                                      = toset(var.subnet_names)
-  address_prefixes                              = [local.subnet_names_prefixes_map[each.value]]
-  name                                          = each.value
-  resource_group_name                           = var.resource_group_name
-  virtual_network_name                          = azurerm_virtual_network.vnet.name
-  private_endpoint_network_policies_enabled     = lookup(var.private_link_endpoint_network_policies_enabled, each.value, false)
-  private_link_service_network_policies_enabled = lookup(var.private_link_service_network_policies_enabled, each.value, false)
-  service_endpoints                             = lookup(var.subnet_service_endpoints, each.value, [])
+resource "azurerm_virtual_network_dns_servers" "vnet_dns" {
+  count = var.virtual_network_dns_servers == null ? 0 : 1
 
-  # Configuring Subnet Delegation if provided.
-  dynamic "delegation" {
-    for_each = lookup(var.subnet_delegation, each.value, [])
-    content {
-      name = delegation.value.name
-      service_delegation {
-        name    = delegation.value.service_delegation.name
-        actions = delegation.value.service_delegation.actions
-      }
-    }
-  }
+  virtual_network_id = azurerm_virtual_network.vnet.id
+  dns_servers        = var.virtual_network_dns_servers.dns_servers
 }
 
-# Creating a local map of subnet names to their IDs.
-locals {
-  azurerm_subnets_name_id_map = { for s in azurerm_subnet.subnet : s.name => s.id }
+
+
+resource "azurerm_virtual_network_peering" "vnet_peering" {
+  for_each = var.vnet_peering_config
+
+  name                      = "peering-${each.key}"
+  resource_group_name       = var.resource_group_name           # Assuming you have a variable for the resource group
+  virtual_network_name      = azurerm_virtual_network.vnet.name # Reference to your virtual network
+  remote_virtual_network_id = each.value.remote_vnet_id
+  allow_forwarded_traffic   = each.value.allow_forwarded_traffic
+  allow_gateway_transit     = each.value.allow_gateway_transit
+  use_remote_gateways       = each.value.use_remote_gateways
 }
 
-# Associating Network Security Groups to Subnets.
-resource "azurerm_subnet_network_security_group_association" "vnet" {
-  for_each                  = var.nsg_ids
-  network_security_group_id = each.value
-  subnet_id                 = local.azurerm_subnets_name_id_map[each.key]
-}
 
-# Associating Route Tables to Subnets.
-resource "azurerm_subnet_route_table_association" "vnet" {
-  for_each       = var.route_tables_ids
-  route_table_id = each.value
-  subnet_id      = local.azurerm_subnets_name_id_map[each.key]
-}
 
 # Applying Management Lock to the Virtual Network if specified.
 resource "azurerm_management_lock" "this" {
   count      = var.lock.kind != "None" ? 1 : 0
-  name       = coalesce(var.lock.name, "lock-${var.name}")
+  name       = coalesce(var.lock.name, "lock-${var.vnet_name}")
   scope      = azurerm_virtual_network.vnet.id
   lock_level = var.lock.kind
 }
 
 # Assigning Roles to the Virtual Network based on the provided configurations.
-resource "azurerm_role_assignment" "this" {
+resource "azurerm_role_assignment" "vnet-level" {
   for_each                               = var.role_assignments
   scope                                  = azurerm_virtual_network.vnet.id
   role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
@@ -82,3 +63,39 @@ resource "azurerm_role_assignment" "this" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
 }
+
+# Create diagonostic settings for the virtual network
+resource "azurerm_monitor_diagnostic_setting" "example" {
+  # Filter out entries that don't have any of the required attributes set
+  for_each = {
+    for key, value in var.diagnostic_settings : key => value
+    if value.workspace_resource_id != null || value.storage_account_resource_id != null || value.event_hub_authorization_rule_resource_id != null
+  }
+
+  name               = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
+  target_resource_id = azurerm_virtual_network.vnet.id
+
+  log_analytics_workspace_id     = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null
+  storage_account_id             = each.value.storage_account_resource_id != null ? each.value.storage_account_resource_id : null
+  eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
+  eventhub_name                  = each.value.event_hub_name != null ? each.value.event_hub_name : null
+
+  dynamic "enabled_log" {
+    for_each = each.value.log_categories_and_groups
+    content {
+      category = enabled_log.value
+      retention_policy {
+        enabled = false
+      }
+    }
+  }
+
+  dynamic "metric" {
+    for_each = each.value.metric_categories
+    content {
+      category = metric.value
+      enabled  = true
+    }
+  }
+}
+
