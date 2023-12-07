@@ -11,7 +11,7 @@ module "azure_vnet" {
 
   address_spaces = ["10.0.0.0/16"]
   vnet_location  = "East US"
-  name           = "myVNet"
+  vnet_name           = "myVNet"
   resource_group_name = "myResourceGroup"
   // ... other required variables ...
 }
