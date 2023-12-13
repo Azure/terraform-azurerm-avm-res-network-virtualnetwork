@@ -1,6 +1,10 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Verified Module for Azure Virtual Networks
 
+
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Average time to resolve an issue") [![Percentage of issues still open](http://isitmaintained.com/badge/open/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Percentage of issues still open")
+
+
 This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
