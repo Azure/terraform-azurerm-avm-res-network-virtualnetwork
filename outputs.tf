@@ -15,7 +15,7 @@ output "subnets" {
 
 
 
-output "vnet-resource" {
+output "vnet_resource" {
   value       = azurerm_virtual_network.vnet
   description = "The Azure Virtual Network resource"
 }
