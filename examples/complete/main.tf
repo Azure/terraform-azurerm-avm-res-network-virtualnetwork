@@ -116,7 +116,7 @@ module "vnet-2" {
   // Configuring a one-way vnet peering from vnet-2 to vnet-1.
   vnet_peering_config = {
     peering1 = {
-      remote_vnet_id          = module.vnet-1.vnet-resource.id
+      remote_vnet_id          = module.vnet-1.vnet_resource.id
       allow_forwarded_traffic = true
       allow_gateway_transit   = false
       use_remote_gateways     = false
