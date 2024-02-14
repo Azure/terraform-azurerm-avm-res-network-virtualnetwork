@@ -1,10 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Verified Module for Azure Virtual Networks
 
-
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Average time to resolve an issue") [![Percentage of issues still open](http://isitmaintained.com/badge/open/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Percentage of issues still open")
-
-
 This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
@@ -15,7 +11,7 @@ module "azure_vnet" {
 
   address_spaces = ["10.0.0.0/16"]
   vnet_location  = "East US"
-  vnet_name           = "myVNet"
+  name           = "myVNet"
   resource_group_name = "myResourceGroup"
   // ... other required variables ...
 }
@@ -36,9 +32,9 @@ The following requirements are needed by this module:
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (3.74.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0)
 
-- <a name="provider_random"></a> [random](#provider\_random) (3.5.1)
+- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
 
@@ -67,51 +63,70 @@ The following input variables are required:
 
 Description: The name of the resource group where the resources will be deployed.
 
+Example usage:  
+resource\_group\_name = "myResourceGroup"
+
 Type: `string`
 
 ### <a name="input_subnets"></a> [subnets](#input\_subnets)
 
-Description: Subnets to create
+Description:   Subnets to create. Specifies the configuration for each subnet.
+
+  Example usage:  
+  subnets = {  
+  subnet1 = {  
+    address\_prefixes = ["10.0.1.0/24"]  
+    nat\_gateway = null  
+    network\_security\_group = null  
+    route\_table = null  
+    service\_endpoints = ["Microsoft.Storage"]
+  }
 
 Type:
 
 ```hcl
-map(object(
-    {
-      address_prefixes = list(string) # (Required) The address prefixes to use for the subnet.
-      nat_gateway = optional(object({
-        id = string # (Required) The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
-      }))
-      network_security_group = optional(object({
-        id = string # (Required) The ID of the Network Security Group which should be associated with the Subnet. Changing this forces a new association to be created.
-      }))
-      private_endpoint_network_policies_enabled     = optional(bool, true) # (Optional) Enable or Disable network policies for the private endpoint on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
-      private_link_service_network_policies_enabled = optional(bool, true) # (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
-      route_table = optional(object({
-        id = string # (Required) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
-      }))
-      service_endpoints           = optional(set(string)) # (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage` and `Microsoft.Web`.
-      service_endpoint_policy_ids = optional(set(string)) # (Optional) The list of IDs of Service Endpoint Policies to associate with the subnet.
-      delegations = optional(list(
-        object(
-          {
-            name = string # (Required) A name for this delegation.
-            service_delegation = object({
-              name    = string                 # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
-              actions = optional(list(string)) # (Optional) A list of Actions which should be delegated. This list is specific to the service to delegate to. Possible values include `Microsoft.Network/networkinterfaces/*`, `Microsoft.Network/virtualNetworks/subnets/action`, `Microsoft.Network/virtualNetworks/subnets/join/action`, `Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action` and `Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action`.
-            })
-          }
-        )
-      ))
-    }
-  ))
+map(object({
+    address_prefixes = list(string)
+    nat_gateway = optional(object({
+      id = string
+    }))
+    network_security_group = optional(object({
+      id = string
+    }))
+    private_endpoint_network_policies_enabled     = optional(bool, true)
+    private_link_service_network_policies_enabled = optional(bool, true)
+    route_table = optional(object({
+      id = string
+    }))
+    service_endpoints           = optional(set(string))
+    service_endpoint_policy_ids = optional(set(string))
+    delegations = optional(list(object({
+      name = string
+      service_delegation = object({
+        name    = string
+        actions = optional(list(string))
+      })
+    })))
+  }))
 ```
 
 ### <a name="input_virtual_network_address_space"></a> [virtual\_network\_address\_space](#input\_virtual\_network\_address\_space)
 
-Description:  (Required) The address space that is used the virtual network. You can supply more than one address space.
+Description:   The address space used by the virtual network. You can supply more than one address space.  
+  Example usage:
+
+  virtual\_network\_address\_space = ["10.0.0.0/16", "10.1.0.0/16"]
 
 Type: `list(string)`
+
+### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
+
+Description:   The location/region where the virtual network is created. Changing this forces a new resource to be created
+
+ Example usage:  
+ vnet\_location = "eastus"
+
+Type: `string`
 
 ## Optional Inputs
 
@@ -119,7 +134,15 @@ The following input variables are optional (have default values):
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
-Description: n/a
+Description:   A map of parameters required to deploy diagnostic settings
+
+  Example usage:  
+ diagnostic\_settings = {  
+  setting1 = {  
+    log\_analytics\_destination\_type = "Dedicated"  
+    workspace\_resource\_id = "logAnalyticsWorkspaceResourceId"
+  }
+}
 
 Type:
 
@@ -141,9 +164,12 @@ Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see https://aka.ms/avm/telemetry.  
+Description: Controls whether or not telemetry is enabled for the module.   
+For more information, see https://aka.ms/avm/telemetry.  
 If it is set to false, then no telemetry will be collected.
+
+Example usage:  
+enable\_telemetry = false
 
 Type: `bool`
 
@@ -151,7 +177,10 @@ Default: `true`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description: The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+Description:   The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.  
+  Example usage:  
+  name = "test-lock"  
+  kind = "ReadOnly"
 
 Type:
 
@@ -167,7 +196,15 @@ Default: `{}`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description: n/a
+Description:   A map of parameters required to deploy role assignments
+
+ Example usage:  
+ role\_assignments = {  
+  assignment1 = {  
+    role\_definition\_id\_or\_name = "Contributor"  
+    principal\_id = "servicePrincipalId"
+  }
+}
 
 Type:
 
@@ -187,7 +224,12 @@ Default: `{}`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: The tags to associate with your network and subnets.
+Description:   The tags to associate with your network and subnets.  
+ Example usage:  
+ tags = {  
+  environment = "production"  
+  project = "myProject"
+}
 
 Type: `map(any)`
 
@@ -195,7 +237,9 @@ Default: `{}`
 
 ### <a name="input_tracing_tags_enabled"></a> [tracing\_tags\_enabled](#input\_tracing\_tags\_enabled)
 
-Description: Whether enable tracing tags that generated by BridgeCrew Yor.
+Description:   Whether to enable tracing tags generated by BridgeCrew Yor  
+  Example usage:  
+  tracing\_tags\_enabled = true
 
 Type: `bool`
 
@@ -203,7 +247,10 @@ Default: `false`
 
 ### <a name="input_tracing_tags_prefix"></a> [tracing\_tags\_prefix](#input\_tracing\_tags\_prefix)
 
-Description: Default prefix for generated tracing tags.
+Description:   Default prefix for generated tracing tags.
+
+ Example usage:  
+ tracing\_tags\_prefix = "customPrefix\_"
 
 Type: `string`
 
@@ -211,14 +258,20 @@ Default: `"avm_"`
 
 ### <a name="input_virtual_network_ddos_protection_plan"></a> [virtual\_network\_ddos\_protection\_plan](#input\_virtual\_network\_ddos\_protection\_plan)
 
-Description: AzureNetwork DDoS Protection Plan.
+Description:   AzureNetwork DDoS Protection Plan.
+
+Example usage:  
+virtual\_network\_ddos\_protection\_plan = {  
+  id = "ddosProtectionPlanId"  
+  enable = true
+}
 
 Type:
 
 ```hcl
 object({
-    id     = string #  (Required) The ID of DDoS Protection Plan.
-    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+    id     = string
+    enable = bool
   })
 ```
 
@@ -226,7 +279,12 @@ Default: `null`
 
 ### <a name="input_virtual_network_dns_servers"></a> [virtual\_network\_dns\_servers](#input\_virtual\_network\_dns\_servers)
 
-Description: (Optional) List of IP addresses of DNS servers
+Description:   (Optional) List of IP addresses of DNS servers.
+
+ Example usage:  
+ virtual\_network\_dns\_servers = {  
+ dns\_servers = ["8.8.8.8", "8.8.4.4"]
+}
 
 Type:
 
@@ -238,17 +296,12 @@ object({
 
 Default: `null`
 
-### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
-
-Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name)
 
 Description: The name of the virtual network to create.
+
+Example usage:  
+vnet\_name = "myVnet"
 
 Type: `string`
 
@@ -256,7 +309,16 @@ Default: `"acctvnet"`
 
 ### <a name="input_vnet_peering_config"></a> [vnet\_peering\_config](#input\_vnet\_peering\_config)
 
-Description: A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+Description:   A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage."  
+  Example usage:  
+  vnet\_peering\_config = {  
+  peering1 = {  
+    remote\_vnet\_id          = "remoteVnetId"  
+    allow\_forwarded\_traffic = true  
+    allow\_gateway\_transit   = false  
+    use\_remote\_gateways     = false
+  }
+}
 
 Type:
 
@@ -279,7 +341,7 @@ The following outputs are exported:
 
 Description: Information about the subnets created in the module.
 
-### <a name="output_vnet-resource"></a> [vnet-resource](#output\_vnet-resource)
+### <a name="output_vnet_resource"></a> [vnet\_resource](#output\_vnet\_resource)
 
 Description: The Azure Virtual Network resource
 

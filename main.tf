@@ -39,6 +39,13 @@ resource "azurerm_virtual_network_peering" "vnet_peering" {
   allow_forwarded_traffic   = each.value.allow_forwarded_traffic
   allow_gateway_transit     = each.value.allow_gateway_transit
   use_remote_gateways       = each.value.use_remote_gateways
+
+  timeouts {
+    create = "60m"
+    update = "60m"
+  }
+
+  depends_on = [azurerm_virtual_network.vnet]
 }
 
 

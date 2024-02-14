@@ -127,5 +127,6 @@ module "vnet-2" {
   vnet_location                 = azurerm_resource_group.example.location
   vnet_name                     = "accttest-vnet"
 
+  depends_on = [module.vnet-2.vNet, module.vnet-1.vNet]
 
 }
