@@ -109,6 +109,7 @@ variable "subnets" {
     service_endpoints = ["Microsoft.Storage"]
   }
   DESCRIPTION
+  default     = {}
 }
 
 variable "virtual_network_ddos_protection_plan" {

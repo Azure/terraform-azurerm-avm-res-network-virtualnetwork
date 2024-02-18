@@ -68,48 +68,6 @@ resource\_group\_name = "myResourceGroup"
 
 Type: `string`
 
-### <a name="input_subnets"></a> [subnets](#input\_subnets)
-
-Description:   Subnets to create. Specifies the configuration for each subnet.
-
-  Example usage:  
-  subnets = {  
-  subnet1 = {  
-    address\_prefixes = ["10.0.1.0/24"]  
-    nat\_gateway = null  
-    network\_security\_group = null  
-    route\_table = null  
-    service\_endpoints = ["Microsoft.Storage"]
-  }
-
-Type:
-
-```hcl
-map(object({
-    address_prefixes = list(string)
-    nat_gateway = optional(object({
-      id = string
-    }))
-    network_security_group = optional(object({
-      id = string
-    }))
-    private_endpoint_network_policies_enabled     = optional(bool, true)
-    private_link_service_network_policies_enabled = optional(bool, true)
-    route_table = optional(object({
-      id = string
-    }))
-    service_endpoints           = optional(set(string))
-    service_endpoint_policy_ids = optional(set(string))
-    delegations = optional(list(object({
-      name = string
-      service_delegation = object({
-        name    = string
-        actions = optional(list(string))
-      })
-    })))
-  }))
-```
-
 ### <a name="input_virtual_network_address_space"></a> [virtual\_network\_address\_space](#input\_virtual\_network\_address\_space)
 
 Description:   The address space used by the virtual network. You can supply more than one address space.  
@@ -217,6 +175,50 @@ map(object({
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+  }))
+```
+
+Default: `{}`
+
+### <a name="input_subnets"></a> [subnets](#input\_subnets)
+
+Description:   Subnets to create. Specifies the configuration for each subnet.
+
+  Example usage:  
+  subnets = {  
+  subnet1 = {  
+    address\_prefixes = ["10.0.1.0/24"]  
+    nat\_gateway = null  
+    network\_security\_group = null  
+    route\_table = null  
+    service\_endpoints = ["Microsoft.Storage"]
+  }
+
+Type:
+
+```hcl
+map(object({
+    address_prefixes = list(string)
+    nat_gateway = optional(object({
+      id = string
+    }))
+    network_security_group = optional(object({
+      id = string
+    }))
+    private_endpoint_network_policies_enabled     = optional(bool, true)
+    private_link_service_network_policies_enabled = optional(bool, true)
+    route_table = optional(object({
+      id = string
+    }))
+    service_endpoints           = optional(set(string))
+    service_endpoint_policy_ids = optional(set(string))
+    delegations = optional(list(object({
+      name = string
+      service_delegation = object({
+        name    = string
+        actions = optional(list(string))
+      })
+    })))
   }))
 ```
 
