@@ -1,4 +1,4 @@
-// Controls whether or not telemetry is enabled for the module.
+#Controls whether or not telemetry is enabled for the module.
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -9,7 +9,7 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
-// Specifies the location of the resource group.
+#Specifies the location of the resource group.
 variable "rg_location" {
   type        = string
   default     = "westus"
@@ -19,7 +19,7 @@ The default value is "westus".
 DESCRIPTION
 }
 
-// Specifies the location of the virtual network.
+#Specifies the location of the virtual network.
 variable "vnet_location" {
   type        = string
   default     = "westus"
