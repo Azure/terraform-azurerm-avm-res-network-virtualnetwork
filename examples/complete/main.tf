@@ -22,7 +22,7 @@ resource "azurerm_network_security_group" "nsg1" {
   resource_group_name = azurerm_resource_group.example.name
 }
 
-// Creating a Route Table with a unique name in the specified location.
+# // Creating a Route Table with a unique name in the specified location.
 resource "azurerm_route_table" "rt1" {
   location            = var.vnet_location
   name                = "test-${random_id.rg_name.hex}-rt"

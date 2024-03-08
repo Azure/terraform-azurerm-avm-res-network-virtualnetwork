@@ -1,49 +1,38 @@
-terraform {
-  required_version = ">= 1.3.0"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
-}
-
-
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
-}
-
-# This allows us to randomize the region for the resource group.
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
-}
-## End of section to provide a random Azure region for the resource group
-
-# This ensures we have unique CAF compliant names for our resources.
+# Importing the Azure naming module to ensure resources have unique CAF compliant names.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 }
 
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+# Creating a resource group with a unique name in the specified location.
+resource "azurerm_resource_group" "example" {
+  location = var.rg_location
   name     = module.naming.resource_group.name_unique
 }
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
+locals {
+  subnets = {
+    for i in range(3) : "subnet${i}" => {
+      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+    }
+  }
+  virtual_network_address_space = "10.0.0.0/16"
+}
+
+# Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
+module "vnet" {
+  source              = "../../"
+  vnet_name           = module.naming.virtual_network.name
+  enable_telemetry    = true
+  resource_group_name = azurerm_resource_group.example.name
+  vnet_location       = var.vnet_location
+  subnets             = local.subnets
+
+
+  virtual_network_dns_servers = {
+    dns_servers = ["8.8.8.8"]
+  }
+
+  virtual_network_address_space = ["10.0.0.0/16"]
+
+}
