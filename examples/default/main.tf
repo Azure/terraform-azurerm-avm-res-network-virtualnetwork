@@ -17,7 +17,6 @@ locals {
     }
   }
   virtual_network_address_space = "10.0.0.0/16"
-
 }
 
 # Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.

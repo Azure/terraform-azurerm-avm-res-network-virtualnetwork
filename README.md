@@ -1,10 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Verified Module for Azure Virtual Networks
 
-
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Average time to resolve an issue") [![Percentage of issues still open](http://isitmaintained.com/badge/open/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Percentage of issues still open")
-
-
 This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
@@ -15,7 +11,7 @@ module "azure_vnet" {
 
   address_spaces = ["10.0.0.0/16"]
   vnet_location  = "East US"
-  vnet_name           = "myVNet"
+  name           = "myVNet"
   resource_group_name = "myResourceGroup"
   // ... other required variables ...
 }
@@ -36,9 +32,9 @@ The following requirements are needed by this module:
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (3.74.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0)
 
-- <a name="provider_random"></a> [random](#provider\_random) (3.5.1)
+- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
 
@@ -279,7 +275,7 @@ The following outputs are exported:
 
 Description: Information about the subnets created in the module.
 
-### <a name="output_vnet-resource"></a> [vnet-resource](#output\_vnet-resource)
+### <a name="output_vnet_resource"></a> [vnet\_resource](#output\_vnet\_resource)
 
 Description: The Azure Virtual Network resource
 
@@ -291,8 +287,4 @@ No modules.
 ## Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
-
-## AVM Versioning Notice
-
-Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
 <!-- END_TF_DOCS -->
