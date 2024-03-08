@@ -57,7 +57,7 @@ resource "azurerm_subnet_nat_gateway_association" "nat_gw" {
 }
 
 #Required AVM Shared interfaces 
-resource "azurerm_role_assignment" "subnet-level" {
+resource "azurerm_role_assignment" "subnet_level" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
