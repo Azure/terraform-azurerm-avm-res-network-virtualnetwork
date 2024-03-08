@@ -136,7 +136,7 @@ The tags to associate with your network and subnets.
 DESCRIPTION
 }
 
-//required AVM interfaces
+#required AVM interfaces
 
 variable "diagnostic_settings" {
   type = map(object({
