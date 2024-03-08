@@ -51,7 +51,7 @@ resource "azurerm_management_lock" "this" {
 }
 
 # Assigning Roles to the Virtual Network based on the provided configurations.
-resource "azurerm_role_assignment" "vnet-level" {
+resource "azurerm_role_assignment" "vnet_level" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
