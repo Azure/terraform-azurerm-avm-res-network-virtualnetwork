@@ -1,5 +1,3 @@
-
-
 #Specifies the location of the resource group.
 variable "rg_location" {
   type        = string

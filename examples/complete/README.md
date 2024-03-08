@@ -3,6 +3,140 @@
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
+```hcl
+#Importing the Azure naming module to ensure resources have unique CAF compliant names.
+module "naming" {
+  source  = "Azure/naming/azurerm"
+  version = "0.3.0"
+}
+
+#Generating a random ID to be used for creating unique resource names.
+resource "random_id" "rg_name" {
+  byte_length = 8
+}
+
+#Creating a resource group with a unique name in the specified location.
+resource "azurerm_resource_group" "example" {
+  location = var.rg_location
+  name     = module.naming.resource_group.name_unique
+}
+
+#Creating a Network Security Group with a unique name in the specified location.
+resource "azurerm_network_security_group" "nsg1" {
+  location            = var.vnet_location
+  name                = "test-${random_id.rg_name.hex}-nsg"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Creating a Route Table with a unique name in the specified location.
+resource "azurerm_route_table" "rt1" {
+  location            = var.vnet_location
+  name                = "test-${random_id.rg_name.hex}-rt"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Creating a DDoS Protection Plan in the specified location.
+resource "azurerm_network_ddos_protection_plan" "example" {
+  location            = var.vnet_location
+  name                = "example-protection-plan"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Creating a NAT Gateway in the specified location.
+resource "azurerm_nat_gateway" "example" {
+  location            = var.vnet_location
+  name                = "example-natgateway"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Defining the first virtual network (vnet-1) with its subnets and settings.
+module "vnet_1" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.example.name
+
+  subnets = {
+    subnet0 = {
+      address_prefixes = ["192.168.0.0/16"]
+    }
+  }
+
+  virtual_network_address_space = ["192.168.0.0/16"]
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "accttest-vnet-peer"
+
+
+}
+
+#Defining the second virtual network (vnet-2) with its subnets and settings.
+module "vnet_2" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.example.name
+
+  subnets = {
+    subnet0 = {
+      address_prefixes                          = ["10.0.0.0/24"]
+      private_endpoint_network_policies_enabled = false
+      service_endpoints                         = ["Microsoft.Storage", "Microsoft.Sql"]
+      delegations = [
+        {
+          name = "Microsoft.Sql.managedInstances"
+          service_delegation = {
+            name = "Microsoft.Sql/managedInstances"
+            actions = [
+              "Microsoft.Network/virtualNetworks/subnets/join/action",
+              "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action",
+              "Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action",
+            ]
+          }
+        }
+      ]
+    }
+    subnet1 = {
+      address_prefixes                          = ["10.0.1.0/24"]
+      private_endpoint_network_policies_enabled = false
+      service_endpoints                         = ["Microsoft.AzureActiveDirectory"]
+    }
+    subnet2 = {
+      address_prefixes = ["10.0.2.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
+      network_security_group = {
+        id = azurerm_network_security_group.nsg1.id
+      }
+      route_table = {
+        id = azurerm_route_table.rt1.id
+      }
+    }
+  }
+
+  #Specifying DNS servers and DDoS protection plan for vnet-2.
+  virtual_network_dns_servers = {
+    dns_servers = ["8.8.8.8"]
+  }
+  virtual_network_ddos_protection_plan = {
+    id     = azurerm_network_ddos_protection_plan.example.id
+    enable = true
+  }
+
+  #Configuring a one-way vnet peering from vnet-2 to vnet-1.
+  vnet_peering_config = {
+    peering1 = {
+      remote_vnet_id          = module.vnet-1.vnet_resource.id
+      allow_forwarded_traffic = true
+      allow_gateway_transit   = false
+      use_remote_gateways     = false
+    }
+  }
+
+  virtual_network_address_space = ["10.0.0.0/16"]
+  vnet_location                 = azurerm_resource_group.example.location
+  vnet_name                     = "accttest-vnet"
+
+
+}
+```
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -12,13 +146,15 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
 
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
+
 ## Providers
 
 The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
 
-- <a name="provider_random"></a> [random](#provider\_random)
+- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
 
@@ -39,16 +175,6 @@ No required inputs.
 ## Optional Inputs
 
 The following input variables are optional (have default values):
-
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information, see https://aka.ms/avm/telemetryinfo.  
-If it is set to false, then no telemetry will be collected.
-
-Type: `bool`
-
-Default: `true`
 
 ### <a name="input_rg_location"></a> [rg\_location](#input\_rg\_location)
 
@@ -82,13 +208,13 @@ Source: Azure/naming/azurerm
 
 Version: 0.3.0
 
-### <a name="module_vnet-1"></a> [vnet-1](#module\_vnet-1)
+### <a name="module_vnet_1"></a> [vnet\_1](#module\_vnet\_1)
 
 Source: ../../
 
 Version:
 
-### <a name="module_vnet-2"></a> [vnet-2](#module\_vnet-2)
+### <a name="module_vnet_2"></a> [vnet\_2](#module\_vnet\_2)
 
 Source: ../../
 
