@@ -70,4 +70,8 @@ runs:
         if [ "$MODVERMAJOR" -eq "$RELVERMAJOR" ] && [ "$MODVERMINOR" -eq "$RELVERMINOR" ] && [ "$MODVERPATCH" -lt "$RELVERPATCH" ]; then
           echo "Module version ${{ env.MODULE_VERSION }} is less than latest release ${{ env.LATEST_RELEASE }}"
           exit 1
+<<<<<<< HEAD
         fi
+=======
+        fi
+>>>>>>> template/main

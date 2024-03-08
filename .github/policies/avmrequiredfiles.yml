@@ -15,4 +15,9 @@ configuration:
     prTitle: "feat: add AVM mandatory file(s) to this repo"
     prBody: |
       This repository needs the standard workflow and policy files to ensure compliance.
+<<<<<<< HEAD
     file:
+=======
+    file:
+
+>>>>>>> template/main

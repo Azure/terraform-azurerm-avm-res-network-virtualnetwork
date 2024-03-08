@@ -44,4 +44,8 @@ runs:
       run: terraform destroy -auto-approve
       working-directory: examples/${{ inputs.example }}
       shell: bash
+<<<<<<< HEAD
       if: always()
+=======
+      if: always()
+>>>>>>> template/main

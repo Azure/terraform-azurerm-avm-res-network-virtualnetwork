@@ -9,6 +9,7 @@ inputs:
 runs:
   using: composite
   steps:
+<<<<<<< HEAD
     - uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: ">=1.5.0"
@@ -40,3 +41,30 @@ runs:
     - name: tflint
       run: tflint
       shell: bash
+=======
+
+    - name: terraform fmt check
+      shell: bash
+      run: |
+        docker run --rm -v $(pwd):/src -w /src mcr.microsoft.com/azterraform make tffmtcheck
+
+    - name: terraform validate
+      shell: bash
+      run: |
+        docker run --rm -v $(pwd):/src -w /src mcr.microsoft.com/azterraform make tfvalidatecheck
+
+    - name: terrafmt check
+      shell: bash
+      run: |
+        docker run --rm -v $(pwd):/src -w /src mcr.microsoft.com/azterraform make terrafmtcheck
+
+    - name: tflint
+      shell: bash
+      run: |
+        docker run --rm -v $(pwd):/src -w /src mcr.microsoft.com/azterraform make tflint
+
+    - name: tfsec
+      shell: bash
+      run: |
+        echo "Bypass tfsec for now"
+>>>>>>> template/main

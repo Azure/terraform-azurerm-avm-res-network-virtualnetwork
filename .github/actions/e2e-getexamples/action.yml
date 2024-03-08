@@ -31,4 +31,8 @@ runs:
         # Get the examples
         echo examples="$(jsonls -d)" >> "$GITHUB_OUTPUT"
       working-directory: examples
+<<<<<<< HEAD
       shell: bash
+=======
+      shell: bash
+>>>>>>> template/main

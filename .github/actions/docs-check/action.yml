@@ -4,6 +4,7 @@ description: Checks that documentation has been updated on PR
 runs:
   using: composite
   steps:
+<<<<<<< HEAD
     - name: setup go
       uses: actions/setup-go@v4
       with:
@@ -28,10 +29,17 @@ runs:
         terraform fmt -recursive
         echo "==> Fixing embedded Terraform with terrafmt..."
         find . | egrep ".md|.tf" | grep -v README.md | sort | while read f; do terrafmt fmt $f; done
+=======
+    - name: fmt check
+      shell: bash
+      run: |
+        docker run --rm -v $(pwd):/src -w /src mcr.microsoft.com/azterraform make fmtcheck
+>>>>>>> template/main
 
     - name: docs check
       shell: bash
       run: |
+<<<<<<< HEAD
         echo "==> Generating module documentation..."
         terraform-docs -c .terraform-docs.yml .
         echo "==> Generating examples documentation..."
@@ -50,3 +58,6 @@ runs:
           echo "Run 'make fmt && make docs' locally and commit the changes to fix."
           exit 1
         fi
+=======
+        docker run --rm -v $(pwd):/src -w /src mcr.microsoft.com/azterraform make docscheck
+>>>>>>> template/main
