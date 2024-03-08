@@ -11,8 +11,6 @@ configuration:
       allowsForcePushes: false
       allowsDeletions: false
       requiresLinearHistory: true
-<<<<<<< HEAD
       requireCodeOwnersReview: true
-=======
-      requireCodeOwnersReview: true
->>>>>>> template/main
+
+
