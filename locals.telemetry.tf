@@ -1,9 +1,6 @@
 locals {
-
   module_name = "CHANGEME"
-
   module_type = "res"
-
   telem_arm_deployment_name = substr(
     format(
       "%s.%s.%s.v%s.%s",
@@ -16,7 +13,6 @@ locals {
     0,
     64
   )
-
   telem_arm_template_content = jsonencode({
     "$schema" : "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion" : "1.0.0.0",
