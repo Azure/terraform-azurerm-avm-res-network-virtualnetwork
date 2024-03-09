@@ -1,5 +1,5 @@
 locals {
-  module_name = "CHANGEME"
+  module_name = "avm-res-network-virtualnetwork"
   module_type = "res"
   telem_arm_deployment_name = substr(
     format(
