@@ -94,28 +94,9 @@ No required inputs.
 
 The following input variables are optional (have default values):
 
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information, see https://aka.ms/avm/telemetryinfo.  
-If it is set to false, then no telemetry will be collected.
-
-Type: `bool`
-
-Default: `true`
-
 ### <a name="input_rg_location"></a> [rg\_location](#input\_rg\_location)
 
 Description: This variable defines the Azure region where the resource group will be created.  
-The default value is "westus".
-
-Type: `string`
-
-Default: `"westus"`
-
-### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
-
-Description: This variable defines the Azure region where the virtual network will be created.  
 The default value is "westus".
 
 Type: `string`
