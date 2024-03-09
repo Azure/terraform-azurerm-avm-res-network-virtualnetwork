@@ -74,8 +74,6 @@ data "curl" "public_ip" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>=1.2)
-
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>=3.11.0, <4.0)
 
 - <a name="requirement_curl"></a> [curl](#requirement\_curl) (1.0.2)
