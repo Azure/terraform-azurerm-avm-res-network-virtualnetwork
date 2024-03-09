@@ -61,11 +61,11 @@ variable "diagnostic_settings" {
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
   }))
-  default  = {}
-  nullable = false
+  default     = {}
   description = <<DESCRIPTION
   Map of diagnostic setting configurations
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
@@ -110,11 +110,10 @@ variable "role_assignments" {
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
   }))
-  default = {}
+  default     = {}
   description = <<DESCRIPTION
   Map of configurations required to configure RBAC
   DESCRIPTION
-
 }
 
 variable "tags" {
