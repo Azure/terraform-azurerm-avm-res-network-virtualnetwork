@@ -13,7 +13,7 @@ terraform {
       source  = "anschoewe/curl"
       version = "1.0.2"
     }
-    
+
   }
 }
 provider "azurerm" {
