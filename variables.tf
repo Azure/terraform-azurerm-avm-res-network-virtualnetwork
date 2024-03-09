@@ -63,6 +63,9 @@ variable "diagnostic_settings" {
   }))
   default  = {}
   nullable = false
+  description = <<DESCRIPTION
+  Map of diagnostic setting configurations
+  DESCRIPTION
 
   validation {
     condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
@@ -108,6 +111,10 @@ variable "role_assignments" {
     delegated_managed_identity_resource_id = optional(string, null)
   }))
   default = {}
+  description = <<DESCRIPTION
+  Map of configurations required to configure RBAC
+  DESCRIPTION
+
 }
 
 variable "tags" {
