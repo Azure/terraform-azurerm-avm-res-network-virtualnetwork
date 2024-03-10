@@ -127,7 +127,15 @@ Default: `"westus"`
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id)
+
+Description: The resource ID of the virtual network.
+
+### <a name="output_vnet_name"></a> [vnet\_name](#output\_vnet\_name)
+
+Description: The name of the virtual network.
 
 ## Modules
 

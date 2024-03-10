@@ -277,6 +277,10 @@ The following outputs are exported:
 
 Description: Information about the subnets created in the module.
 
+### <a name="output_virtual_network_id"></a> [virtual\_network\_id](#output\_virtual\_network\_id)
+
+Description: The resource ID of the virtual network.
+
 ### <a name="output_vnet_resource"></a> [vnet\_resource](#output\_vnet\_resource)
 
 Description: The Azure Virtual Network resource

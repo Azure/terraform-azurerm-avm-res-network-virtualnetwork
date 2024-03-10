@@ -11,6 +11,11 @@ output "subnets" {
   }
 }
 
+output "virtual_network_id" {
+  description = "The resource ID of the virtual network."
+  value       = azurerm_virtual_network.vnet.id
+}
+
 output "vnet_resource" {
   description = "The Azure Virtual Network resource"
   value       = azurerm_virtual_network.vnet

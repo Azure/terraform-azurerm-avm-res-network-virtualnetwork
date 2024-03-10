@@ -27,15 +27,8 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.example.name
   vnet_location       = var.vnet_location
   subnets             = local.subnets
-
-
   virtual_network_dns_servers = {
     dns_servers = ["8.8.8.8"]
   }
-
   virtual_network_address_space = ["10.0.0.0/16"]
-
 }
-
-
-
