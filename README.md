@@ -107,6 +107,14 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
 Description: The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
@@ -122,6 +130,14 @@ object({
 ```
 
 Default: `{}`
+
+### <a name="input_name"></a> [name](#input\_name)
+
+Description: The name of the virtual network to create.
+
+Type: `string`
+
+Default: `"acctvnet"`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -235,22 +251,6 @@ object({
 ```
 
 Default: `null`
-
-### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
-
-Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name)
-
-Description: The name of the virtual network to create.
-
-Type: `string`
-
-Default: `"acctvnet"`
 
 ### <a name="input_vnet_peering_config"></a> [vnet\_peering\_config](#input\_vnet\_peering\_config)
 

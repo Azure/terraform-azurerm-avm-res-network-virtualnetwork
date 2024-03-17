@@ -50,6 +50,14 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
+variable "location" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+The location/region where the virtual network is created. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
 variable "lock" {
   type = object({
     name = optional(string, null)
@@ -65,6 +73,14 @@ variable "lock" {
     condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
     error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
   }
+}
+
+variable "name" {
+  type        = string
+  default     = "acctvnet"
+  description = <<DESCRIPTION
+The name of the virtual network to create.
+DESCRIPTION
 }
 
 variable "role_assignments" {
@@ -162,22 +178,6 @@ variable "virtual_network_dns_servers" {
   })
   default     = null
   description = "(Optional) List of IP addresses of DNS servers"
-}
-
-variable "vnet_location" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-The location/region where the virtual network is created. Changing this forces a new resource to be created.
-DESCRIPTION
-}
-
-variable "vnet_name" {
-  type        = string
-  default     = "acctvnet"
-  description = <<DESCRIPTION
-The name of the virtual network to create.
-DESCRIPTION
 }
 
 variable "vnet_peering_config" {

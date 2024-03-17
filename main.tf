@@ -2,8 +2,8 @@
 # Creating a Virtual Network with the specified configurations.
 resource "azurerm_virtual_network" "vnet" {
   address_space       = var.virtual_network_address_space
-  location            = var.vnet_location
-  name                = var.vnet_name
+  location            = var.location
+  name                = var.name
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
@@ -46,7 +46,7 @@ resource "azurerm_management_lock" "this" {
   count = var.lock.kind != "None" ? 1 : 0
 
   lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.vnet_name}")
+  name       = coalesce(var.lock.name, "lock-${var.name}")
   scope      = azurerm_virtual_network.vnet.id
 }
 

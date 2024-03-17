@@ -31,8 +31,8 @@ module "vnet" {
   resource_group_name           = azurerm_resource_group.example.name
   virtual_network_address_space = ["10.0.0.0/16"]
   subnets                       = local.subnets
-  vnet_location                 = azurerm_resource_group.example.location
-  vnet_name                     = "azure-subnets-vnet"
+  location                      = azurerm_resource_group.example.location
+  name                          = "azure-subnets-vnet"
 
 }
 

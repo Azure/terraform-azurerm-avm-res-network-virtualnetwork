@@ -61,8 +61,8 @@ module "vnet_1" {
   }
 
   virtual_network_address_space = ["192.168.0.0/16"]
-  vnet_location                 = azurerm_resource_group.example.location
-  vnet_name                     = "accttest-vnet-peer"
+  location                      = azurerm_resource_group.example.location
+  name                          = "accttest-vnet-peer"
 
 
 }
