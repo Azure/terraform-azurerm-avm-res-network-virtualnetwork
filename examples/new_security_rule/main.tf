@@ -1,16 +1,16 @@
-// Importing the Azure naming module to ensure resources have unique CAF compliant names.
+#Importing the Azure naming module to ensure resources have unique CAF compliant names.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.3.0"
 }
 
-// Creating a resource group with a unique name in the specified location.
+#Creating a resource group with a unique name in the specified location.
 resource "azurerm_resource_group" "example" {
   location = var.rg_location
   name     = module.naming.resource_group.name_unique
 }
 
-// Creating a Network Security Group with a rule allowing SSH access from the executor's IP address.
+#Creating a Network Security Group with a rule allowing SSH access from the executor's IP address.
 resource "azurerm_network_security_group" "ssh" {
   location            = azurerm_resource_group.example.location
   name                = module.naming.network_security_group.name
@@ -43,18 +43,18 @@ locals {
   virtual_network_address_space = "10.0.0.0/16"
 }
 
-// Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
+#Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
 module "vnet" {
   source                        = "../../"
   resource_group_name           = azurerm_resource_group.example.name
   virtual_network_address_space = ["10.0.0.0/16"]
   subnets                       = local.subnets
-  vnet_location                 = azurerm_resource_group.example.location
-  vnet_name                     = "azure-subnets-vnet"
+  location                      = azurerm_resource_group.example.location
+  name                          = "azure_subnets_vnet"
 
 }
 
-// Fetching the public IP address of the Terraform executor.
+#Fetching the public IP address of the Terraform executor.
 data "curl" "public_ip" {
   http_method = "GET"
   uri         = "http://api.ipify.org?format=json"

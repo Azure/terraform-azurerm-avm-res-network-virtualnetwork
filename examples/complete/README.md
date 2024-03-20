@@ -3,6 +3,71 @@
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
+```hcl
+#Importing the Azure naming module to ensure resources have unique CAF compliant names.
+module "naming" {
+  source  = "Azure/naming/azurerm"
+  version = "0.3.0"
+}
+
+#Generating a random ID to be used for creating unique resource names.
+resource "random_id" "rg_name" {
+  byte_length = 8
+}
+
+#Creating a resource group with a unique name in the specified location.
+resource "azurerm_resource_group" "example" {
+  location = var.rg_location
+  name     = module.naming.resource_group.name_unique
+}
+
+#Creating a Network Security Group with a unique name in the specified location.
+resource "azurerm_network_security_group" "nsg1" {
+  location            = var.vnet_location
+  name                = "test-${random_id.rg_name.hex}-nsg"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Creating a Route Table with a unique name in the specified location.
+resource "azurerm_route_table" "rt1" {
+  location            = var.vnet_location
+  name                = "test-${random_id.rg_name.hex}-rt"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Creating a DDoS Protection Plan in the specified location.
+resource "azurerm_network_ddos_protection_plan" "example" {
+  location            = var.vnet_location
+  name                = "example-protection-plan"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Creating a NAT Gateway in the specified location.
+resource "azurerm_nat_gateway" "example" {
+  location            = var.vnet_location
+  name                = "example-natgateway"
+  resource_group_name = azurerm_resource_group.example.name
+}
+
+#Defining the first virtual network (vnet-1) with its subnets and settings.
+module "vnet_1" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.example.name
+
+  subnets = {
+    subnet0 = {
+      address_prefixes = ["192.168.0.0/16"]
+    }
+  }
+
+  virtual_network_address_space = ["192.168.0.0/16"]
+  location                      = azurerm_resource_group.example.location
+  name                          = "accttest-vnet-peer"
+
+
+}
+```
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -12,13 +77,15 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
 
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
+
 ## Providers
 
 The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
 
-- <a name="provider_random"></a> [random](#provider\_random)
+- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
 
@@ -40,16 +107,6 @@ No required inputs.
 
 The following input variables are optional (have default values):
 
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information, see https://aka.ms/avm/telemetryinfo.  
-If it is set to false, then no telemetry will be collected.
-
-Type: `bool`
-
-Default: `true`
-
 ### <a name="input_rg_location"></a> [rg\_location](#input\_rg\_location)
 
 Description: This variable defines the Azure region where the resource group will be created.  
@@ -70,7 +127,15 @@ Default: `"westus"`
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id)
+
+Description: The resource ID of the virtual network.
+
+### <a name="output_vnet_name"></a> [vnet\_name](#output\_vnet\_name)
+
+Description: The name of the virtual network.
 
 ## Modules
 
@@ -82,13 +147,7 @@ Source: Azure/naming/azurerm
 
 Version: 0.3.0
 
-### <a name="module_vnet-1"></a> [vnet-1](#module\_vnet-1)
-
-Source: ../../
-
-Version:
-
-### <a name="module_vnet-2"></a> [vnet-2](#module\_vnet-2)
+### <a name="module_vnet_1"></a> [vnet\_1](#module\_vnet\_1)
 
 Source: ../../
 

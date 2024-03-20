@@ -1,25 +1,7 @@
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetry.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-}
-
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
 The name of the resource group where the resources will be deployed.
-DESCRIPTION
-}
-
-variable "vnet_name" {
-  type        = string
-  default     = "acctvnet"
-  description = <<DESCRIPTION
-The name of the virtual network to create.
 DESCRIPTION
 }
 
@@ -34,23 +16,89 @@ variable "virtual_network_address_space" {
   }
 }
 
+variable "diagnostic_settings" {
+  type = map(object({
+    name                                     = optional(string, null)
+    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+  Map of diagnostic setting configurations
+  DESCRIPTION
+  nullable    = false
 
-
-variable "virtual_network_dns_servers" {
-  type = object({
-    dns_servers = list(string)
-  })
-  default     = null
-  description = "(Optional) List of IP addresses of DNS servers"
+  validation {
+    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
+    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
+  }
 }
 
-variable "vnet_location" {
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+This variable controls whether or not telemetry is enabled for the module.
+For more information see https://aka.ms/avm/telemetry.
+If it is set to false, then no telemetry will be collected.
+DESCRIPTION
+}
+
+variable "location" {
   type        = string
   default     = null
   description = <<DESCRIPTION
 The location/region where the virtual network is created. Changing this forces a new resource to be created.
 DESCRIPTION
 }
+
+variable "lock" {
+  type = object({
+    name = optional(string, null)
+    kind = optional(string, "None")
+
+
+  })
+  default     = {}
+  description = "The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
+  nullable    = false
+
+  validation {
+    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
+    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
+  }
+}
+
+variable "name" {
+  type        = string
+  default     = "acctvnet"
+  description = <<DESCRIPTION
+The name of the virtual network to create.
+DESCRIPTION
+}
+
+variable "role_assignments" {
+  type = map(object({
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+  Map of configurations required to configure RBAC
+  DESCRIPTION
+}
+
 variable "subnets" {
   type = map(object(
     {
@@ -81,30 +129,21 @@ variable "subnets" {
       ))
     }
   ))
-  description = "Subnets to create"
-}
-variable "virtual_network_ddos_protection_plan" {
-  type = object({
-    id     = string #  (Required) The ID of DDoS Protection Plan.
-    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
-  })
-  default     = null
-  description = "AzureNetwork DDoS Protection Plan."
-}
-
-variable "vnet_peering_config" {
+  default     = {} # Set the default value to an empty map
   description = <<DESCRIPTION
-A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+The subnets to create
 DESCRIPTION
-  type = map(object({
-    remote_vnet_id          = string
-    allow_forwarded_traffic = bool
-    allow_gateway_transit   = bool
-    use_remote_gateways     = bool
-  }))
-  default = {}
 }
 
+variable "tags" {
+  type = map(any)
+  default = {
+
+  }
+  description = <<DESCRIPTION
+The tags to associate with your network and subnets.
+DESCRIPTION
+}
 
 variable "tracing_tags_enabled" {
   type        = bool
@@ -122,70 +161,34 @@ variable "tracing_tags_prefix" {
 Default prefix for generated tracing tags.
 DESCRIPTION
   nullable    = false
-
 }
 
-
-variable "tags" {
-  type = map(any)
-  default = {
-
-  }
-  description = <<DESCRIPTION
-The tags to associate with your network and subnets.
-DESCRIPTION
-}
-
-//required AVM interfaces
-
-variable "diagnostic_settings" {
-  type = map(object({
-    name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
-    metric_categories                        = optional(set(string), ["AllMetrics"])
-    log_analytics_destination_type           = optional(string, "Dedicated")
-    workspace_resource_id                    = optional(string, null)
-    storage_account_resource_id              = optional(string, null)
-    event_hub_authorization_rule_resource_id = optional(string, null)
-    event_hub_name                           = optional(string, null)
-    marketplace_partner_resource_id          = optional(string, null)
-  }))
-  default  = {}
-  nullable = false
-
-  validation {
-    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
-    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
-  }
-}
-
-
-variable "role_assignments" {
-  type = map(object({
-    role_definition_id_or_name             = string
-    principal_id                           = string
-    description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, false)
-    condition                              = optional(string, null)
-    condition_version                      = optional(string, null)
-    delegated_managed_identity_resource_id = optional(string, null)
-  }))
-  default = {}
-
-}
-
-variable "lock" {
+variable "virtual_network_ddos_protection_plan" {
   type = object({
-    name = optional(string, null)
-    kind = optional(string, "None")
-
-
+    id     = string #  (Required) The ID of DDoS Protection Plan.
+    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
   })
-  description = "The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
+  default     = null
+  description = "AzureNetwork DDoS Protection Plan."
+}
+
+variable "virtual_network_dns_servers" {
+  type = object({
+    dns_servers = list(string)
+  })
+  default     = null
+  description = "(Optional) List of IP addresses of DNS servers"
+}
+
+variable "vnet_peering_config" {
+  type = map(object({
+    remote_vnet_id          = string
+    allow_forwarded_traffic = bool
+    allow_gateway_transit   = bool
+    use_remote_gateways     = bool
+  }))
   default     = {}
-  nullable    = false
-  validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
-  }
+  description = <<DESCRIPTION
+A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+DESCRIPTION
 }

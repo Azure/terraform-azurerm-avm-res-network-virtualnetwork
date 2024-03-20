@@ -1,6 +1,5 @@
-
-
 output "subnets" {
+  description = "Information about the subnets created in the module."
   value = {
     for s in azurerm_subnet.subnet : s.name => {
       id               = s.id
@@ -10,12 +9,14 @@ output "subnets" {
 
     }
   }
-  description = "Information about the subnets created in the module."
 }
 
-
+output "virtual_network_id" {
+  description = "The resource ID of the virtual network."
+  value       = azurerm_virtual_network.vnet.id
+}
 
 output "vnet_resource" {
-  value       = azurerm_virtual_network.vnet
   description = "The Azure Virtual Network resource"
+  value       = azurerm_virtual_network.vnet
 }

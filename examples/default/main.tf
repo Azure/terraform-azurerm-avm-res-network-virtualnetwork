@@ -17,26 +17,18 @@ locals {
     }
   }
   virtual_network_address_space = "10.0.0.0/16"
-
 }
 
 # Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
 module "vnet" {
   source              = "../../"
-  vnet_name           = module.naming.virtual_network.name
+  name                = module.naming.virtual_network.name
   enable_telemetry    = true
   resource_group_name = azurerm_resource_group.example.name
-  vnet_location       = var.vnet_location
+  location            = var.vnet_location
   subnets             = local.subnets
-
-
   virtual_network_dns_servers = {
     dns_servers = ["8.8.8.8"]
   }
-
   virtual_network_address_space = ["10.0.0.0/16"]
-
 }
-
-
-

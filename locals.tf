@@ -1,6 +1,5 @@
 
 locals {
-
   enable_telemetry                   = var.enable_telemetry
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
   subnet_with_nat_gateway = {

@@ -1,4 +1,4 @@
-// Importing the Azure naming module to ensure resources have unique CAF compliant names.
+#Importing the Azure naming module to ensure resources have unique CAF compliant names.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.3.0"
@@ -8,7 +8,7 @@ resource "random_id" "rg_name" {
   byte_length = 8
 }
 
-// Creating a resource group with a unique name in the specified location.
+#Creating a resource group with a unique name in the specified location.
 resource "azurerm_resource_group" "example" {
   location = var.rg_location
   name     = module.naming.resource_group.name_unique
@@ -31,8 +31,8 @@ module "vnet" {
   resource_group_name           = azurerm_resource_group.example.name
   virtual_network_address_space = ["10.0.0.0/16"]
   subnets                       = local.subnets
-  vnet_location                 = azurerm_resource_group.example.location
-  vnet_name                     = "azure-subnets-vnet"
+  location                      = azurerm_resource_group.example.location
+  name                          = "azure-subnets-vnet"
 
 }
 

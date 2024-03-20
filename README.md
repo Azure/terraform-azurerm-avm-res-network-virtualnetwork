@@ -1,10 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Verified Module for Azure Virtual Networks
 
-
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Average time to resolve an issue") [![Percentage of issues still open](http://isitmaintained.com/badge/open/Azure/terraform-azurerm-avm-res-network-virtualnetwork.svg)](http://isitmaintained.com/project/Azure/terraform-azurerm-avm-res-network-virtualnetwork "Percentage of issues still open")
-
-
 This module provides a generic way to create and manage Azure Virtual Networks (vNets) and their associated resources.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
@@ -15,7 +11,7 @@ module "azure_vnet" {
 
   address_spaces = ["10.0.0.0/16"]
   vnet_location  = "East US"
-  vnet_name           = "myVNet"
+  name           = "myVNet"
   resource_group_name = "myResourceGroup"
   // ... other required variables ...
 }
@@ -36,9 +32,9 @@ The following requirements are needed by this module:
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (3.74.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0)
 
-- <a name="provider_random"></a> [random](#provider\_random) (3.5.1)
+- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
 
@@ -47,8 +43,8 @@ The following resources are used by this module:
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
-- [azurerm_role_assignment.subnet-level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.vnet-level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.subnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet_nat_gateway_association.nat_gw](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
 - [azurerm_subnet_network_security_group_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) (resource)
@@ -69,9 +65,103 @@ Description: The name of the resource group where the resources will be deployed
 
 Type: `string`
 
+### <a name="input_virtual_network_address_space"></a> [virtual\_network\_address\_space](#input\_virtual\_network\_address\_space)
+
+Description:  (Required) The address space that is used the virtual network. You can supply more than one address space.
+
+Type: `list(string)`
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
+
+Description:   Map of diagnostic setting configurations
+
+Type:
+
+```hcl
+map(object({
+    name                                     = optional(string, null)
+    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+```
+
+Default: `{}`
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see https://aka.ms/avm/telemetry.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_lock"></a> [lock](#input\_lock)
+
+Description: The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+
+Type:
+
+```hcl
+object({
+    name = optional(string, null)
+    kind = optional(string, "None")
+
+  })
+```
+
+Default: `{}`
+
+### <a name="input_name"></a> [name](#input\_name)
+
+Description: The name of the virtual network to create.
+
+Type: `string`
+
+Default: `"acctvnet"`
+
+### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
+
+Description:   Map of configurations required to configure RBAC
+
+Type:
+
+```hcl
+map(object({
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_subnets"></a> [subnets](#input\_subnets)
 
-Description: Subnets to create
+Description: The subnets to create
 
 Type:
 
@@ -105,82 +195,6 @@ map(object(
       ))
     }
   ))
-```
-
-### <a name="input_virtual_network_address_space"></a> [virtual\_network\_address\_space](#input\_virtual\_network\_address\_space)
-
-Description:  (Required) The address space that is used the virtual network. You can supply more than one address space.
-
-Type: `list(string)`
-
-## Optional Inputs
-
-The following input variables are optional (have default values):
-
-### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
-
-Description: n/a
-
-Type:
-
-```hcl
-map(object({
-    name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
-    metric_categories                        = optional(set(string), ["AllMetrics"])
-    log_analytics_destination_type           = optional(string, "Dedicated")
-    workspace_resource_id                    = optional(string, null)
-    storage_account_resource_id              = optional(string, null)
-    event_hub_authorization_rule_resource_id = optional(string, null)
-    event_hub_name                           = optional(string, null)
-    marketplace_partner_resource_id          = optional(string, null)
-  }))
-```
-
-Default: `{}`
-
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see https://aka.ms/avm/telemetry.  
-If it is set to false, then no telemetry will be collected.
-
-Type: `bool`
-
-Default: `true`
-
-### <a name="input_lock"></a> [lock](#input\_lock)
-
-Description: The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-
-Type:
-
-```hcl
-object({
-    name = optional(string, null)
-    kind = optional(string, "None")
-
-  })
-```
-
-Default: `{}`
-
-### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
-
-Description: n/a
-
-Type:
-
-```hcl
-map(object({
-    role_definition_id_or_name             = string
-    principal_id                           = string
-    description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, false)
-    condition                              = optional(string, null)
-    condition_version                      = optional(string, null)
-    delegated_managed_identity_resource_id = optional(string, null)
-  }))
 ```
 
 Default: `{}`
@@ -238,22 +252,6 @@ object({
 
 Default: `null`
 
-### <a name="input_vnet_location"></a> [vnet\_location](#input\_vnet\_location)
-
-Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name)
-
-Description: The name of the virtual network to create.
-
-Type: `string`
-
-Default: `"acctvnet"`
-
 ### <a name="input_vnet_peering_config"></a> [vnet\_peering\_config](#input\_vnet\_peering\_config)
 
 Description: A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
@@ -279,7 +277,11 @@ The following outputs are exported:
 
 Description: Information about the subnets created in the module.
 
-### <a name="output_vnet-resource"></a> [vnet-resource](#output\_vnet-resource)
+### <a name="output_virtual_network_id"></a> [virtual\_network\_id](#output\_virtual\_network\_id)
+
+Description: The resource ID of the virtual network.
+
+### <a name="output_vnet_resource"></a> [vnet\_resource](#output\_vnet\_resource)
 
 Description: The Azure Virtual Network resource
 
@@ -291,8 +293,4 @@ No modules.
 ## Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
-
-## AVM Versioning Notice
-
-Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
 <!-- END_TF_DOCS -->
