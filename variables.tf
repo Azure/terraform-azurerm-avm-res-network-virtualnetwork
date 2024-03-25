@@ -1,3 +1,10 @@
+variable "location" {
+  type        = string
+  description = <<DESCRIPTION
+The location/region where the virtual network is created. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
@@ -47,14 +54,6 @@ variable "enable_telemetry" {
 This variable controls whether or not telemetry is enabled for the module.
 For more information see https://aka.ms/avm/telemetry.
 If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-}
-
-variable "location" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-The location/region where the virtual network is created. Changing this forces a new resource to be created.
 DESCRIPTION
 }
 
