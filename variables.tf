@@ -57,6 +57,14 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
+variable "existing_parent_resource" {
+  description = "If supplied, this allows subnets to be created against an existing vnet."
+  type = object({
+    name = string
+  })
+  default = null
+}
+
 variable "lock" {
   type = object({
     name = optional(string, null)

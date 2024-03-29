@@ -13,7 +13,7 @@ output "subnets" {
 
 output "virtual_network_id" {
   description = "The resource ID of the virtual network."
-  value       = azurerm_virtual_network.vnet.id
+  value       = "/subscriptions/${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
 }
 
 output "vnet_resource" {
