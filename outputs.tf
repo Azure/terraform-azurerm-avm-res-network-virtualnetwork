@@ -13,7 +13,7 @@ output "subnets" {
 
 output "virtual_network_id" {
   description = "The resource ID of the virtual network."
-  value       = azurerm_virtual_network.vnet.id
+  value       = var.existing_virtual_network != null ? var.existing_virtual_network.id : azurerm_virtual_network.vnet[0].id
 }
 
 output "vnet_resource" {

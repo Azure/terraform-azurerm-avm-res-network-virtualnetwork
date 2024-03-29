@@ -57,6 +57,19 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
+variable "existing_virtual_network" {
+  type = object({
+    id = string
+  })
+  default     = null
+  description = "The resource ID of a existing virtual network. If supplied, the subnet will be attached to an existing virtual network instead of creating a new one."
+
+  validation {
+    condition     = var.existing_virtual_network == null || can(regex("^/subscriptions/[a-zA-Z0-9-]*/resourceGroups/[a-zA-Z0-9-_]*/providers/Microsoft.Network/virtualNetworks/[a-zA-Z0-9-_]*$", var.existing_virtual_network.id))
+    error_message = "The existing_virtual_network.id does not match the expected Azure resource ID pattern."
+  }
+}
+
 variable "lock" {
   type = object({
     name = optional(string, null)

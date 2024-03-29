@@ -113,6 +113,20 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_existing_virtual_network"></a> [existing\_virtual\_network](#input\_existing\_virtual\_network)
+
+Description: The resource ID of a existing virtual network. If supplied, the subnet will be attached to an existing virtual network instead of creating a new one.
+
+Type:
+
+```hcl
+object({
+    id = string
+  })
+```
+
+Default: `null`
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
 Description: The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
