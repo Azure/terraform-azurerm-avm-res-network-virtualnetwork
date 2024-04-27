@@ -1,11 +1,11 @@
 #Output vnet id
-output "vnet_id" {
+output "id" {
   description = "The resource ID of the virtual network."
-  value       = module.vnet_1.virtual_network_id
+  value       = module.vnet_1.id
 }
 
-#Output vnet name
-output "vnet_name" {
+#Output vnet resource information
+output "resource" {
   description = "The name of the virtual network."
-  value       = module.vnet_1.vnet_resource
+  value       = module.vnet_1.resource
 }

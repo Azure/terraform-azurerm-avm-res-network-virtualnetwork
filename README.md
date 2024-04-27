@@ -24,6 +24,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.12)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
@@ -31,6 +33,8 @@ The following requirements are needed by this module:
 ## Providers
 
 The following providers are used by this module:
+
+- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.12)
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0)
 
@@ -40,16 +44,13 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.subnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_subnet_nat_gateway_association.nat_gw](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
-- [azurerm_subnet_network_security_group_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) (resource)
-- [azurerm_subnet_route_table_association.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_route_table_association) (resource)
-- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [azurerm_virtual_network_dns_servers.vnet_dns](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_dns_servers) (resource)
 - [azurerm_virtual_network_peering.vnet_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
@@ -91,7 +92,8 @@ Type:
 ```hcl
 map(object({
     name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
+    log_categories                           = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
@@ -130,19 +132,21 @@ Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description: The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+Description:   Controls the Resource Lock configuration for this resource. The following properties can be specified:
+
+  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
 Type:
 
 ```hcl
 object({
+    kind = string
     name = optional(string, null)
-    kind = optional(string, "None")
-
   })
 ```
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
@@ -154,7 +158,18 @@ Default: `"acctvnet"`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description:   Map of configurations required to configure RBAC
+Description:   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+  - `principal_id` - The ID of the principal to assign the role to.
+  - `description` - (Optional) The description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+  - `condition` - (Optional) The condition which will be used to scope the role assignment.
+  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+
+  > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 
 Type:
 
@@ -214,11 +229,11 @@ Default: `{}`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: The tags to associate with your network and subnets.
+Description: (Optional) Tags of the resource.
 
-Type: `map(any)`
+Type: `map(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_tracing_tags_enabled"></a> [tracing\_tags\_enabled](#input\_tracing\_tags\_enabled)
 
@@ -286,17 +301,17 @@ Default: `{}`
 
 The following outputs are exported:
 
-### <a name="output_subnets"></a> [subnets](#output\_subnets)
-
-Description: Information about the subnets created in the module.
-
-### <a name="output_virtual_network_id"></a> [virtual\_network\_id](#output\_virtual\_network\_id)
+### <a name="output_id"></a> [id](#output\_id)
 
 Description: The resource ID of the virtual network.
 
-### <a name="output_vnet_resource"></a> [vnet\_resource](#output\_vnet\_resource)
+### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: The Azure Virtual Network resource
+
+### <a name="output_subnets"></a> [subnets](#output\_subnets)
+
+Description: Information about the subnets created in the module.
 
 ## Modules
 

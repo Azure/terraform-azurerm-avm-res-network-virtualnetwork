@@ -2,7 +2,7 @@ data "azurerm_subscription" "this" {}
 
 # Azure Generic vNet Module
 # Creating a Virtual Network with the specified configurations.
-resource "azurerm_virtual_network" "vnet" {
+resource "azurerm_virtual_network" "this" {
   count = var.existing_parent_resource == null ? 1 : 0
 
   address_space       = var.virtual_network_address_space
@@ -28,10 +28,8 @@ resource "azurerm_virtual_network_dns_servers" "vnet_dns" {
   virtual_network_id = "/subscriptions/${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   dns_servers        = var.virtual_network_dns_servers.dns_servers
 
-  depends_on = [azurerm_virtual_network.vnet]
+  depends_on = [azurerm_virtual_network.this]
 }
-
-
 
 resource "azurerm_virtual_network_peering" "vnet_peering" {
   for_each = var.vnet_peering_config
@@ -44,21 +42,21 @@ resource "azurerm_virtual_network_peering" "vnet_peering" {
   allow_gateway_transit     = each.value.allow_gateway_transit
   use_remote_gateways       = each.value.use_remote_gateways
 
-  depends_on = [azurerm_virtual_network.vnet]
+  depends_on = [azurerm_virtual_network.this]
 }
 
 
 
 # Applying Management Lock to the Virtual Network if specified.
 resource "azurerm_management_lock" "this" {
-  count = var.lock.kind != "None" ? 1 : 0
+  count = var.lock != null ? 1 : 0
 
   lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.name}")
-  scope      = "/subscriptions/${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
-
-  depends_on = [azurerm_virtual_network.vnet]
+  name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
+  scope      = azurerm_virtual_network.this[0].id
+  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
+
 
 # Assigning Roles to the Virtual Network based on the provided configurations.
 resource "azurerm_role_assignment" "vnet_level" {
@@ -73,7 +71,7 @@ resource "azurerm_role_assignment" "vnet_level" {
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 
-  depends_on = [azurerm_virtual_network.vnet]
+  depends_on = [azurerm_virtual_network.this]
 }
 
 # Create diagonostic settings for the virtual network
@@ -109,6 +107,6 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
     }
   }
 
-  depends_on = [azurerm_virtual_network.vnet]
+  depends_on = [azurerm_virtual_network.this]
 }
 
