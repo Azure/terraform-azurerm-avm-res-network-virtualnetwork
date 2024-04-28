@@ -126,8 +126,7 @@ module "vnet1" {
       delegations = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
-          name    = "Microsoft.Web/serverFarms"
-          actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+          name = "Microsoft.Web/serverFarms"
         }
       }]
       nat_gateway = {

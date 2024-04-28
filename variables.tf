@@ -1,3 +1,14 @@
+variable "address_space" {
+  type        = list(string)
+  description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
+  nullable    = false
+
+  validation {
+    condition     = length(var.address_space) > 0
+    error_message = "Please provide at least one cidr as address space."
+  }
+}
+
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -12,15 +23,13 @@ The name of the resource group where the resources will be deployed.
 DESCRIPTION
 }
 
-variable "address_space" {
-  type        = list(string)
-  description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_space) > 0
-    error_message = "Please provide at least one cidr as address space."
-  }
+variable "ddos_protection_plan" {
+  type = object({
+    id     = string #  (Required) The ID of DDoS Protection Plan.
+    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+  })
+  default     = null
+  description = "AzureNetwork DDoS Protection Plan."
 }
 
 variable "diagnostic_settings" {
@@ -48,6 +57,14 @@ variable "diagnostic_settings" {
   }
 }
 
+variable "dns_servers" {
+  type = object({
+    dns_servers = list(string)
+  })
+  default     = null
+  description = "(Optional) List of IP addresses of DNS servers"
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -59,11 +76,11 @@ DESCRIPTION
 }
 
 variable "existing_parent_resource" {
-  description = "If supplied, this allows subnets to be created against an existing vnet."
   type = object({
     name = string
   })
-  default = null
+  default     = null
+  description = "If supplied, this allows subnets to be created against an existing vnet."
 }
 
 variable "lock" {
@@ -93,6 +110,21 @@ The name of the virtual network to create.
 DESCRIPTION
 }
 
+variable "peerings" {
+  type = map(object({
+    name                         = string
+    remote_virtual_network_id    = string
+    allow_forwarded_traffic      = optional(bool, false)
+    allow_gateway_transit        = optional(bool, false)
+    allow_virtual_network_access = optional(bool, true)
+    use_remote_gateways          = optional(bool, false)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+DESCRIPTION
+}
+
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
@@ -104,7 +136,6 @@ variable "role_assignments" {
     delegated_managed_identity_resource_id = optional(string, null)
   }))
   default     = {}
-  nullable    = false
   description = <<DESCRIPTION
   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
   
@@ -119,8 +150,8 @@ variable "role_assignments" {
   
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
+  nullable    = false
 }
-
 
 variable "subnets" {
   type = map(object(
@@ -143,8 +174,7 @@ variable "subnets" {
       delegations = optional(list(object({
         name = string # (Required) A name for this delegation.
         service_delegation = object({
-          name    = string                 # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
-          actions = optional(list(string)) # (Optional) A list of Actions which should be delegated. This list is specific to the service to delegate to. Possible values include `Microsoft.Network/networkinterfaces/*`, `Microsoft.Network/virtualNetworks/subnets/action`, `Microsoft.Network/virtualNetworks/subnets/join/action`, `Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action` and `Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action`.
+          name = string # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
         }) })
       ))
     }
@@ -160,7 +190,6 @@ variable "tags" {
   default     = null
   description = "(Optional) Tags of the resource."
 }
-
 
 variable "tracing_tags_enabled" {
   type        = bool
@@ -178,38 +207,6 @@ variable "tracing_tags_prefix" {
 Default prefix for generated tracing tags.
 DESCRIPTION
   nullable    = false
-}
-
-variable "ddos_protection_plan" {
-  type = object({
-    id     = string #  (Required) The ID of DDoS Protection Plan.
-    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
-  })
-  default     = null
-  description = "AzureNetwork DDoS Protection Plan."
-}
-
-variable "dns_servers" {
-  type = object({
-    dns_servers = list(string)
-  })
-  default     = null
-  description = "(Optional) List of IP addresses of DNS servers"
-}
-
-variable "peerings" {
-  type = map(object({
-    name                         = string
-    remote_virtual_network_id    = string
-    allow_forwarded_traffic      = optional(bool, false)
-    allow_gateway_transit        = optional(bool, false)
-    allow_virtual_network_access = optional(bool, true)
-    use_remote_gateways          = optional(bool, false)
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
-DESCRIPTION
 }
 
 variable "wait_for_vnet_before_subnet_operations" {

@@ -53,6 +53,7 @@ resource "azurerm_resource_group" "this" {
 }
 
 locals {
+  address_space = "10.0.0.0/16"
   subnets = {
     for i in range(2) :
     "subnet${i}" => {
@@ -60,14 +61,13 @@ locals {
       address_prefixes = [cidrsubnet(local.address_space, 8, i)]
     }
   }
-  address_space = "10.0.0.0/16"
 }
 
 resource "azurerm_virtual_network" "this" {
-  name                = module.naming.virtual_network.name_unique
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.virtual_network.name_unique
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 module "existing_vnet" {

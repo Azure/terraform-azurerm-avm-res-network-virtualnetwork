@@ -1,3 +1,13 @@
+output "id" {
+  description = "The resource ID of the virtual network."
+  value       = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+}
+
+output "resource" {
+  description = "The Azure Virtual Network resource"
+  value       = azapi_resource.vnet
+}
+
 output "subnets" {
   description = "Information about the subnets created in the module."
   value = {
@@ -9,14 +19,4 @@ output "subnets" {
       nsg_association_id = s.body.properties.networkSecurityGroup
     }
   }
-}
-
-output "id" {
-  description = "The resource ID of the virtual network."
-  value       = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
-}
-
-output "resource" {
-  description = "The Azure Virtual Network resource"
-  value       = azapi_resource.vnet
 }

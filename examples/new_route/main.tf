@@ -61,6 +61,7 @@ resource "azurerm_route" "this" {
 }
 
 locals {
+  address_space = "10.0.0.0/16"
   subnets = {
     for i in range(3) :
     "subnet${i}" => {
@@ -71,7 +72,6 @@ locals {
       }
     }
   }
-  address_space = "10.0.0.0/16"
 }
 
 module "vnet" {

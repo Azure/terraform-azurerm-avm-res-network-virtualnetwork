@@ -4,11 +4,9 @@ data "azurerm_subscription" "this" {}
 # lifecycle ignore changes to the body to prevent subnets being deleted
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_resource" "vnet" {
-  count     = var.existing_parent_resource == null ? 1 : 0
-  parent_id = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}"
-  type      = "Microsoft.Network/virtualNetworks@2021-08-01"
-  name      = var.name
-  location  = var.location
+  count = var.existing_parent_resource == null ? 1 : 0
+
+  type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {
     properties = {
       addressSpace = {
@@ -24,7 +22,11 @@ resource "azapi_resource" "vnet" {
       enableDdosProtection = var.ddos_protection_plan != null ? var.ddos_protection_plan.enable : false
     }
   }
-  tags = var.tags
+  location  = var.location
+  name      = var.name
+  parent_id = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}"
+  tags      = var.tags
+
   lifecycle {
     ignore_changes = [body, tags]
   }
@@ -34,9 +36,9 @@ resource "azapi_resource" "vnet" {
 # This is a workaround to allow updates to the virtual network without deleting the subnets created elsewhere.
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_update_resource" "vnet" {
-  count       = var.existing_parent_resource == null ? 1 : 0
-  resource_id = azapi_resource.vnet[0].id
-  type        = "Microsoft.Network/virtualNetworks@2021-08-01"
+  count = var.existing_parent_resource == null ? 1 : 0
+
+  type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {
     properties = {
       addressSpace = {
@@ -52,6 +54,7 @@ resource "azapi_update_resource" "vnet" {
     },
     tags = var.tags
   }
+  resource_id = azapi_resource.vnet[0].id
 }
 
 resource "time_sleep" "wait_for_vnet_before_subnet_operations" {

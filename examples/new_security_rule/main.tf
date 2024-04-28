@@ -71,6 +71,7 @@ resource "azurerm_network_security_group" "ssh" {
 
 
 locals {
+  address_space = "10.0.0.0/16"
   subnets = {
     for i in range(3) :
     "subnet${i}" => {
@@ -81,7 +82,6 @@ locals {
       }
     }
   }
-  address_space = "10.0.0.0/16"
 }
 
 #Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
