@@ -215,7 +215,7 @@ DESCRIPTION
 variable "wait_for_vnet_before_subnet_operations" {
   type = object({
     create  = optional(string, "50s")
-    destroy = optional(string, "30s")
+    destroy = optional(string, "50s")
   })
   default     = {}
   description = <<DESCRIPTION
