@@ -10,12 +10,10 @@ resource "azapi_resource" "subnet" {
       addressPrefixes = each.value.address_prefixes
       delegations = each.value.delegations != null ? [
         for delegation in each.value.delegations : {
-          #id   = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}/subnets/${each.value.name}/delegations/${delegation.name}"
           name = delegation.name
           properties = {
             serviceName = delegation.service_delegation.name
           }
-          #type = "Microsoft.Network/virtualNetworks/subnets/delegations"
         }
       ] : []
       natGateway = each.value.nat_gateway != null ? {
