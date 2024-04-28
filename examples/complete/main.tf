@@ -86,7 +86,7 @@ data "http" "public_ip" {
 
 resource "azurerm_network_security_group" "https" {
   location            = azurerm_resource_group.this.location
-  name                = module.naming.network_security_group.name
+  name                = module.naming.network_security_group.name_unique
   resource_group_name = azurerm_resource_group.this.name
 
   security_rule {

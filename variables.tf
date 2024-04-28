@@ -14,7 +14,7 @@ DESCRIPTION
 
 variable "address_space" {
   type        = list(string)
-  description = " (Required) The address space that is used the virtual network. You can supply more than one address space."
+  description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
   nullable    = false
 
   validation {
@@ -214,8 +214,8 @@ DESCRIPTION
 
 variable "wait_for_vnet_before_subnet_operations" {
   type = object({
-    create  = optional(string, "30s")
-    destroy = optional(string, "0s")
+    create  = optional(string, "50s")
+    destroy = optional(string, "30s")
   })
   default     = {}
   description = <<DESCRIPTION

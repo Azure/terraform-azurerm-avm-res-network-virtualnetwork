@@ -68,7 +68,7 @@ The following input variables are required:
 
 ### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
 
-Description:  (Required) The address space that is used the virtual network. You can supply more than one address space.
+Description: (Required) The address space that is used the virtual network. You can supply more than one address space.
 
 Type: `list(string)`
 
@@ -309,8 +309,8 @@ Type:
 
 ```hcl
 object({
-    create  = optional(string, "30s")
-    destroy = optional(string, "0s")
+    create  = optional(string, "50s")
+    destroy = optional(string, "30s")
   })
 ```
 

@@ -55,8 +55,6 @@ resource "azapi_update_resource" "vnet" {
 }
 
 resource "time_sleep" "wait_for_vnet_before_subnet_operations" {
-  count = (var.existing_parent_resource != null) ? 1 : 0
-
   create_duration  = var.wait_for_vnet_before_subnet_operations.create
   destroy_duration = var.wait_for_vnet_before_subnet_operations.destroy
 
@@ -93,6 +91,11 @@ resource "azurerm_management_lock" "this" {
   name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
   scope      = azapi_resource.vnet[0].id
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
+
+  depends_on = [
+    azapi_resource.vnet,
+    azapi_update_resource.vnet,
+  ]
 }
 
 
@@ -109,7 +112,10 @@ resource "azurerm_role_assignment" "vnet_level" {
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 
-  depends_on = [azapi_resource.vnet]
+  depends_on = [
+    azapi_resource.vnet,
+    azapi_update_resource.vnet,
+  ]
 }
 
 # Create diagonostic settings for the virtual network
@@ -141,6 +147,9 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
     }
   }
 
-  depends_on = [azapi_resource.vnet]
+  depends_on = [
+    azapi_resource.vnet,
+    azapi_update_resource.vnet,
+  ]
 }
 

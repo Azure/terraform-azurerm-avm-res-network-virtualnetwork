@@ -39,7 +39,9 @@ resource "azapi_resource" "subnet" {
   tags = var.tags
 
   depends_on = [
-    time_sleep.wait_for_vnet_before_subnet_operations
+    azapi_resource.vnet,
+    azapi_update_resource.vnet,
+    time_sleep.wait_for_vnet_before_subnet_operations,
   ]
 }
 
