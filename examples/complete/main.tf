@@ -50,13 +50,6 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-#Creating a Network Security Group with a unique name in the specified location.
-resource "azurerm_network_security_group" "nsg1" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_security_group.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-}
-
 #Creating a Route Table with a unique name in the specified location.
 resource "azurerm_route_table" "this" {
   location            = azurerm_resource_group.this.location
