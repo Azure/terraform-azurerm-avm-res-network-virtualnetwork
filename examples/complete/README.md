@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Azure Verified Module for Azure Virtual Networks
+# Complete example for AVM virtual network module
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
@@ -114,9 +114,19 @@ module "vnet1" {
   source              = "../../"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network_peering.name_unique
+  name                = module.naming.virtual_network.name_unique
 
   address_space = ["192.168.0.0/16"]
+
+  dns_servers = {
+    dns_servers = ["8.8.8.8"]
+  }
+
+  ddos_protection_plan = {
+    id = azurerm_network_ddos_protection_plan.this.id
+    # due to resource cost
+    enable = false
+  }
 
   subnets = {
     subnet0 = {
@@ -145,28 +155,18 @@ module "vnet1" {
       service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
     }
   }
-
-  dns_servers = {
-    dns_servers = ["8.8.8.8"]
-  }
-
-  ddos_protection_plan = {
-    id = azurerm_network_ddos_protection_plan.this.id
-    # due to resource cost
-    enable = false
-  }
 }
 
 module "vnet2" {
   source              = "../../"
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  name                = "${module.naming.virtual_network_peering.name_unique}2"
+  name                = "${module.naming.virtual_network.name_unique}2"
   address_space       = ["10.0.0.0/27"]
 
   peerings = {
     "peertovnet1" = {
-      name                         = "peerFromVnet2ToVnet1"
+      name                         = module.naming.virtual_network_peering.name_unique
       remote_virtual_network_id    = module.vnet1.id
       allow_forwarded_traffic      = true
       allow_gateway_transit        = true
