@@ -59,7 +59,7 @@ resource "azurerm_route_table" "this" {
 }
 
 resource "azurerm_route" "this" {
-  address_prefix      = local.virtual_network_address_space
+  address_prefix      = local.address_space
   name                = "acceptanceTestRoute1"
   next_hop_type       = "VnetLocal"
   resource_group_name = azurerm_resource_group.this.name
@@ -71,22 +71,22 @@ locals {
     for i in range(3) :
     "subnet${i}" => {
       name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
       route_table = {
         id = azurerm_route_table.this.id
       }
     }
   }
-  virtual_network_address_space = "10.0.0.0/16"
+  address_space = "10.0.0.0/16"
 }
 
 module "vnet" {
-  source                        = "../../"
-  resource_group_name           = azurerm_resource_group.this.name
-  virtual_network_address_space = ["10.0.0.0/16"]
-  subnets                       = local.subnets
-  location                      = azurerm_resource_group.this.location
-  name                          = module.naming.virtual_network.name
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
+  subnets             = local.subnets
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.virtual_network.name
 }
 
 ```

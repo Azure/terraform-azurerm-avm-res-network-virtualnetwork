@@ -13,7 +13,7 @@ terraform {
     }
     http = {
       source  = "hashicorp/http"
-      version = "3.4.2"
+      version = "~> 3.4"
     }
     random = {
       source  = "hashicorp/random"
@@ -81,26 +81,26 @@ locals {
     for i in range(3) :
     "subnet${i}" => {
       name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.virtual_network_address_space, 8, i)]
+      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
       network_security_group = {
         id = azurerm_network_security_group.ssh.id
       }
     }
   }
-  virtual_network_address_space = "10.0.0.0/16"
+  address_space = "10.0.0.0/16"
 }
 
 #Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
 module "vnet" {
-  source                        = "../../"
-  resource_group_name           = azurerm_resource_group.this.name
-  virtual_network_address_space = ["10.0.0.0/16"]
-  subnets                       = local.subnets
-  location                      = azurerm_resource_group.this.location
-  name                          = module.naming.virtual_network.name_unique
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
+  subnets             = local.subnets
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.virtual_network.name_unique
 }
 
-#Fetching the public IP address of the Terraform executor.
+# Fetching the public IP address of the Terraform executor.
 data "http" "public_ip" {
   method = "GET"
   url    = "http://api.ipify.org?format=json"
@@ -116,7 +116,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
-- <a name="requirement_http"></a> [http](#requirement\_http) (3.4.2)
+- <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -126,7 +126,7 @@ The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
 
-- <a name="provider_http"></a> [http](#provider\_http) (3.4.2)
+- <a name="provider_http"></a> [http](#provider\_http) (~> 3.4)
 
 - <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
@@ -137,7 +137,7 @@ The following resources are used by this module:
 - [azurerm_network_security_group.ssh](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [http_http.public_ip](https://registry.terraform.io/providers/hashicorp/http/3.4.2/docs/data-sources/http) (data source)
+- [http_http.public_ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

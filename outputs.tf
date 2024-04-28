@@ -3,7 +3,7 @@ output "subnets" {
   value = {
     for s in azapi_resource.subnet : s.name => {
       id                 = s.id
-      address_prefixes   = s.body.properties.address_prefixes
+      address_prefixes   = s.body.properties.addressPrefixes
       resource_group     = split("/", s.id)[4]
       virtual_network    = split("/", s.id)[8]
       nsg_association_id = s.body.properties.networkSecurityGroup
@@ -13,10 +13,10 @@ output "subnets" {
 
 output "id" {
   description = "The resource ID of the virtual network."
-  value       = "/subscriptions/${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  value       = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
 }
 
 output "resource" {
   description = "The Azure Virtual Network resource"
-  value       = azurerm_virtual_network.this
+  value       = azapi_resource.vnet
 }
