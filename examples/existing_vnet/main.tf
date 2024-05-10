@@ -66,7 +66,7 @@ resource "azurerm_virtual_network" "this" {
 
 module "existing_vnet" {
   source = "../../"
-  existing_parent_resource = {
+  existing_vnet = {
     name = azurerm_virtual_network.this.name
   }
   resource_group_name = azurerm_resource_group.this.name

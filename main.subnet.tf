@@ -1,10 +1,7 @@
 resource "azapi_resource" "subnet" {
   for_each = var.subnets
 
-  type      = "Microsoft.Network/virtualNetworks/subnets@2023-04-01"
-  name      = each.value.name
-  parent_id = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
-
+  type = "Microsoft.Network/virtualNetworks/subnets@2023-04-01"
   body = {
     properties = {
       addressPrefixes = each.value.address_prefixes
@@ -34,7 +31,9 @@ resource "azapi_resource" "subnet" {
       ] : null
     }
   }
-  tags = var.tags
+  name      = each.value.name
+  parent_id = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  tags      = var.tags
 
   depends_on = [
     azapi_resource.vnet,

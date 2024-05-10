@@ -4,7 +4,7 @@ data "azurerm_subscription" "this" {}
 # lifecycle ignore changes to the body to prevent subnets being deleted
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_resource" "vnet" {
-  count = var.existing_parent_resource == null ? 1 : 0
+  count = var.existing_vnet == null ? 1 : 0
 
   type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {
@@ -36,7 +36,7 @@ resource "azapi_resource" "vnet" {
 # This is a workaround to allow updates to the virtual network without deleting the subnets created elsewhere.
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_update_resource" "vnet" {
-  count = var.existing_parent_resource == null ? 1 : 0
+  count = var.existing_vnet == null ? 1 : 0
 
   type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {
