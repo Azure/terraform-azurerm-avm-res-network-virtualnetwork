@@ -31,9 +31,10 @@ resource "azapi_resource" "subnet" {
       ] : null
     }
   }
-  name      = each.value.name
-  parent_id = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
-  tags      = var.tags
+  name                      = each.value.name
+  parent_id                 = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  schema_validation_enabled = true
+  tags                      = var.tags
 
   depends_on = [
     azapi_resource.vnet,

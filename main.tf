@@ -22,10 +22,11 @@ resource "azapi_resource" "vnet" {
       enableDdosProtection = var.ddos_protection_plan != null ? var.ddos_protection_plan.enable : false
     }
   }
-  location  = var.location
-  name      = var.name
-  parent_id = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}"
-  tags      = var.tags
+  location                  = var.location
+  name                      = var.name
+  parent_id                 = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}"
+  schema_validation_enabled = true
+  tags                      = var.tags
 
   lifecycle {
     ignore_changes = [body, tags]
