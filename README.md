@@ -342,7 +342,7 @@ Description: The resource ID of the virtual network.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The Azure Virtual Network resource
+Description: The Azure Virtual Network resource.  This will be null if an existing vnet is supplied.
 
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
