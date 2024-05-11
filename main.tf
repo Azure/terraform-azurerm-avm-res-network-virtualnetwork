@@ -69,6 +69,9 @@ resource "azapi_resource" "vnet_peering" {
   type = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
   body = {
     properties = {
+      remoteVirtualNetwork = {
+        id = each.value.remote_virtual_network_resource_id
+      }
       allowVirtualNetworkAccess = each.value.allow_virtual_network_access
       allowForwardedTraffic     = each.value.allow_forwarded_traffic
       allowGatewayTransit       = each.value.allow_gateway_transit

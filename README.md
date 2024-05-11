@@ -195,12 +195,12 @@ Type:
 
 ```hcl
 map(object({
-    name                         = string
-    remote_virtual_network_id    = string
-    allow_forwarded_traffic      = optional(bool, false)
-    allow_gateway_transit        = optional(bool, false)
-    allow_virtual_network_access = optional(bool, true)
-    use_remote_gateways          = optional(bool, false)
+    name                               = string
+    remote_virtual_network_resource_id = string
+    allow_forwarded_traffic            = optional(bool, false)
+    allow_gateway_transit              = optional(bool, false)
+    allow_virtual_network_access       = optional(bool, true)
+    use_remote_gateways                = optional(bool, false)
   }))
 ```
 

@@ -152,12 +152,12 @@ module "vnet2" {
 
   peerings = {
     "peertovnet1" = {
-      name                         = module.naming.virtual_network_peering.name_unique
-      remote_virtual_network_id    = module.vnet1.id
-      allow_forwarded_traffic      = true
-      allow_gateway_transit        = true
-      allow_virtual_network_access = false
-      use_remote_gateways          = false
+      name                               = module.naming.virtual_network_peering.name_unique
+      remote_virtual_network_resource_id = module.vnet1.id
+      allow_forwarded_traffic            = true
+      allow_gateway_transit              = true
+      allow_virtual_network_access       = false
+      use_remote_gateways                = false
     }
   }
 }
