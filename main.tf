@@ -63,25 +63,28 @@ resource "azapi_update_resource" "vnet" {
   resource_id = azapi_resource.vnet[0].id
 }
 
-resource "azurerm_virtual_network_peering" "vnet_peering" {
+resource "azapi_resource" "vnet_peering" {
   for_each = var.peerings
 
-  name                         = each.value.name
-  remote_virtual_network_id    = each.value.remote_virtual_network_id
-  resource_group_name          = local.resource_group_name # Assuming you have a variable for the resource group
-  virtual_network_name         = local.vnet_name           # Reference to your virtual network
-  allow_forwarded_traffic      = each.value.allow_forwarded_traffic
-  allow_gateway_transit        = each.value.allow_gateway_transit
-  allow_virtual_network_access = each.value.allow_virtual_network_access
-  use_remote_gateways          = each.value.use_remote_gateways
+  type = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  body = {
+    properties = {
+      allowVirtualNetworkAccess = each.value.allow_virtual_network_access
+      allowForwardedTraffic     = each.value.allow_forwarded_traffic
+      allowGatewayTransit       = each.value.allow_gateway_transit
+      useRemoteGateways         = each.value.use_remote_gateways
+    }
+  }
+  locks                     = [local.vnet_resource_id]
+  name                      = each.value.name
+  parent_id                 = local.vnet_resource_id
+  schema_validation_enabled = true
 
   depends_on = [
     azapi_resource.vnet,
     azapi_update_resource.vnet,
   ]
 }
-
-
 
 # Applying Management Lock to the Virtual Network if specified.
 resource "azurerm_management_lock" "this" {
@@ -104,7 +107,7 @@ resource "azurerm_role_assignment" "vnet_level" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
-  scope                                  = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  scope                                  = local.vnet_resource_id
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
@@ -127,7 +130,7 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
   }
 
   name                           = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
-  target_resource_id             = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  target_resource_id             = local.vnet_resource_id
   eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
   eventhub_name                  = each.value.event_hub_name != null ? each.value.event_hub_name : null
   log_analytics_workspace_id     = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null
