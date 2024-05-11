@@ -19,7 +19,7 @@ resource "azapi_resource" "subnet" {
       networkSecurityGroup = each.value.network_security_group != null ? {
         id = each.value.network_security_group.id
       } : null
-      privateEndpointNetworkPolicies    = each.value.private_endpoint_network_policies_enabled
+      privateEndpointNetworkPolicies    = each.value.private_endpoint_network_policies
       privateLinkServiceNetworkPolicies = each.value.private_link_service_network_policies_enabled == false ? "Disabled" : "Enabled"
       routeTable = each.value.route_table != null ? {
         id = each.value.route_table.id
