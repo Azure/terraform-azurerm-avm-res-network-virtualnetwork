@@ -235,25 +235,3 @@ variable "tags" {
   default     = null
   description = "(Optional) Tags of the resource."
 }
-
-variable "wait_after_subnet_operations" {
-  type = object({
-    create  = optional(string, "20s")
-    destroy = optional(string, "20s")
-  })
-  default     = {}
-  description = <<DESCRIPTION
-The duration to wait after creating a subnet before performing other operations.
-DESCRIPTION
-}
-
-variable "wait_for_vnet_before_subnet_operations" {
-  type = object({
-    create  = optional(string, "30s")
-    destroy = optional(string, "30s")
-  })
-  default     = {}
-  description = <<DESCRIPTION
-The duration to wait after creating a vnet before performing subnet operations.
-DESCRIPTION
-}

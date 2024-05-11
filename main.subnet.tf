@@ -31,6 +31,7 @@ resource "azapi_resource" "subnet" {
       ] : null
     }
   }
+  locks                     = ["${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"]
   name                      = each.value.name
   parent_id                 = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   schema_validation_enabled = true
@@ -39,18 +40,6 @@ resource "azapi_resource" "subnet" {
   depends_on = [
     azapi_resource.vnet,
     azapi_update_resource.vnet,
-    time_sleep.wait_for_vnet_before_subnet_operations,
-  ]
-}
-
-# this allows a calling module to specify subnets individually and avoid this race condition:
-# https://github.com/Azure/terraform-provider-azapi/issues/503
-resource "time_sleep" "wait_after_subnet_operations" {
-  create_duration  = var.wait_after_subnet_operations.create
-  destroy_duration = var.wait_after_subnet_operations.destroy
-
-  depends_on = [
-    azapi_resource.subnet
   ]
 }
 

@@ -30,8 +30,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
-- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.9)
-
 ## Providers
 
 The following providers are used by this module:
@@ -41,8 +39,6 @@ The following providers are used by this module:
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
 
 - <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
-
-- <a name="provider_time"></a> [time](#provider\_time) (~> 0.9)
 
 ## Resources
 
@@ -58,8 +54,6 @@ The following resources are used by this module:
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_virtual_network_peering.vnet_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
-- [time_sleep.wait_after_subnet_operations](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
-- [time_sleep.wait_for_vnet_before_subnet_operations](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -337,36 +331,6 @@ Description: (Optional) Tags of the resource.
 Type: `map(string)`
 
 Default: `null`
-
-### <a name="input_wait_after_subnet_operations"></a> [wait\_after\_subnet\_operations](#input\_wait\_after\_subnet\_operations)
-
-Description: The duration to wait after creating a subnet before performing other operations.
-
-Type:
-
-```hcl
-object({
-    create  = optional(string, "20s")
-    destroy = optional(string, "20s")
-  })
-```
-
-Default: `{}`
-
-### <a name="input_wait_for_vnet_before_subnet_operations"></a> [wait\_for\_vnet\_before\_subnet\_operations](#input\_wait\_for\_vnet\_before\_subnet\_operations)
-
-Description: The duration to wait after creating a vnet before performing subnet operations.
-
-Type:
-
-```hcl
-object({
-    create  = optional(string, "30s")
-    destroy = optional(string, "30s")
-  })
-```
-
-Default: `{}`
 
 ## Outputs
 

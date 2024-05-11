@@ -63,15 +63,6 @@ resource "azapi_update_resource" "vnet" {
   resource_id = azapi_resource.vnet[0].id
 }
 
-resource "time_sleep" "wait_for_vnet_before_subnet_operations" {
-  create_duration  = var.wait_for_vnet_before_subnet_operations.create
-  destroy_duration = var.wait_for_vnet_before_subnet_operations.destroy
-
-  depends_on = [
-    azapi_update_resource.vnet
-  ]
-}
-
 resource "azurerm_virtual_network_peering" "vnet_peering" {
   for_each = var.peerings
 
