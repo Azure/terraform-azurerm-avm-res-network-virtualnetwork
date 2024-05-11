@@ -1,12 +1,12 @@
 resource "azapi_resource" "subnet" {
   for_each = var.subnets
 
-  type = "Microsoft.Network/virtualNetworks/subnets@2023-04-01"
+  type = "Microsoft.Network/virtualNetworks/subnets@2023-11-01"
   body = {
     properties = {
       addressPrefixes = each.value.address_prefixes
-      delegations = each.value.delegations != null ? [
-        for delegation in each.value.delegations : {
+      delegations = each.value.delegation != null ? [
+        for delegation in each.value.delegation : {
           name = delegation.name
           properties = {
             serviceName = delegation.service_delegation.name
@@ -19,7 +19,7 @@ resource "azapi_resource" "subnet" {
       networkSecurityGroup = each.value.network_security_group != null ? {
         id = each.value.network_security_group.id
       } : null
-      privateEndpointNetworkPolicies    = each.value.private_endpoint_network_policies_enabled == false ? "Disabled" : "Enabled"
+      privateEndpointNetworkPolicies    = each.value.private_endpoint_network_policies_enabled
       privateLinkServiceNetworkPolicies = each.value.private_link_service_network_policies_enabled == false ? "Disabled" : "Enabled"
       routeTable = each.value.route_table != null ? {
         id = each.value.route_table.id
