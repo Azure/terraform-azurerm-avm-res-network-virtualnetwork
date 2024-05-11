@@ -237,8 +237,8 @@ variable "tags" {
 
 variable "wait_for_vnet_before_subnet_operations" {
   type = object({
-    create  = optional(string, "50s")
-    destroy = optional(string, "50s")
+    create  = optional(string, "60s")
+    destroy = optional(string, "60s")
   })
   default     = {}
   description = <<DESCRIPTION

@@ -335,8 +335,8 @@ Type:
 
 ```hcl
 object({
-    create  = optional(string, "50s")
-    destroy = optional(string, "50s")
+    create  = optional(string, "60s")
+    destroy = optional(string, "60s")
   })
 ```
 
