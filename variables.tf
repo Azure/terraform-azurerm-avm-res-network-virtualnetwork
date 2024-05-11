@@ -1,14 +1,3 @@
-variable "address_space" {
-  type        = list(string)
-  description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_space) > 0
-    error_message = "Please provide at least one cidr as address space."
-  }
-}
-
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -21,6 +10,12 @@ variable "resource_group_name" {
   description = <<DESCRIPTION
 The name of the resource group where the resources will be deployed.
 DESCRIPTION
+}
+
+variable "address_space" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing_vnet must be supplied."
 }
 
 variable "ddos_protection_plan" {
@@ -77,10 +72,10 @@ DESCRIPTION
 
 variable "existing_vnet" {
   type = object({
-    name = string
+    id = string
   })
   default     = null
-  description = "If supplied, this allows subnets to be created against an existing vnet."
+  description = "(Optional) This allows a vnet resource id to be supplied, this allows subnets to be created against an existing vnet."
 }
 
 variable "lock" {
@@ -104,9 +99,9 @@ variable "lock" {
 
 variable "name" {
   type        = string
-  default     = "acctvnet"
+  default     = null
   description = <<DESCRIPTION
-The name of the virtual network to create.
+The name of the virtual network to create.  If null, existing_vnet must be supplied.
 DESCRIPTION
 }
 
@@ -229,16 +224,33 @@ A map of subnets to create
 DESCRIPTION
 }
 
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = "Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+}
+
 variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
 }
 
+variable "wait_after_subnet_operations" {
+  type = object({
+    create  = optional(string, "20s")
+    destroy = optional(string, "20s")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+The duration to wait after creating a subnet before performing other operations.
+DESCRIPTION
+}
+
 variable "wait_for_vnet_before_subnet_operations" {
   type = object({
-    create  = optional(string, "60s")
-    destroy = optional(string, "60s")
+    create  = optional(string, "30s")
+    destroy = optional(string, "30s")
   })
   default     = {}
   description = <<DESCRIPTION

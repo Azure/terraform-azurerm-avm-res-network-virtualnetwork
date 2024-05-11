@@ -1,4 +1,4 @@
-data "azurerm_subscription" "this" {}
+data "azurerm_client_config" "this" {}
 
 # azapi_resource.vnet are the virtual networks that will be created
 # lifecycle ignore changes to the body to prevent subnets being deleted
@@ -24,12 +24,17 @@ resource "azapi_resource" "vnet" {
   }
   location                  = var.location
   name                      = var.name
-  parent_id                 = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}"
+  parent_id                 = "${local.subscription_id}/resourceGroups/${local.resource_group_name}"
   schema_validation_enabled = true
   tags                      = var.tags
 
   lifecycle {
     ignore_changes = [body, tags]
+
+    precondition {
+      condition     = var.name != null && var.address_space != null && var.existing_vnet == null
+      error_message = "`var.name` and `var.address_space` must be specified unless `var.existing_vnet` is supplied."
+    }
   }
 }
 
@@ -72,8 +77,8 @@ resource "azurerm_virtual_network_peering" "vnet_peering" {
 
   name                         = each.value.name
   remote_virtual_network_id    = each.value.remote_virtual_network_id
-  resource_group_name          = var.resource_group_name # Assuming you have a variable for the resource group
-  virtual_network_name         = local.vnet_name         # Reference to your virtual network
+  resource_group_name          = local.resource_group_name # Assuming you have a variable for the resource group
+  virtual_network_name         = local.vnet_name           # Reference to your virtual network
   allow_forwarded_traffic      = each.value.allow_forwarded_traffic
   allow_gateway_transit        = each.value.allow_gateway_transit
   allow_virtual_network_access = each.value.allow_virtual_network_access
@@ -108,7 +113,7 @@ resource "azurerm_role_assignment" "vnet_level" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
-  scope                                  = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  scope                                  = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
@@ -131,7 +136,7 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
   }
 
   name                           = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
-  target_resource_id             = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  target_resource_id             = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
   eventhub_name                  = each.value.event_hub_name != null ? each.value.event_hub_name : null
   log_analytics_workspace_id     = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null

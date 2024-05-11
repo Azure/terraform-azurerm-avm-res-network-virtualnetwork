@@ -46,17 +46,6 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-locals {
-  address_space = "10.0.0.0/16"
-  subnets = {
-    for i in range(2) :
-    "subnet${i}" => {
-      name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
-    }
-  }
-}
-
 resource "azurerm_virtual_network" "this" {
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -64,14 +53,35 @@ resource "azurerm_virtual_network" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-module "existing_vnet" {
+# illustrates how to make subnets separately to deal with <https://github.com/Azure/terraform-provider-azapi/issues/503>
+module "existing_vnet_subnet0" {
   source = "../../"
   existing_vnet = {
     id = azurerm_virtual_network.this.id
   }
   # note the resource group for the subnet comes from the existing_vnet id, but this is kept so that the intention is explicit.
   resource_group_name = azurerm_resource_group.this.name
-  subnets             = local.subnets
-  location            = azurerm_resource_group.this.location
+  subnets = {
+    snet0 = {
+      name             = "snet0"
+      address_prefixes = ["10.0.0.0/24"]
+    }
+  }
+  location = azurerm_resource_group.this.location
 }
 
+module "existing_vnet_subnet1" {
+  source = "../../"
+  existing_vnet = {
+    id = azurerm_virtual_network.this.id
+  }
+  # note the resource group for the subnet comes from the existing_vnet id, but this is kept so that the intention is explicit.
+  resource_group_name = azurerm_resource_group.this.name
+  subnets = {
+    snet1 = {
+      name             = "snet1"
+      address_prefixes = ["10.0.1.0/24"]
+    }
+  }
+  location = azurerm_resource_group.this.location
+}

@@ -58,19 +58,14 @@ The following resources are used by this module:
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_virtual_network_peering.vnet_peering](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
+- [time_sleep.wait_after_subnet_operations](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_for_vnet_before_subnet_operations](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
-- [azurerm_subscription.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
+- [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
-
-Description: (Required) The address space that is used the virtual network. You can supply more than one address space.
-
-Type: `list(string)`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -87,6 +82,14 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
+
+Description: (Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing\_vnet must be supplied.
+
+Type: `list(string)`
+
+Default: `null`
 
 ### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
 
@@ -152,13 +155,13 @@ Default: `true`
 
 ### <a name="input_existing_vnet"></a> [existing\_vnet](#input\_existing\_vnet)
 
-Description: If supplied, this allows subnets to be created against an existing vnet.
+Description: (Optional) This allows a vnet resource id to be supplied, this allows subnets to be created against an existing vnet.
 
 Type:
 
 ```hcl
 object({
-    name = string
+    id = string
   })
 ```
 
@@ -184,11 +187,11 @@ Default: `null`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the virtual network to create.
+Description: The name of the virtual network to create.  If null, existing\_vnet must be supplied.
 
 Type: `string`
 
-Default: `"acctvnet"`
+Default: `null`
 
 ### <a name="input_peerings"></a> [peerings](#input\_peerings)
 
@@ -319,6 +322,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.
@@ -326,6 +337,21 @@ Description: (Optional) Tags of the resource.
 Type: `map(string)`
 
 Default: `null`
+
+### <a name="input_wait_after_subnet_operations"></a> [wait\_after\_subnet\_operations](#input\_wait\_after\_subnet\_operations)
+
+Description: The duration to wait after creating a subnet before performing other operations.
+
+Type:
+
+```hcl
+object({
+    create  = optional(string, "20s")
+    destroy = optional(string, "20s")
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_wait_for_vnet_before_subnet_operations"></a> [wait\_for\_vnet\_before\_subnet\_operations](#input\_wait\_for\_vnet\_before\_subnet\_operations)
 
@@ -335,8 +361,8 @@ Type:
 
 ```hcl
 object({
-    create  = optional(string, "60s")
-    destroy = optional(string, "60s")
+    create  = optional(string, "30s")
+    destroy = optional(string, "30s")
   })
 ```
 

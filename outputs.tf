@@ -1,6 +1,6 @@
 output "id" {
   description = "The resource ID of the virtual network."
-  value       = "${data.azurerm_subscription.this.id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  value       = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
 }
 
 output "resource" {
