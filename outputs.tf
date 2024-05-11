@@ -1,6 +1,6 @@
 output "id" {
   description = "The resource ID of the virtual network."
-  value       = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  value       = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
 }
 
 output "resource" {

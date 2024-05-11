@@ -104,7 +104,7 @@ resource "azurerm_role_assignment" "vnet_level" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
-  scope                                  = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  scope                                  = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
@@ -127,7 +127,7 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
   }
 
   name                           = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
-  target_resource_id             = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  target_resource_id             = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
   eventhub_name                  = each.value.event_hub_name != null ? each.value.event_hub_name : null
   log_analytics_workspace_id     = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null
