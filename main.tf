@@ -24,7 +24,7 @@ resource "azapi_resource" "vnet" {
   }
   location                  = var.location
   name                      = var.name
-  parent_id                 = "${local.subscription_id}/resourceGroups/${local.resource_group_name}"
+  parent_id                 = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}"
   schema_validation_enabled = true
   tags                      = var.tags
 

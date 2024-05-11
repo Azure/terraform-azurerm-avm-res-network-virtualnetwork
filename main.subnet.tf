@@ -33,7 +33,7 @@ resource "azapi_resource" "subnet" {
   }
   locks                     = ["${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"]
   name                      = each.value.name
-  parent_id                 = "${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  parent_id                 = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
   schema_validation_enabled = true
   tags                      = var.tags
 
