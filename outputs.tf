@@ -5,7 +5,7 @@ output "id" {
 
 output "resource" {
   description = "The Azure Virtual Network resource"
-  value       = azapi_resource.vnet
+  value       = azapi_resource.vnet[0]
 }
 
 output "subnets" {
