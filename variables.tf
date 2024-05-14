@@ -3,6 +3,7 @@ variable "location" {
   description = <<DESCRIPTION
 The location/region where the virtual network is created. Changing this forces a new resource to be created.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "resource_group_name" {
@@ -167,6 +168,7 @@ variable "role_assignments" {
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
   }))
   default     = {}
   description = <<DESCRIPTION
