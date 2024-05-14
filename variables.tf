@@ -20,11 +20,16 @@ variable "address_space" {
 
 variable "ddos_protection_plan" {
   type = object({
-    id     = string #  (Required) The ID of DDoS Protection Plan.
-    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+    id     = string
+    enable = bool
   })
   default     = null
-  description = "AzureNetwork DDoS Protection Plan."
+  description = <<DESCRIPTION
+Specifies an AzureNetwork DDoS Protection Plan.
+
+- `id`: The ID of the DDoS Protection Plan. (Required)
+- `enable`: Enables or disables the DDoS Protection Plan on the Virtual Network. (Required)
+DESCRIPTION
 }
 
 variable "diagnostic_settings" {
@@ -57,7 +62,11 @@ variable "dns_servers" {
     dns_servers = list(string)
   })
   default     = null
-  description = "(Optional) List of IP addresses of DNS servers"
+  description = <<DESCRIPTION
+(Optional) Specifies a list of IP addresses representing DNS servers.
+
+- `dns_servers`: List of IP addresses of DNS servers.
+DESCRIPTION
 }
 
 variable "enable_telemetry" {
@@ -72,10 +81,31 @@ DESCRIPTION
 
 variable "existing_vnet" {
   type = object({
-    id = string
+    resource_id = string
   })
   default     = null
-  description = "(Optional) This allows a vnet resource id to be supplied, this allows subnets to be created against an existing vnet."
+  description = <<DESCRIPTION
+  (Optional) Optionally allows an existing vnet to be supplied, into which subnets can be created.
+
+  Example:
+
+  ```terraform
+  module "vnet" {
+    # ...other parameters
+
+    existing_vnet = {
+      resource_id = azurerm_virtual_network.this.id
+    }
+    subnets = local.subnets
+  }
+  ```
+
+  The advantage of doing so is this encapsulates the resource_id value, which is "known after apply", in an object.
+  The object itself can be easily found out if it is null or not, which allows Terraform to make an exact plan 
+  of deployment during the "plan stage".
+
+  Reference the AVM guidance: https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tfnfr11---category-code-style---null-comparison-toggle
+  DESCRIPTION
 }
 
 variable "lock" {
@@ -117,7 +147,15 @@ variable "peerings" {
   default     = {}
   description = <<DESCRIPTION
 A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+
+- `name`: The name of the virtual network peering configuration.
+- `remote_virtual_network_resource_id`: The resource ID of the remote virtual network.
+- `allow_forwarded_traffic`: (Optional) Enables forwarded traffic between the virtual networks. Defaults to false.
+- `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
+- `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "role_assignments" {

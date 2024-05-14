@@ -67,7 +67,7 @@ resource "azurerm_virtual_network" "this" {
 module "existing_vnet" {
   source = "../../"
   existing_vnet = {
-    id = azurerm_virtual_network.this.id
+    resource_id = azurerm_virtual_network.this.id
   }
   # note the resource group for the subnet comes from the existing_vnet id, but this is kept so that the intention is explicit.
   resource_group_name = azurerm_resource_group.this.name
