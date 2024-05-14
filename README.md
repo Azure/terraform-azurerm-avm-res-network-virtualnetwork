@@ -87,14 +87,17 @@ Default: `null`
 
 ### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
 
-Description: AzureNetwork DDoS Protection Plan.
+Description: Specifies an AzureNetwork DDoS Protection Plan.
+
+- `id`: The ID of the DDoS Protection Plan. (Required)
+- `enable`: Enables or disables the DDoS Protection Plan on the Virtual Network. (Required)
 
 Type:
 
 ```hcl
 object({
-    id     = string #  (Required) The ID of DDoS Protection Plan.
-    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+    id     = string
+    enable = bool
   })
 ```
 
@@ -125,7 +128,9 @@ Default: `{}`
 
 ### <a name="input_dns_servers"></a> [dns\_servers](#input\_dns\_servers)
 
-Description: (Optional) List of IP addresses of DNS servers
+Description: (Optional) Specifies a list of IP addresses representing DNS servers.
+
+- `dns_servers`: List of IP addresses of DNS servers.
 
 Type:
 
@@ -149,13 +154,32 @@ Default: `true`
 
 ### <a name="input_existing_vnet"></a> [existing\_vnet](#input\_existing\_vnet)
 
-Description: (Optional) This allows a vnet resource id to be supplied, this allows subnets to be created against an existing vnet.
+Description:   (Optional) Optionally allows an existing vnet to be supplied, into which subnets can be created.
+
+  Example:
+
+  ```terraform
+  module "vnet" {
+    # ...other parameters
+
+    existing_vnet = {
+      resource_id = azurerm_virtual_network.this.id
+    }
+    subnets = local.subnets
+  }
+```
+
+  The advantage of doing so is this encapsulates the resource\_id value, which is "known after apply", in an object.  
+  The object itself can be easily found out if it is null or not, which allows Terraform to make an exact plan   
+  of deployment during the "plan stage".
+
+  Reference the AVM guidance: https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tfnfr11---category-code-style---null-comparison-toggle
 
 Type:
 
 ```hcl
 object({
-    id = string
+    resource_id = string
   })
 ```
 
@@ -190,6 +214,13 @@ Default: `null`
 ### <a name="input_peerings"></a> [peerings](#input\_peerings)
 
 Description: A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+
+- `name`: The name of the virtual network peering configuration.
+- `remote_virtual_network_resource_id`: The resource ID of the remote virtual network.
+- `allow_forwarded_traffic`: (Optional) Enables forwarded traffic between the virtual networks. Defaults to false.
+- `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
+- `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
 
 Type:
 
@@ -336,13 +367,17 @@ Default: `null`
 
 The following outputs are exported:
 
-### <a name="output_id"></a> [id](#output\_id)
+### <a name="output_name"></a> [name](#output\_name)
 
-Description: The resource ID of the virtual network.
+Description: The resource name of the virtual network.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: The Azure Virtual Network resource.  This will be null if an existing vnet is supplied.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource ID of the virtual network.
 
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
