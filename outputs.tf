@@ -16,12 +16,17 @@ output "resource_id" {
 output "subnets" {
   description = "Information about the subnets created in the module."
   value = {
-    for s in azapi_resource.subnet : s.name => {
-      id                 = s.id
-      address_prefixes   = s.body.properties.addressPrefixes
-      resource_group     = split("/", s.id)[4]
-      virtual_network    = split("/", s.id)[8]
-      nsg_association_id = s.body.properties.networkSecurityGroup
+    for sk, sv in azapi_resource.subnet : sk => {
+      # TODO should both id & resource_id be included?
+      id                                               = sv.id
+      resource_id                                      = sv.id
+      address_prefixes                                 = sv.body.properties.addressPrefixes
+      resource_group_name                              = split("/", sv.id)[4]
+      virtual_network_name                             = split("/", sv.id)[8]
+      nsg_resource_id                                  = try(sv.body.properties.networkSecurityGroup.id, null)
+      route_table_resource_id                          = try(sv.body.properties.routeTable.id, null)
+      nat_gateway_resource_id                          = try(sv.body.properties.natGateway.id, null)
+      application_gateway_ip_configuration_resource_id = try(sv.body.properties.applicationGatewayIPConfigurations.id, null)
     }
   }
 }
