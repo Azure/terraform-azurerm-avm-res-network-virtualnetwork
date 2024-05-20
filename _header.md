@@ -46,7 +46,7 @@ This example shows how to create subnets for a pre-exisating virtual network.
 module "avm-res-network-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  existing_vnet = {
+  existing_virtual_network = {
     resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
   }
 

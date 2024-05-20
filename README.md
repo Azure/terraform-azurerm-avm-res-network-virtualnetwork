@@ -47,7 +47,7 @@ This example shows how to create subnets for a pre-exisating virtual network.
 module "avm-res-network-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  existing_vnet = {
+  existing_virtual_network = {
     resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
   }
 
@@ -115,7 +115,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
 
-Description: (Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing\_vnet must be supplied.
+Description: (Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing\_virtual\_network must be supplied.
 
 Type: `list(string)`
 
@@ -188,7 +188,7 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_existing_vnet"></a> [existing\_vnet](#input\_existing\_vnet)
+### <a name="input_existing_virtual_network"></a> [existing\_virtual\_network](#input\_existing\_virtual\_network)
 
 Description:   (Optional) Optionally allows an existing vnet to be supplied, into which subnets can be created.
 
@@ -200,7 +200,7 @@ Description:   (Optional) Optionally allows an existing vnet to be supplied, int
   module "vnet" {
     # ...other parameters
 
-    existing_vnet = {
+    existing_virtual_network = {
       resource_id = azurerm_virtual_network.this.id
     }
     subnets = local.subnets
@@ -253,7 +253,7 @@ Default: `null`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: (Optional) The name of the virtual network to create.  If null, existing\_vnet must be supplied.
+Description: (Optional) The name of the virtual network to create.  If null, existing\_virtual\_network must be supplied.
 
 Type: `string`
 

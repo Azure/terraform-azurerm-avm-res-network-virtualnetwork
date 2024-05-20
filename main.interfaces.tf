@@ -1,6 +1,6 @@
 # Applying Management Lock to the Virtual Network if specified.
 resource "azurerm_management_lock" "this" {
-  count = var.lock != null ? 1 : 0
+  count = var.existing_virtual_network == null ? (var.lock != null ? 1 : 0) : 0
 
   lock_level = var.lock.kind
   name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
@@ -15,7 +15,7 @@ resource "azurerm_management_lock" "this" {
 
 # Assigning Roles to the Virtual Network based on the provided configurations.
 resource "azurerm_role_assignment" "vnet_level" {
-  for_each = var.role_assignments
+  for_each = var.existing_virtual_network == null ? var.role_assignments : {}
 
   principal_id                           = each.value.principal_id
   scope                                  = azapi_resource.vnet[0].id
@@ -35,10 +35,10 @@ resource "azurerm_role_assignment" "vnet_level" {
 # Create diagonostic settings for the virtual network
 resource "azurerm_monitor_diagnostic_setting" "example" {
   # Filter out entries that don't have any of the required attributes set
-  for_each = {
+  for_each = var.existing_virtual_network == null ? {
     for key, value in var.diagnostic_settings : key => value
     if value.workspace_resource_id != null || value.storage_account_resource_id != null || value.event_hub_authorization_rule_resource_id != null
-  }
+  } : {}
 
   name                           = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
   target_resource_id             = azapi_resource.vnet[0].id

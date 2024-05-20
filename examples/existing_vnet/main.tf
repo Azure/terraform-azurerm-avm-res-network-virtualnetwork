@@ -64,9 +64,9 @@ resource "azurerm_virtual_network" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-module "existing_vnet" {
+module "existing_virtual_network" {
   source = "../../"
-  existing_vnet = {
+  existing_virtual_network = {
     resource_id = azurerm_virtual_network.this.id
   }
   subnets = local.subnets

@@ -70,9 +70,9 @@ resource "azurerm_virtual_network" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-module "existing_vnet" {
+module "existing_virtual_network" {
   source = "../../"
-  existing_vnet = {
+  existing_virtual_network = {
     resource_id = azurerm_virtual_network.this.id
   }
   subnets = local.subnets
@@ -123,7 +123,7 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_existing_vnet"></a> [existing\_vnet](#module\_existing\_vnet)
+### <a name="module_existing_virtual_network"></a> [existing\_virtual\_network](#module\_existing\_virtual\_network)
 
 Source: ../../
 

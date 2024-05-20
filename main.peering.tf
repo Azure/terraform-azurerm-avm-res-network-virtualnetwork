@@ -1,5 +1,5 @@
 resource "azapi_resource" "vnet_peering" {
-  for_each = var.peerings
+  for_each = var.existing_virtual_network == null ? var.peerings : {}
 
   type = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
   body = {
@@ -25,7 +25,7 @@ resource "azapi_resource" "vnet_peering" {
 }
 
 resource "azapi_resource" "reverse_vnet_peering" {
-  for_each = { for k, v in var.peerings : k => v if v.create_reverse_peering }
+  for_each = var.existing_virtual_network == null ? { for k, v in var.peerings : k => v if v.create_reverse_peering } : {}
 
   type = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
   body = {

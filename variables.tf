@@ -1,7 +1,7 @@
 variable "address_space" {
   type        = list(string)
   default     = null
-  description = "(Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing_vnet must be supplied."
+  description = "(Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing_virtual_network must be supplied."
 }
 
 variable "ddos_protection_plan" {
@@ -65,7 +65,7 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
-variable "existing_vnet" {
+variable "existing_virtual_network" {
   type = object({
     resource_id = string
   })
@@ -81,7 +81,7 @@ variable "existing_vnet" {
   module "vnet" {
     # ...other parameters
 
-    existing_vnet = {
+    existing_virtual_network = {
       resource_id = azurerm_virtual_network.this.id
     }
     subnets = local.subnets
@@ -129,7 +129,7 @@ variable "name" {
   type        = string
   default     = null
   description = <<DESCRIPTION
-(Optional) The name of the virtual network to create.  If null, existing_vnet must be supplied.
+(Optional) The name of the virtual network to create.  If null, existing_virtual_network must be supplied.
 DESCRIPTION
 }
 
