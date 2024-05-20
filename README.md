@@ -22,7 +22,11 @@ The module supports:
 
 ## Usage
 
-To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
+To use this module in your Terraform configuration, you'll need to provide values for the required variables.
+
+### Example - Virtual Network with no Subnets
+
+This example shows the most basic usage of the module. It creates a new virtual network with no subnets.
 
 ```terraform
 module "avm-res-network-virtualnetwork" {
@@ -32,6 +36,31 @@ module "avm-res-network-virtualnetwork" {
   location            = "East US"
   name                = "myVNet"
   resource_group_name = "myResourceGroup"
+}
+```
+
+### Example - Subnet with externally sourced Virtual Network
+
+This example shows how to create subnets for a pre-exisating virtual network.
+
+```terraform
+module "avm-res-network-subnet" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
+
+  existing_vnet = {
+    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
+  }
+
+  subnets = {
+    "subnet1" = {
+      name             = "subnet1"
+      address_prefixes = ["10.0.0.0/24"]
+    }
+    "subnet2" = {
+      name             = "subnet2"
+      address_prefixes = ["10.0.1.0/24"]
+    }
+  }
 }
 ```
 
@@ -62,6 +91,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.reverse_vnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
@@ -77,19 +107,7 @@ The following resources are used by this module:
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: The location/region where the virtual network is created. Changing this forces a new resource to be created.
-
-Type: `string`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The name of the resource group where the resources will be deployed.
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -205,9 +223,19 @@ object({
 
 Default: `null`
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: (Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
+
+This is not required if supplying an existing virtual network resource id.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   Controls the Resource Lock configuration for this resource. The following properties can be specified:
+Description:   (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
@@ -225,7 +253,7 @@ Default: `null`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the virtual network to create.  If null, existing\_vnet must be supplied.
+Description: (Optional) The name of the virtual network to create.  If null, existing\_vnet must be supplied.
 
 Type: `string`
 
@@ -233,7 +261,7 @@ Default: `null`
 
 ### <a name="input_peerings"></a> [peerings](#input\_peerings)
 
-Description: A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+Description: (Optional) A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
 
 - `name`: The name of the virtual network peering configuration.
 - `remote_virtual_network_resource_id`: The resource ID of the remote virtual network.
@@ -241,25 +269,48 @@ Description: A map of virtual network peering configurations. Each entry specifi
 - `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
 - `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
 - `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
+- `create_reverse_peering`: (Optional) Creates the reverse peering to form a complete peering.
+- `reverse_name`: (Optional) If you have selected `create_reverse_peering`, then this name will be used for the reverse peer.
+- `reverse_allow_forwarded_traffic`: (Optional) If you have selected `create_reverse_peering`, enables forwarded traffic between the virtual networks. Defaults to false.
+- `reverse_allow_gateway_transit`: (Optional) If you have selected `create_reverse_peering`, enables gateway transit for the virtual networks. Defaults to false.
+- `reverse_allow_virtual_network_access`: (Optional) If you have selected `create_reverse_peering`, enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
 
 Type:
 
 ```hcl
 map(object({
-    name                               = string
-    remote_virtual_network_resource_id = string
-    allow_forwarded_traffic            = optional(bool, false)
-    allow_gateway_transit              = optional(bool, false)
-    allow_virtual_network_access       = optional(bool, true)
-    use_remote_gateways                = optional(bool, false)
+    name                                 = string
+    remote_virtual_network_resource_id   = string
+    allow_forwarded_traffic              = optional(bool, false)
+    allow_gateway_transit                = optional(bool, false)
+    allow_virtual_network_access         = optional(bool, true)
+    use_remote_gateways                  = optional(bool, false)
+    create_reverse_peering               = optional(bool, false)
+    reverse_name                         = optional(string)
+    reverse_allow_forwarded_traffic      = optional(bool, false)
+    reverse_allow_gateway_transit        = optional(bool, false)
+    reverse_allow_virtual_network_access = optional(bool, true)
+    reverse_use_remote_gateways          = optional(bool, false)
+
   }))
 ```
 
 Default: `{}`
 
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: (Optional) The name of the resource group where the resources will be deployed.
+
+This is not requied if supplying an existing virtual network resource id.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description:   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description:   (Optional) A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
@@ -291,7 +342,7 @@ Default: `{}`
 
 ### <a name="input_subnets"></a> [subnets](#input\_subnets)
 
-Description: A map of subnets to create
+Description: (Optional) A map of subnets to create
 
  - `address_prefixes` - (Required) The address prefixes to use for the subnet.
  - `enforce_private_link_endpoint_network_policies` -
@@ -370,7 +421,7 @@ Default: `{}`
 
 ### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
 
-Description: Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription.
+Description: (Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription.
 
 Type: `string`
 

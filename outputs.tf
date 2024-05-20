@@ -1,16 +1,16 @@
 output "name" {
   description = "The resource name of the virtual network."
-  value       = try(azapi_resource.vnet[0].name, local.vnet_name)
+  value       = local.output_vnet_name
 }
 
 output "resource" {
   description = "The Azure Virtual Network resource.  This will be null if an existing vnet is supplied."
-  value       = try(azapi_resource.vnet[0], null)
+  value       = local.output_vnet_resource
 }
 
 output "resource_id" {
   description = "The resource ID of the virtual network."
-  value       = try(azapi_resource.vnet[0].id, local.vnet_resource_id)
+  value       = local.output_vnet_resource_id
 }
 
 output "subnets" {

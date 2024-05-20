@@ -1,18 +1,3 @@
-variable "location" {
-  type        = string
-  description = <<DESCRIPTION
-The location/region where the virtual network is created. Changing this forces a new resource to be created.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "resource_group_name" {
-  type        = string
-  description = <<DESCRIPTION
-The name of the resource group where the resources will be deployed.
-DESCRIPTION
-}
-
 variable "address_space" {
   type        = list(string)
   default     = null
@@ -111,6 +96,16 @@ variable "existing_vnet" {
   DESCRIPTION
 }
 
+variable "location" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created. 
+
+This is not required if supplying an existing virtual network resource id.
+DESCRIPTION
+}
+
 variable "lock" {
   type = object({
     kind = string
@@ -118,7 +113,7 @@ variable "lock" {
   })
   default     = null
   description = <<DESCRIPTION
-  Controls the Resource Lock configuration for this resource. The following properties can be specified:
+  (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
   
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
@@ -134,22 +129,29 @@ variable "name" {
   type        = string
   default     = null
   description = <<DESCRIPTION
-The name of the virtual network to create.  If null, existing_vnet must be supplied.
+(Optional) The name of the virtual network to create.  If null, existing_vnet must be supplied.
 DESCRIPTION
 }
 
 variable "peerings" {
   type = map(object({
-    name                               = string
-    remote_virtual_network_resource_id = string
-    allow_forwarded_traffic            = optional(bool, false)
-    allow_gateway_transit              = optional(bool, false)
-    allow_virtual_network_access       = optional(bool, true)
-    use_remote_gateways                = optional(bool, false)
+    name                                 = string
+    remote_virtual_network_resource_id   = string
+    allow_forwarded_traffic              = optional(bool, false)
+    allow_gateway_transit                = optional(bool, false)
+    allow_virtual_network_access         = optional(bool, true)
+    use_remote_gateways                  = optional(bool, false)
+    create_reverse_peering               = optional(bool, false)
+    reverse_name                         = optional(string)
+    reverse_allow_forwarded_traffic      = optional(bool, false)
+    reverse_allow_gateway_transit        = optional(bool, false)
+    reverse_allow_virtual_network_access = optional(bool, true)
+    reverse_use_remote_gateways          = optional(bool, false)
+
   }))
   default     = {}
   description = <<DESCRIPTION
-A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+(Optional) A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
 
 - `name`: The name of the virtual network peering configuration.
 - `remote_virtual_network_resource_id`: The resource ID of the remote virtual network.
@@ -157,8 +159,25 @@ A map of virtual network peering configurations. Each entry specifies a remote v
 - `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
 - `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
 - `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
+- `create_reverse_peering`: (Optional) Creates the reverse peering to form a complete peering.
+- `reverse_name`: (Optional) If you have selected `create_reverse_peering`, then this name will be used for the reverse peer.
+- `reverse_allow_forwarded_traffic`: (Optional) If you have selected `create_reverse_peering`, enables forwarded traffic between the virtual networks. Defaults to false.
+- `reverse_allow_gateway_transit`: (Optional) If you have selected `create_reverse_peering`, enables gateway transit for the virtual networks. Defaults to false.
+- `reverse_allow_virtual_network_access`: (Optional) If you have selected `create_reverse_peering`, enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
+
 DESCRIPTION
   nullable    = false
+}
+
+variable "resource_group_name" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The name of the resource group where the resources will be deployed. 
+
+This is not requied if supplying an existing virtual network resource id.
+DESCRIPTION
 }
 
 variable "role_assignments" {
@@ -174,7 +193,7 @@ variable "role_assignments" {
   }))
   default     = {}
   description = <<DESCRIPTION
-  A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  (Optional) A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
   
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
@@ -222,7 +241,7 @@ variable "subnets" {
   }))
   default     = {} # Set the default value to an empty map
   description = <<DESCRIPTION
-A map of subnets to create
+(Optional) A map of subnets to create
 
  - `address_prefixes` - (Required) The address prefixes to use for the subnet.
  - `enforce_private_link_endpoint_network_policies` - 
@@ -269,7 +288,7 @@ DESCRIPTION
 variable "subscription_id" {
   type        = string
   default     = null
-  description = "Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+  description = "(Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
 }
 
 variable "tags" {

@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Verified Module for Azure Virtual Networks
 
-This code sample shows how to create and manage Azure Virtual Networks (vNets) and associate route tables.
+This code sample shows how to create and manage subnets for pre-existing virtual networks.
 
 ```hcl
 terraform {
@@ -75,12 +75,8 @@ module "existing_vnet" {
   existing_vnet = {
     resource_id = azurerm_virtual_network.this.id
   }
-  # note the resource group for the subnet comes from the existing_vnet id, but this is kept so that the intention is explicit.
-  resource_group_name = azurerm_resource_group.this.name
-  subnets             = local.subnets
-  location            = azurerm_resource_group.this.location
+  subnets = local.subnets
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->

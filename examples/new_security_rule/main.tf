@@ -69,7 +69,6 @@ resource "azurerm_network_security_group" "ssh" {
   }
 }
 
-
 locals {
   address_space = "10.0.0.0/16"
   subnets = {

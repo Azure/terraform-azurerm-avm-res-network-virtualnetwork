@@ -31,9 +31,9 @@ resource "azapi_resource" "subnet" {
       ] : null
     }
   }
-  locks                     = [local.vnet_resource_id]
+  locks                     = [local.output_vnet_resource_id]
   name                      = each.value.name
-  parent_id                 = local.vnet_resource_id
+  parent_id                 = local.output_vnet_resource_id
   schema_validation_enabled = true
   tags                      = var.tags
 

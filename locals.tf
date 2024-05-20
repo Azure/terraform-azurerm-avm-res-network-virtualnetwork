@@ -1,8 +1,12 @@
 locals {
-  enable_telemetry                   = var.enable_telemetry
-  resource_group_name                = coalesce(try(var.existing_vnet.resource_id[4], null), var.resource_group_name)
+  enable_telemetry                   = var.enable_telemetry && var.existing_vnet == null
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
-  subscription_id                    = coalesce(try(var.existing_vnet.resource_id[2], null), var.subscription_id, data.azurerm_client_config.this.subscription_id)
-  vnet_name                          = var.existing_vnet == null ? var.name : split("/", var.existing_vnet.resource_id)[8]
-  vnet_resource_id                   = "/subscriptions/${local.subscription_id}/resourceGroups/${local.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.vnet_name}"
+  subscription_id                    = coalesce(var.subscription_id, data.azurerm_client_config.this.subscription_id)
+  vnet_resource_id                   = var.existing_vnet == null ? "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${var.name}" : ""
+}
+
+locals {
+  output_vnet_name        = var.existing_vnet == null ? azapi_resource.vnet[0].name : split("/", var.existing_vnet.resource_id)[8]
+  output_vnet_resource    = var.existing_vnet == null ? azapi_resource.vnet[0] : null
+  output_vnet_resource_id = var.existing_vnet == null ? azapi_resource.vnet[0].id : var.existing_vnet.resource_id
 }
