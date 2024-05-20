@@ -404,6 +404,15 @@ Description: The resource ID of the virtual network.
 
 Description: Information about the subnets created in the module.
 
+- resource\_id: The resource ID of the subnet.
+- address\_prefixes: The address prefixes of the subnet.
+- resource\_group\_name: The resource group name of the subnet.
+- virtual\_network\_name: The virtual network name of the subnet.
+- nsg\_resource\_id: The network security group resource ID of the subnet.
+- route\_table\_resource\_id: The route table resource ID of the subnet.
+- nat\_gateway\_resource\_id: The NAT gateway resource ID of the subnet.
+- application\_gateway\_ip\_configuration\_resource\_id: The application gateway IP configuration resource ID of the subnet.
+
 ## Modules
 
 No modules.
