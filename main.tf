@@ -1,5 +1,3 @@
-data "azurerm_client_config" "this" {}
-
 # azapi_resource.vnet are the virtual networks that will be created
 # lifecycle ignore changes to the body to prevent subnets being deleted
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 

@@ -1,4 +1,3 @@
-
 locals {
   enable_telemetry                   = var.enable_telemetry
   resource_group_name                = coalesce(try(var.existing_vnet.resource_id[4], null), var.resource_group_name)

@@ -88,6 +88,8 @@ variable "existing_vnet" {
   description = <<DESCRIPTION
   (Optional) Optionally allows an existing vnet to be supplied, into which subnets can be created.
 
+  - resource_id: The resource ID of the existing virtual network. Changing this forces new subnet resources to be created.
+
   Example:
 
   ```terraform

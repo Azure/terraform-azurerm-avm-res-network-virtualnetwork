@@ -43,7 +43,6 @@ resource "azapi_resource" "subnet" {
   ]
 }
 
-#Required AVM Shared interfaces 
 resource "azurerm_role_assignment" "subnet_level" {
   for_each = var.role_assignments
 
