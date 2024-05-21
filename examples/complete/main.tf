@@ -95,6 +95,12 @@ resource "azurerm_network_security_group" "https" {
   }
 }
 
+resource "azurerm_user_assigned_identity" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.user_assigned_identity.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source              = "../../"
@@ -112,6 +118,13 @@ module "vnet1" {
     id = azurerm_network_ddos_protection_plan.this.id
     # due to resource cost
     enable = false
+  }
+
+  role_assignments = {
+    role1 = {
+      principal_id               = azurerm_user_assigned_identity.this.principal_id
+      role_definition_id_or_name = "Contributor"
+    }
   }
 
   subnets = {
@@ -138,6 +151,12 @@ module "vnet1" {
         id = azurerm_route_table.this.id
       }
       service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
+      role_assignments = {
+        role1 = {
+          principal_id               = azurerm_user_assigned_identity.this.principal_id
+          role_definition_id_or_name = "Contributor"
+        }
+      }
     }
   }
 }
