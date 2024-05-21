@@ -40,7 +40,7 @@ resource "azapi_resource" "vnet" {
 # This is a workaround to allow updates to the virtual network without deleting the subnets created elsewhere.
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_update_resource" "vnet" {
-  count = var.use_existing_virtual_network == null ? 0 : 1
+  count = var.use_existing_virtual_network ? 0 : 1
 
   type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {
