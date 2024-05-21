@@ -38,17 +38,16 @@ module "avm-res-network-virtualnetwork" {
 }
 ```
 
-### Example - Subnet with externally sourced Virtual Network
+### Example - Create subnets on a pre-existing Virtual Network
 
-This example shows how to create subnets for a pre-exisating virtual network.
+This example shows how to create subnets for a pre-existing virtual network.
 
 ```terraform
 module "avm-res-network-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  existing_virtual_network = {
-    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
-  }
+  resource_group_name = "myResourceGroup"
+  name                = "myVNet"
 
   subnets = {
     "subnet1" = {
