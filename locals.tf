@@ -6,5 +6,7 @@ locals {
 }
 
 locals {
-  output_vnet_resource = var.use_existing_virtual_network ? null : azapi_resource.vnet[0]
+  output_virtual_network_resource_id = var.use_existing_virtual_network ? local.vnet_resource_id : azapi_resource.vnet[0].id
+  output_virtual_network_name = var.use_existing_virtual_network ? var.name : azapi_resource.vnet[0].name
+  output_virtual_network_resource = var.use_existing_virtual_network ? null : azapi_resource.vnet[0]
 }
