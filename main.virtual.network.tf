@@ -2,7 +2,7 @@
 # lifecycle ignore changes to the body to prevent subnets being deleted
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_resource" "vnet" {
-  count = var.existing_virtual_network == null ? 1 : 0
+  count = var.use_existing_virtual_network ? 0 : 1
 
   type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {
@@ -30,7 +30,7 @@ resource "azapi_resource" "vnet" {
     ignore_changes = [body, tags]
 
     precondition {
-      condition     = var.existing_virtual_network == null ? (var.resource_group_name != null && var.location != null && var.name != null && var.address_space != null) : true
+      condition     = var.use_existing_virtual_network ? true : (var.resource_group_name != null && var.location != null && var.name != null && var.address_space != null)
       error_message = "`var.resource_group_name`, `var.location`, `var.name` and `var.address_space` must be specified unless `var.existing_virtual_network` is supplied."
     }
   }
@@ -40,7 +40,7 @@ resource "azapi_resource" "vnet" {
 # This is a workaround to allow updates to the virtual network without deleting the subnets created elsewhere.
 # see <https://github.com/Azure/terraform-azurerm-lz-vending/issues/45> for more information 
 resource "azapi_update_resource" "vnet" {
-  count = var.existing_virtual_network == null ? 1 : 0
+  count = var.use_existing_virtual_network == null ? 0 : 1
 
   type = "Microsoft.Network/virtualNetworks@2021-08-01"
   body = {

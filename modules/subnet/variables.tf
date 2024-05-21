@@ -1,0 +1,168 @@
+variable "address_prefixes" {
+  type     = list(string)
+  nullable = false
+  validation {
+    condition     = length(var.address_prefixes) > 0
+    error_message = "At least one address prefix must be supplied."
+  }
+  description = <<DESCRIPTION
+  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
+  DESCRIPTION
+}
+
+variable "virtual_network_name" {
+  type        = string
+  nullable    = false
+  description = <<DESCRIPTION
+  (Required) The name of the Virtual Network, into which the subnet will be created.
+  DESCRIPTION
+}
+
+variable "name" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The name of the virtual network to create.  If null, existing_virtual_network must be supplied.
+DESCRIPTION
+}
+
+variable "resource_group_name" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The name of the resource group where the parent virtual network is deployed. 
+DESCRIPTION
+}
+
+variable "role_assignments" {
+  type = map(object({
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+  (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  
+  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+  - `principal_id` - The ID of the principal to assign the role to.
+  - `description` - (Optional) The description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+  - `condition` - (Optional) The condition which will be used to scope the role assignment.
+  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+  
+  > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+  DESCRIPTION
+  nullable    = false
+}
+
+variable "route_table" {
+  type = object({
+    id = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The ID of the route table to associate with the subnet. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
+variable "service_endpoints" {
+  type        = set(string)
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
+  DESCRIPTION
+}
+
+variable "service_endpoint_policy_ids" {
+  type        = set(string)
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A set of service endpoint policy IDs to associate with the subnet. Changing this forces a new resource to be created.
+  DESCRIPTION
+}
+
+variable "nat_gateway" {
+  type = object({
+    id = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The ID of the NAT Gateway to associate with the subnet. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
+variable "network_security_group" {
+  type = object({
+    id = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The ID of the Network Security Group to associate with the subnet. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
+variable "private_endpoint_network_policies" {
+  type    = string
+  default = "Enabled"
+  validation {
+    condition     = can(regex("^(Disabled|Enabled|NetworkSecurityGroupEnabled|RouteTableEnabled)$", var.private_endpoint_network_policies))
+    error_message = "private_endpoint_network_policies must be one of Disabled, Enabled, NetworkSecurityGroupEnabled, or RouteTableEnabled."
+  }
+  description = <<DESCRIPTION
+(Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
+DESCRIPTION
+}
+
+variable "private_link_service_network_policies_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+(Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+DESCRIPTION
+}
+
+variable "delegation" {
+  type = list(object({
+    name = string
+    service_delegation = object({
+      name    = string
+      actions = optional(list(string))
+    })
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
+    
+    - `name` - (Required) A name for this delegation.
+    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+      - `name` - (Required) The name of the service to delegate to.
+      - `actions` - (Optional) The list of actions which should be delegated. This list is specific to the service to delegate to.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Timeouts configuration for the Subnet.
+DESCRIPTION
+}
+
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+}

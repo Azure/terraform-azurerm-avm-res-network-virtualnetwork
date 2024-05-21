@@ -1,3 +1,10 @@
+variable "resource_group_name" {
+  type        = string
+  description = <<DESCRIPTION
+(Required) The name of the resource group where the resources will be deployed. 
+DESCRIPTION
+}
+
 variable "address_space" {
   type        = list(string)
   default     = null
@@ -63,37 +70,6 @@ This variable controls whether or not telemetry is enabled for the module.
 For more information see https://aka.ms/avm/telemetry.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
-}
-
-variable "existing_virtual_network" {
-  type = object({
-    resource_id = string
-  })
-  default     = null
-  description = <<DESCRIPTION
-  (Optional) Optionally allows an existing vnet to be supplied, into which subnets can be created.
-
-  - resource_id: The resource ID of the existing virtual network. Changing this forces new subnet resources to be created.
-
-  Example:
-
-  ```terraform
-  module "vnet" {
-    # ...other parameters
-
-    existing_virtual_network = {
-      resource_id = azurerm_virtual_network.this.id
-    }
-    subnets = local.subnets
-  }
-  ```
-
-  The advantage of doing so is this encapsulates the resource_id value, which is "known after apply", in an object.
-  The object itself can be easily found out if it is null or not, which allows Terraform to make an exact plan 
-  of deployment during the "plan stage".
-
-  Reference the AVM guidance: https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tfnfr11---category-code-style---null-comparison-toggle
-  DESCRIPTION
 }
 
 variable "location" {
@@ -170,16 +146,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-(Optional) The name of the resource group where the resources will be deployed. 
-
-This is not requied if supplying an existing virtual network resource id.
-DESCRIPTION
-}
-
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
@@ -238,8 +204,18 @@ variable "subnets" {
       read   = optional(string)
       update = optional(string)
     }))
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })))
   }))
-  default     = {} # Set the default value to an empty map
+  default     = {}
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
@@ -281,6 +257,18 @@ variable "subnets" {
  - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
  - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
  - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
+
+ ---
+ `role_assignments` block supports the following:
+
+ - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+ - `principal_id` - The ID of the principal to assign the role to.
+ - `description` - (Optional) The description of the role assignment.
+ - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+ - `condition` - (Optional) The condition which will be used to scope the role assignment.
+ - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+ - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+ - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
  
 DESCRIPTION
 }
@@ -295,4 +283,15 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
+}
+
+variable "use_existing_virtual_network" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+  (Optional) Allows an existing virtual network to be targeted, into which subnets can be created.
+  When in the mode you will not be able to manage anything about the virtual network, only the subnets.
+
+  The Virtual Network is determined from the `subscription_id`, `resource_group_name`, and `name` variables.
+  DESCRIPTION
 }

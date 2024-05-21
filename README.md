@@ -92,14 +92,12 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azapi_resource.reverse_vnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_update_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
-- [azurerm_role_assignment.subnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -107,7 +105,13 @@ The following resources are used by this module:
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
+The following input variables are required:
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: (Required) The name of the resource group where the resources will be deployed.
+
+Type: `string`
 
 ## Optional Inputs
 
@@ -188,41 +192,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_existing_virtual_network"></a> [existing\_virtual\_network](#input\_existing\_virtual\_network)
-
-Description:   (Optional) Optionally allows an existing vnet to be supplied, into which subnets can be created.
-
-  - resource\_id: The resource ID of the existing virtual network. Changing this forces new subnet resources to be created.
-
-  Example:
-
-  ```terraform
-  module "vnet" {
-    # ...other parameters
-
-    existing_virtual_network = {
-      resource_id = azurerm_virtual_network.this.id
-    }
-    subnets = local.subnets
-  }
-```
-
-  The advantage of doing so is this encapsulates the resource\_id value, which is "known after apply", in an object.  
-  The object itself can be easily found out if it is null or not, which allows Terraform to make an exact plan   
-  of deployment during the "plan stage".
-
-  Reference the AVM guidance: https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tfnfr11---category-code-style---null-comparison-toggle
-
-Type:
-
-```hcl
-object({
-    resource_id = string
-  })
-```
-
-Default: `null`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: (Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
@@ -297,16 +266,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: (Optional) The name of the resource group where the resources will be deployed.
-
-This is not requied if supplying an existing virtual network resource id.
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -383,6 +342,18 @@ Description: (Optional) A map of subnets to create
  - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
  - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
 
+ ---
+ `role_assignments` block supports the following:
+
+ - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+ - `principal_id` - The ID of the principal to assign the role to.
+ - `description` - (Optional) The description of the role assignment.
+ - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+ - `condition` - (Optional) The condition which will be used to scope the role assignment.
+ - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+ - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+ - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+
 Type:
 
 ```hcl
@@ -414,6 +385,16 @@ map(object({
       read   = optional(string)
       update = optional(string)
     }))
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })))
   }))
 ```
 
@@ -434,6 +415,17 @@ Description: (Optional) Tags of the resource.
 Type: `map(string)`
 
 Default: `null`
+
+### <a name="input_use_existing_virtual_network"></a> [use\_existing\_virtual\_network](#input\_use\_existing\_virtual\_network)
+
+Description:   (Optional) Allows an existing virtual network to be targeted, into which subnets can be created.  
+  When in the mode you will not be able to manage anything about the virtual network, only the subnets.
+
+  The Virtual Network is determined from the `subscription_id`, `resource_group_name`, and `name` variables.
+
+Type: `bool`
+
+Default: `false`
 
 ## Outputs
 
@@ -466,7 +458,13 @@ Description: Information about the subnets created in the module.
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_subnet"></a> [subnet](#module\_subnet)
+
+Source: ./modules/subnet
+
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

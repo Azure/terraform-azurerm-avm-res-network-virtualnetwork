@@ -71,11 +71,11 @@ resource "azurerm_virtual_network" "this" {
 }
 
 module "existing_virtual_network" {
-  source = "../../"
-  existing_virtual_network = {
-    resource_id = azurerm_virtual_network.this.id
-  }
-  subnets = local.subnets
+  source                       = "../../"
+  use_existing_virtual_network = true
+  resource_group_name          = azurerm_resource_group.this.name
+  name                         = azurerm_virtual_network.this.name
+  subnets                      = local.subnets
 }
 ```
 

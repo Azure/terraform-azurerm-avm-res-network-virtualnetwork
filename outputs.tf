@@ -1,6 +1,6 @@
 output "name" {
   description = "The resource name of the virtual network."
-  value       = local.output_vnet_name
+  value       = var.name
 }
 
 output "resource" {
@@ -10,7 +10,7 @@ output "resource" {
 
 output "resource_id" {
   description = "The resource ID of the virtual network."
-  value       = local.output_vnet_resource_id
+  value       = local.vnet_resource_id
 }
 
 output "subnets" {
@@ -28,15 +28,15 @@ Information about the subnets created in the module.
 
 DESCRIPTION
   value = {
-    for sk, sv in azapi_resource.subnet : sk => {
-      resource_id                                      = sv.id
-      address_prefixes                                 = sv.body.properties.addressPrefixes
-      resource_group_name                              = split("/", sv.id)[4]
-      virtual_network_name                             = split("/", sv.id)[8]
-      nsg_resource_id                                  = try(sv.body.properties.networkSecurityGroup.id, null)
-      route_table_resource_id                          = try(sv.body.properties.routeTable.id, null)
-      nat_gateway_resource_id                          = try(sv.body.properties.natGateway.id, null)
-      application_gateway_ip_configuration_resource_id = try(sv.body.properties.applicationGatewayIPConfigurations.id, null)
+    for sk, sv in var.subnets : sk => {
+      resource_id                                      = module.subnet[sk].resource_id
+      address_prefixes                                 = sv.address_prefixes
+      resource_group_name                              = var.resource_group_name
+      virtual_network_name                             = var.name
+      nsg_resource_id                                  = try(sv.network_security_group.id, null)
+      route_table_resource_id                          = try(sv.route_table.id, null)
+      nat_gateway_resource_id                          = try(sv.nat_gateway.id, null)
+      application_gateway_ip_configuration_resource_id = module.subnet[sk].application_gateway_ip_configuration_resource_id
     }
   }
 }

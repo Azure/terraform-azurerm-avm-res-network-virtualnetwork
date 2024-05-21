@@ -95,7 +95,6 @@ resource "azurerm_network_security_group" "https" {
   }
 }
 
-
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source              = "../../"
