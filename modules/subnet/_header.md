@@ -28,7 +28,7 @@ module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
   resource_group_name  = "myResourceGroup"
-  virtual_network_name = "myVNet"  
+  virtual_network_name = "myVNet"
   name                 = "mySubnet"
   address_prefixes     = ["10.0.0.0/24"]
 }
