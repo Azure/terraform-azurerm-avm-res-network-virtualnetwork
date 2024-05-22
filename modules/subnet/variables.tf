@@ -1,7 +1,90 @@
-variable "subscription_id" {
+variable "address_prefixes" {
+  type        = list(string)
+  description = <<DESCRIPTION
+  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
+  DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = length(var.address_prefixes) > 0
+    error_message = "At least one address prefix must be supplied."
+  }
+}
+
+variable "name" {
   type        = string
+  description = <<DESCRIPTION
+(Optional) The name of the subnet to create.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "virtual_network_name" {
+  type        = string
+  description = <<DESCRIPTION
+  (Required) The name of the Virtual Network, into which the subnet will be created.
+  DESCRIPTION
+  nullable    = false
+}
+
+variable "delegation" {
+  type = list(object({
+    name = string
+    service_delegation = object({
+      name    = string
+      actions = optional(list(string))
+    })
+  }))
   default     = null
-  description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+  description = <<DESCRIPTION
+(Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
+    
+    - `name` - (Required) A name for this delegation.
+    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+      - `name` - (Required) The name of the service to delegate to.
+      - `actions` - (Optional) The list of actions which should be delegated. This list is specific to the service to delegate to.
+DESCRIPTION
+}
+
+variable "nat_gateway" {
+  type = object({
+    id = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The ID of the NAT Gateway to associate with the subnet. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
+variable "network_security_group" {
+  type = object({
+    id = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The ID of the Network Security Group to associate with the subnet. Changing this forces a new resource to be created.
+DESCRIPTION
+}
+
+variable "private_endpoint_network_policies" {
+  type        = string
+  default     = "Enabled"
+  description = <<DESCRIPTION
+(Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^(Disabled|Enabled|NetworkSecurityGroupEnabled|RouteTableEnabled)$", var.private_endpoint_network_policies))
+    error_message = "private_endpoint_network_policies must be one of Disabled, Enabled, NetworkSecurityGroupEnabled, or RouteTableEnabled."
+  }
+}
+
+variable "private_link_service_network_policies_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+(Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+DESCRIPTION
 }
 
 variable "resource_group_name" {
@@ -10,34 +93,6 @@ variable "resource_group_name" {
   description = <<DESCRIPTION
 (Optional) The name of the resource group where the parent virtual network is deployed. 
 DESCRIPTION
-}
-
-variable "virtual_network_name" {
-  type        = string
-  nullable    = false
-  description = <<DESCRIPTION
-  (Required) The name of the Virtual Network, into which the subnet will be created.
-  DESCRIPTION
-}
-
-variable "name" {
-  type        = string
-  nullable    = false
-  description = <<DESCRIPTION
-(Optional) The name of the subnet to create.
-DESCRIPTION
-}
-
-variable "address_prefixes" {
-  type     = list(string)
-  nullable = false
-  validation {
-    condition     = length(var.address_prefixes) > 0
-    error_message = "At least one address prefix must be supplied."
-  }
-  description = <<DESCRIPTION
-  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
-  DESCRIPTION
 }
 
 variable "role_assignments" {
@@ -79,14 +134,6 @@ variable "route_table" {
 DESCRIPTION
 }
 
-variable "service_endpoints" {
-  type        = set(string)
-  default     = null
-  description = <<DESCRIPTION
-(Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
-  DESCRIPTION
-}
-
 variable "service_endpoint_policy_ids" {
   type        = set(string)
   default     = null
@@ -95,63 +142,18 @@ variable "service_endpoint_policy_ids" {
   DESCRIPTION
 }
 
-variable "nat_gateway" {
-  type = object({
-    id = string
-  })
+variable "service_endpoints" {
+  type        = set(string)
   default     = null
   description = <<DESCRIPTION
-(Optional) The ID of the NAT Gateway to associate with the subnet. Changing this forces a new resource to be created.
-DESCRIPTION
+(Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
+  DESCRIPTION
 }
 
-variable "network_security_group" {
-  type = object({
-    id = string
-  })
+variable "subscription_id" {
+  type        = string
   default     = null
-  description = <<DESCRIPTION
-(Optional) The ID of the Network Security Group to associate with the subnet. Changing this forces a new resource to be created.
-DESCRIPTION
-}
-
-variable "private_endpoint_network_policies" {
-  type    = string
-  default = "Enabled"
-  validation {
-    condition     = can(regex("^(Disabled|Enabled|NetworkSecurityGroupEnabled|RouteTableEnabled)$", var.private_endpoint_network_policies))
-    error_message = "private_endpoint_network_policies must be one of Disabled, Enabled, NetworkSecurityGroupEnabled, or RouteTableEnabled."
-  }
-  description = <<DESCRIPTION
-(Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
-DESCRIPTION
-}
-
-variable "private_link_service_network_policies_enabled" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-(Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
-DESCRIPTION
-}
-
-variable "delegation" {
-  type = list(object({
-    name = string
-    service_delegation = object({
-      name    = string
-      actions = optional(list(string))
-    })
-  }))
-  default     = null
-  description = <<DESCRIPTION
-(Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
-    
-    - `name` - (Required) A name for this delegation.
-    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
-      - `name` - (Required) The name of the service to delegate to.
-      - `actions` - (Optional) The list of actions which should be delegated. This list is specific to the service to delegate to.
-DESCRIPTION
+  description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
 }
 
 variable "timeouts" {
