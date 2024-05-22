@@ -27,9 +27,9 @@ This example shows the most basic usage of the module. It creates a new virtual 
 module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  address_prefixes     = ["10.0.0.0/24"]
-  name                 = "mySubnet"
   resource_group_name  = "myResourceGroup"
-  virtual_network_name = "myVNet"
+  virtual_network_name = "myVNet"  
+  name                 = "mySubnet"
+  address_prefixes     = ["10.0.0.0/24"]
 }
 ```

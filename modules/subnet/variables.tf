@@ -1,13 +1,15 @@
-variable "address_prefixes" {
-  type     = list(string)
-  nullable = false
-  validation {
-    condition     = length(var.address_prefixes) > 0
-    error_message = "At least one address prefix must be supplied."
-  }
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+}
+
+variable "resource_group_name" {
+  type        = string
+  default     = null
   description = <<DESCRIPTION
-  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
-  DESCRIPTION
+(Optional) The name of the resource group where the parent virtual network is deployed. 
+DESCRIPTION
 }
 
 variable "virtual_network_name" {
@@ -20,18 +22,22 @@ variable "virtual_network_name" {
 
 variable "name" {
   type        = string
-  default     = null
+  nullable    = false
   description = <<DESCRIPTION
-(Optional) The name of the virtual network to create.  If null, existing_virtual_network must be supplied.
+(Optional) The name of the subnet to create.
 DESCRIPTION
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = null
+variable "address_prefixes" {
+  type     = list(string)
+  nullable = false
+  validation {
+    condition     = length(var.address_prefixes) > 0
+    error_message = "At least one address prefix must be supplied."
+  }
   description = <<DESCRIPTION
-(Optional) The name of the resource group where the parent virtual network is deployed. 
-DESCRIPTION
+  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
+  DESCRIPTION
 }
 
 variable "role_assignments" {
@@ -159,10 +165,4 @@ variable "timeouts" {
   description = <<DESCRIPTION
 (Optional) Timeouts configuration for the Subnet.
 DESCRIPTION
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
 }
