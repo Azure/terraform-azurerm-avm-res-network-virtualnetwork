@@ -29,7 +29,7 @@ module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
   resource_group_name  = "myResourceGroup"
-  virtual_network_name = "myVNet"  
+  virtual_network_name = "myVNet"
   name                 = "mySubnet"
   address_prefixes     = ["10.0.0.0/24"]
 }
@@ -44,13 +44,15 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.71)
+
 ## Providers
 
 The following providers are used by this module:
 
 - <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.13)
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
 
 ## Resources
 
@@ -86,6 +88,16 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_default_outbound_access_enabled"></a> [default\_outbound\_access\_enabled](#input\_default\_outbound\_access\_enabled)
+
+Description: (Optional) Determines whether default outbound internet access is enabled for this subnet. This can only be set at create time.
+
+More details here: https://learn.microsoft.com/en-gb/azure/virtual-network/ip-services/default-outbound-access
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_delegation"></a> [delegation](#input\_delegation)
 
@@ -196,7 +208,7 @@ Default: `{}`
 
 ### <a name="input_route_table"></a> [route\_table](#input\_route\_table)
 
-Description: (Optional) The ID of the route table to associate with the subnet. Changing this forces a new resource to be created.
+Description: (Optional) The ID of the route table to associate with the subnet.
 
 Type:
 
@@ -208,11 +220,17 @@ object({
 
 Default: `null`
 
-### <a name="input_service_endpoint_policy_ids"></a> [service\_endpoint\_policy\_ids](#input\_service\_endpoint\_policy\_ids)
+### <a name="input_service_endpoint_policies"></a> [service\_endpoint\_policies](#input\_service\_endpoint\_policies)
 
-Description: (Optional) A set of service endpoint policy IDs to associate with the subnet. Changing this forces a new resource to be created.
+Description: (Optional) A set of service endpoint policy IDs to associate with the subnet.
 
-Type: `set(string)`
+Type:
+
+```hcl
+map(object({
+    id = string
+  }))
+```
 
 Default: `null`
 
@@ -232,34 +250,21 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
-
-Description: (Optional) Timeouts configuration for the Subnet.
-
-Type:
-
-```hcl
-object({
-    create = optional(string)
-    delete = optional(string)
-    read   = optional(string)
-    update = optional(string)
-  })
-```
-
-Default: `null`
-
 ## Outputs
 
 The following outputs are exported:
 
 ### <a name="output_application_gateway_ip_configuration_resource_id"></a> [application\_gateway\_ip\_configuration\_resource\_id](#output\_application\_gateway\_ip\_configuration\_resource\_id)
 
-Description: n/a
+Description: The application gateway ip configurations resource id.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: All attributes of the subnet
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: n/a
+Description: The resource ID of the subnet.
 
 ## Modules
 

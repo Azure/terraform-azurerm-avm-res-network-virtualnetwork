@@ -11,6 +11,7 @@ resource "azapi_resource" "subnet" {
           }
         }
       ] : []
+      defaultOutboundAccess = var.default_outbound_access_enabled
       natGateway = var.nat_gateway != null ? {
         id = var.nat_gateway.id
       } : null
@@ -25,6 +26,11 @@ resource "azapi_resource" "subnet" {
       serviceEndpoints = var.service_endpoints != null ? [
         for service_endpoint in var.service_endpoints : {
           service = service_endpoint
+        }
+      ] : null
+      serviceEndpointPolicies = var.service_endpoint_policies != null ? [
+        for service_endpoint_policy in var.service_endpoint_policies : {
+          id = service_endpoint_policy.id
         }
       ] : null
     }

@@ -27,6 +27,17 @@ variable "virtual_network_name" {
   nullable    = false
 }
 
+variable "default_outbound_access_enabled" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+(Optional) Determines whether default outbound internet access is enabled for this subnet. This can only be set at create time.
+
+More details here: https://learn.microsoft.com/en-gb/azure/virtual-network/ip-services/default-outbound-access
+DESCRIPTION
+  nullable    = false
+}
+
 variable "delegation" {
   type = list(object({
     name = string
@@ -130,15 +141,17 @@ variable "route_table" {
   })
   default     = null
   description = <<DESCRIPTION
-(Optional) The ID of the route table to associate with the subnet. Changing this forces a new resource to be created.
+(Optional) The ID of the route table to associate with the subnet.
 DESCRIPTION
 }
 
-variable "service_endpoint_policy_ids" {
-  type        = set(string)
+variable "service_endpoint_policies" {
+  type = map(object({
+    id = string
+  }))
   default     = null
   description = <<DESCRIPTION
-(Optional) A set of service endpoint policy IDs to associate with the subnet. Changing this forces a new resource to be created.
+(Optional) A set of service endpoint policy IDs to associate with the subnet.
   DESCRIPTION
 }
 
@@ -154,17 +167,4 @@ variable "subscription_id" {
   type        = string
   default     = null
   description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
-}
-
-variable "timeouts" {
-  type = object({
-    create = optional(string)
-    delete = optional(string)
-    read   = optional(string)
-    update = optional(string)
-  })
-  default     = null
-  description = <<DESCRIPTION
-(Optional) Timeouts configuration for the Subnet.
-DESCRIPTION
 }

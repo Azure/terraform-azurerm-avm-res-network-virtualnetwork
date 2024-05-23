@@ -101,6 +101,30 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+resource "azurerm_storage_account" "this" {
+  account_replication_type = "ZRS"
+  account_tier             = "Standard"
+  location                 = azurerm_resource_group.this.location
+  name                     = module.naming.storage_account.name_unique
+  resource_group_name      = azurerm_resource_group.this.name
+}
+
+resource "azurerm_subnet_service_endpoint_storage_policy" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "sep-${module.naming.unique-seed}"
+  resource_group_name = azurerm_resource_group.this.name
+
+  definition {
+    name = "name1"
+    service_resources = [
+      azurerm_resource_group.this.id,
+      azurerm_storage_account.this.id
+    ]
+    description = "definition1"
+    service     = "Microsoft.Storage"
+  }
+}
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source              = "../../"
@@ -133,8 +157,9 @@ module "vnet1" {
       address_prefixes = ["192.168.0.0/24"]
     }
     subnet1 = {
-      name             = "${module.naming.subnet.name_unique}1"
-      address_prefixes = ["192.168.1.0/24"]
+      name                            = "${module.naming.subnet.name_unique}1"
+      address_prefixes                = ["192.168.1.0/24"]
+      default_outbound_access_enabled = true
       delegation = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
@@ -151,6 +176,9 @@ module "vnet1" {
         id = azurerm_route_table.this.id
       }
       service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
+      service_endpoint_policies = {
+        policy1 = { id = azurerm_subnet_service_endpoint_storage_policy.this.id }
+      }
       role_assignments = {
         role1 = {
           principal_id               = azurerm_user_assigned_identity.this.principal_id
