@@ -18,7 +18,6 @@ module "subnet" {
   role_assignments                              = each.value.role_assignments
 
   depends_on = [
-    azapi_resource.vnet,
-    azapi_update_resource.vnet,
+    azapi_resource.vnet
   ]
 }

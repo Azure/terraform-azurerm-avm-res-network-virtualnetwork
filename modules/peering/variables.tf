@@ -81,7 +81,6 @@ variable "reverse_name" {
   type        = string
   default     = null
   description = "The name of the reverse peering"
-  nullable    = false
 }
 
 variable "reverse_use_remote_gateways" {

@@ -4,12 +4,11 @@ resource "azurerm_management_lock" "this" {
 
   lock_level = var.lock.kind
   name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
-  scope      = azapi_resource.vnet[0].id
+  scope      = azapi_resource.vnet.id
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 
   depends_on = [
-    azapi_resource.vnet,
-    azapi_update_resource.vnet,
+    azapi_resource.vnet
   ]
 }
 
@@ -18,7 +17,7 @@ resource "azurerm_role_assignment" "vnet_level" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
-  scope                                  = azapi_resource.vnet[0].id
+  scope                                  = azapi_resource.vnet.id
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
@@ -27,8 +26,7 @@ resource "azurerm_role_assignment" "vnet_level" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 
   depends_on = [
-    azapi_resource.vnet,
-    azapi_update_resource.vnet,
+    azapi_resource.vnet
   ]
 }
 
@@ -40,7 +38,7 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
   }
 
   name                           = each.value.name != null ? each.value.name : "defaultDiagnosticSetting"
-  target_resource_id             = azapi_resource.vnet[0].id
+  target_resource_id             = azapi_resource.vnet.id
   eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id != null ? each.value.event_hub_authorization_rule_resource_id : null
   eventhub_name                  = each.value.event_hub_name != null ? each.value.event_hub_name : null
   log_analytics_workspace_id     = each.value.workspace_resource_id != null ? each.value.workspace_resource_id : null
@@ -61,7 +59,6 @@ resource "azurerm_monitor_diagnostic_setting" "example" {
   }
 
   depends_on = [
-    azapi_resource.vnet,
-    azapi_update_resource.vnet,
+    azapi_resource.vnet
   ]
 }

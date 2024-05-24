@@ -1,21 +1,32 @@
 output "name" {
   description = "The resource name of the virtual network."
-  value       = local.output_virtual_network_name
+  value       = azapi_resource.vnet.name
+}
+
+output "peerings" {
+  description = <<DESCRIPTION
+Information about the peerings created in the module.
+
+Please refer to the peering module documentation for details of the outputs
+DESCRIPTION
+  value       = module.subnet
 }
 
 output "resource" {
   description = "The Azure Virtual Network resource.  This will be null if an existing vnet is supplied."
-  value       = local.output_virtual_network_resource
+  value       = azapi_resource.vnet
 }
 
 output "resource_id" {
   description = "The resource ID of the virtual network."
-  value       = local.output_virtual_network_resource_id
+  value       = azapi_resource.vnet.id
 }
 
 output "subnets" {
   description = <<DESCRIPTION
-Information about the subnets created in the module.
+Information about the peerings created in the module.
+
+Please refer to the subnet module documentation for details of the outputs.
 DESCRIPTION
-  value       = module.subnet
+  value       = module.peering
 }

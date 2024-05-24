@@ -2,7 +2,7 @@ module "peering" {
   source   = "./modules/peering"
   for_each = var.peerings
 
-  virtual_network                      = { resource_id = azapi_resource.vnet[0].id }
+  virtual_network                      = { resource_id = azapi_resource.vnet.id }
   remote_virtual_network               = { resource_id = each.value.remote_virtual_network_resource_id }
   name                                 = each.value.name
   allow_virtual_network_access         = each.value.allow_virtual_network_access
@@ -17,7 +17,6 @@ module "peering" {
   reverse_use_remote_gateways          = each.value.reverse_use_remote_gateways
 
   depends_on = [
-    azapi_resource.vnet,
-    azapi_update_resource.vnet,
+    azapi_resource.vnet
   ]
 }

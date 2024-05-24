@@ -418,6 +418,12 @@ The following outputs are exported:
 
 Description: The resource name of the virtual network.
 
+### <a name="output_peerings"></a> [peerings](#output\_peerings)
+
+Description: Information about the peerings created in the module.
+
+Please refer to the peering module documentation for details of the outputs
+
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: The Azure Virtual Network resource.  This will be null if an existing vnet is supplied.
@@ -428,7 +434,9 @@ Description: The resource ID of the virtual network.
 
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
-Description: Information about the subnets created in the module.
+Description: Information about the peerings created in the module.
+
+Please refer to the subnet module documentation for details of the outputs.
 
 ## Modules
 

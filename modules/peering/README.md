@@ -193,17 +193,29 @@ Default: `false`
 
 The following outputs are exported:
 
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The name of the peering resource
+
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: All attributes of the peering resource
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: The resource ID of the reverse peering resource.
+Description: The resource ID of the peering resource.
+
+### <a name="output_reverse_name"></a> [reverse\_name](#output\_reverse\_name)
+
+Description: The name of the reverse peering resource
 
 ### <a name="output_reverse_resource"></a> [reverse\_resource](#output\_reverse\_resource)
 
 Description: All attributes of the reverse peering resource
+
+### <a name="output_reverse_resource_id"></a> [reverse\_resource\_id](#output\_reverse\_resource\_id)
+
+Description: The resource ID of the reverse peering resource.
 
 ## Modules
 
