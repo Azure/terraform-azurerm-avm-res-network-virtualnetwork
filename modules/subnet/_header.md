@@ -4,7 +4,7 @@ This module is used to manage Azure Virtual Network Subnets.
 
 ## Features
 
-This module supports managing virtual networks and their associated subnets together or independently.
+This module supports managing virtual networks subnets.
 
 The module supports:
 
@@ -21,15 +21,15 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 ### Example - Basic Subnet
 
-This example shows the most basic usage of the module. It creates a new virtual network with no subnets.
+This example shows the most basic usage of the module. It creates a new subnet.
 
 ```terraform
 module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  resource_group_name  = "myResourceGroup"
-  virtual_network_name = "myVNet"
-  name                 = "mySubnet"
-  address_prefixes     = ["10.0.0.0/24"]
+  virtual_network = {
+    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
+  }
+  address_prefixes = ["10.0.0.0/24"]
 }
 ```

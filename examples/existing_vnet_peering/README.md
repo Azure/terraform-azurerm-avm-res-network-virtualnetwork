@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Azure Verified Module for Azure Virtual Networks
+# Example of Virtual Network peering with pre-existing virtual networks
 
-This code sample shows how to create and manage subnets for pre-existing virtual networks.
+This code sample shows how to create and manage peerings for pre-existing virtual networks.
 
 ```hcl
 terraform {
@@ -52,30 +52,39 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-locals {
-  address_space = "10.0.0.0/16"
-  subnets = {
-    for i in range(2) :
-    "subnet${i}" => {
-      name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
-    }
-  }
-}
-
-resource "azurerm_virtual_network" "this" {
+resource "azurerm_virtual_network" "local" {
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
+  name                = "${module.naming.virtual_network.name_unique}-1"
   resource_group_name = azurerm_resource_group.this.name
 }
 
-module "existing_virtual_network" {
-  source                       = "../../"
-  use_existing_virtual_network = true
-  resource_group_name          = azurerm_resource_group.this.name
-  name                         = azurerm_virtual_network.this.name
-  subnets                      = local.subnets
+resource "azurerm_virtual_network" "remote" {
+  address_space       = ["10.1.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-2"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+module "peering" {
+  source = "../../modules/peering"
+  virtual_network = {
+    resource_id = azurerm_virtual_network.local.id
+  }
+  remote_virtual_network = {
+    resource_id = azurerm_virtual_network.remote.id
+  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
+  allow_forwarded_traffic              = true
+  allow_gateway_transit                = true
+  allow_virtual_network_access         = true
+  use_remote_gateways                  = false
+  create_reverse_peering               = true
+  reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-remote-to-local"
+  reverse_allow_forwarded_traffic      = false
+  reverse_allow_gateway_transit        = false
+  reverse_allow_virtual_network_access = true
+  reverse_use_remote_gateways          = false
 }
 ```
 
@@ -103,7 +112,8 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_virtual_network.local](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_virtual_network.remote](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -123,17 +133,17 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_existing_virtual_network"></a> [existing\_virtual\_network](#module\_existing\_virtual\_network)
-
-Source: ../../
-
-Version:
-
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
 
 Version: ~> 0.3
+
+### <a name="module_peering"></a> [peering](#module\_peering)
+
+Source: ../../modules/peering
+
+Version:
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 

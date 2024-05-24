@@ -3,6 +3,11 @@
 
 This module is used to manage Azure Virtual Networks, Subnets and Peerings.
 
+This module is composite and includes sub modules that can be used independently for pre-existing vitual networks. These sub modules are:
+
+- subnet - The subnet module is used to manage subnets within a virtual network.
+- peering - The peering module is used to manage virtual network peerings.
+
 ## Features
 
 This module supports managing virtual networks and their associated subnets together or independently. There is no separate AVM for subnets, this is also the subnet module.
@@ -36,20 +41,6 @@ module "avm-res-network-virtualnetwork" {
   location            = "East US"
   name                = "myVNet"
   resource_group_name = "myResourceGroup"
-}
-```
-
-### Example - Create subnets on a pre-existing Virtual Network
-
-This example shows how to create subnets for a pre-existing virtual network.
-
-```terraform
-module "avm-res-network-subnet" {
-  source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
-
-  resource_group_name = "myResourceGroup"
-  name                = "myVNet"
-
   subnets = {
     "subnet1" = {
       name             = "subnet1"
@@ -60,6 +51,23 @@ module "avm-res-network-subnet" {
       address_prefixes = ["10.0.1.0/24"]
     }
   }
+}
+```
+
+### Example - Create subnets on a pre-existing Virtual Network
+
+This example shows how to create a subnets for a pre-existing virtual network using the subnet module.
+
+```terraform
+module "avm-res-network-subnet" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
+
+  virtual_network = {
+    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
+  }
+  name             = "subnet1"
+  address_prefixes = ["10.0.0.0/24"]
+
 }
 ```
 
@@ -90,10 +98,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azapi_resource.reverse_vnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.vnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_update_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
@@ -106,6 +111,18 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
+
+Description: (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
+
+Type: `set(string)`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: (Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
+
+Type: `string`
+
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: (Required) The name of the resource group where the resources will be deployed.
@@ -115,14 +132,6 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
-
-### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
-
-Description: (Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing\_virtual\_network must be supplied.
-
-Type: `list(string)`
-
-Default: `null`
 
 ### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
 
@@ -169,13 +178,13 @@ Default: `{}`
 
 Description: (Optional) Specifies a list of IP addresses representing DNS servers.
 
-- `dns_servers`: List of IP addresses of DNS servers.
+- `dns_servers`: Set of IP addresses of DNS servers.
 
 Type:
 
 ```hcl
 object({
-    dns_servers = list(string)
+    dns_servers = set(string)
   })
 ```
 
@@ -190,16 +199,6 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: (Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
-
-This is not required if supplying an existing virtual network resource id.
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
@@ -260,7 +259,6 @@ map(object({
     reverse_allow_gateway_transit        = optional(bool, false)
     reverse_allow_virtual_network_access = optional(bool, true)
     reverse_use_remote_gateways          = optional(bool, false)
-
   }))
 ```
 
@@ -412,17 +410,6 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_use_existing_virtual_network"></a> [use\_existing\_virtual\_network](#input\_use\_existing\_virtual\_network)
-
-Description:   (Optional) Allows an existing virtual network to be targeted, into which subnets can be created.  
-  When in the mode you will not be able to manage anything about the virtual network, only the subnets.
-
-  The Virtual Network is determined from the `subscription_id`, `resource_group_name`, and `name` variables.
-
-Type: `bool`
-
-Default: `false`
-
 ## Outputs
 
 The following outputs are exported:
@@ -446,6 +433,12 @@ Description: Information about the subnets created in the module.
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_peering"></a> [peering](#module\_peering)
+
+Source: ./modules/peering
+
+Version:
 
 ### <a name="module_subnet"></a> [subnet](#module\_subnet)
 

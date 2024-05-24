@@ -46,28 +46,37 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-locals {
-  address_space = "10.0.0.0/16"
-  subnets = {
-    for i in range(2) :
-    "subnet${i}" => {
-      name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
-    }
-  }
-}
-
-resource "azurerm_virtual_network" "this" {
+resource "azurerm_virtual_network" "local" {
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
+  name                = "${module.naming.virtual_network.name_unique}-1"
   resource_group_name = azurerm_resource_group.this.name
 }
 
-module "existing_virtual_network" {
-  source                       = "../../"
-  use_existing_virtual_network = true
-  resource_group_name          = azurerm_resource_group.this.name
-  name                         = azurerm_virtual_network.this.name
-  subnets                      = local.subnets
+resource "azurerm_virtual_network" "remote" {
+  address_space       = ["10.1.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-2"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+module "peering" {
+  source = "../../modules/peering"
+  virtual_network = {
+    resource_id = azurerm_virtual_network.local.id
+  }
+  remote_virtual_network = {
+    resource_id = azurerm_virtual_network.remote.id
+  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
+  allow_forwarded_traffic              = true
+  allow_gateway_transit                = true
+  allow_virtual_network_access         = true
+  use_remote_gateways                  = false
+  create_reverse_peering               = true
+  reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-remote-to-local"
+  reverse_allow_forwarded_traffic      = false
+  reverse_allow_gateway_transit        = false
+  reverse_allow_virtual_network_access = true
+  reverse_use_remote_gateways          = false
 }

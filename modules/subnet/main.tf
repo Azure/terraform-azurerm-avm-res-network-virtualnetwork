@@ -35,9 +35,9 @@ resource "azapi_resource" "subnet" {
       ] : null
     }
   }
-  locks                     = [local.virtual_network_resource_id]
+  locks                     = [var.virtual_network.resource_id]
   name                      = var.name
-  parent_id                 = local.virtual_network_resource_id
+  parent_id                 = var.virtual_network.resource_id
   schema_validation_enabled = true
 }
 

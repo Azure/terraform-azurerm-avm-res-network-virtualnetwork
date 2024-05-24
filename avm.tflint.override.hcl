@@ -169,7 +169,7 @@ rule "diagnostic_settings" {
 }
 
 rule "location" {
-  enabled = false
+  enabled = true
 }
 
 rule "lock" {

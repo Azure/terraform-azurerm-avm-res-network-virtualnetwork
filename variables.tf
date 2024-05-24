@@ -1,14 +1,27 @@
+variable "address_space" {
+  type        = set(string)
+  description = "(Optional) The address spaces applied to the virtual network. You can supply more than one address space."
+  nullable    = false
+
+  validation {
+    condition     = length(var.address_space) > 0
+    error_message = "Address space must contain at least one element."
+  }
+}
+
+variable "location" {
+  type        = string
+  description = <<DESCRIPTION
+(Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created. 
+DESCRIPTION
+  nullable    = false
+}
+
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
 (Required) The name of the resource group where the resources will be deployed. 
 DESCRIPTION
-}
-
-variable "address_space" {
-  type        = list(string)
-  default     = null
-  description = "(Optional) The address space that is used the virtual network. You can supply more than one address space.  If null, existing_virtual_network must be supplied."
 }
 
 variable "ddos_protection_plan" {
@@ -52,13 +65,13 @@ variable "diagnostic_settings" {
 
 variable "dns_servers" {
   type = object({
-    dns_servers = list(string)
+    dns_servers = set(string)
   })
   default     = null
   description = <<DESCRIPTION
 (Optional) Specifies a list of IP addresses representing DNS servers.
 
-- `dns_servers`: List of IP addresses of DNS servers.
+- `dns_servers`: Set of IP addresses of DNS servers.
 DESCRIPTION
 }
 
@@ -69,16 +82,6 @@ variable "enable_telemetry" {
 This variable controls whether or not telemetry is enabled for the module.
 For more information see https://aka.ms/avm/telemetry.
 If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-}
-
-variable "location" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-(Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created. 
-
-This is not required if supplying an existing virtual network resource id.
 DESCRIPTION
 }
 
@@ -123,7 +126,6 @@ variable "peerings" {
     reverse_allow_gateway_transit        = optional(bool, false)
     reverse_allow_virtual_network_access = optional(bool, true)
     reverse_use_remote_gateways          = optional(bool, false)
-
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -280,15 +282,4 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
-}
-
-variable "use_existing_virtual_network" {
-  type        = bool
-  default     = false
-  description = <<DESCRIPTION
-  (Optional) Allows an existing virtual network to be targeted, into which subnets can be created.
-  When in the mode you will not be able to manage anything about the virtual network, only the subnets.
-
-  The Virtual Network is determined from the `subscription_id`, `resource_group_name`, and `name` variables.
-  DESCRIPTION
 }

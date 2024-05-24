@@ -19,10 +19,14 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "virtual_network_name" {
-  type        = string
+variable "virtual_network" {
+  type = object({
+    resource_id = string
+  })
   description = <<DESCRIPTION
-  (Required) The name of the Virtual Network, into which the subnet will be created.
+  (Required) The Virtual Network, into which the subnet will be created.
+
+  - resource_id - The ID of the Virtual Network.
   DESCRIPTION
   nullable    = false
 }
@@ -98,14 +102,6 @@ variable "private_link_service_network_policies_enabled" {
 DESCRIPTION
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-(Optional) The name of the resource group where the parent virtual network is deployed. 
-DESCRIPTION
-}
-
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
@@ -161,10 +157,4 @@ variable "service_endpoints" {
   description = <<DESCRIPTION
 (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
   DESCRIPTION
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = "(Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
 }

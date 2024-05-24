@@ -3,10 +3,7 @@ module "subnet" {
 
   for_each = var.subnets
 
-  subscription_id      = var.subscription_id
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = var.name
-
+  virtual_network                               = { resource_id = azapi_resource.vnet.id }
   name                                          = each.value.name
   address_prefixes                              = each.value.address_prefixes
   delegation                                    = each.value.delegation

@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Complete example for AVM virtual network module
+# Complete example for Azure Virtual Network module
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
@@ -183,7 +183,9 @@ module "vnet1" {
       }
       service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
       service_endpoint_policies = {
-        policy1 = { id = azurerm_subnet_service_endpoint_storage_policy.this.id }
+        policy1 = {
+          id = azurerm_subnet_service_endpoint_storage_policy.this.id
+        }
       }
       role_assignments = {
         role1 = {

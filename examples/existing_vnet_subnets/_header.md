@@ -1,3 +1,3 @@
-# Azure Verified Module for Azure Virtual Networks
+# Example of Subnets with pre-existing virtual networks
 
 This code sample shows how to create and manage subnets for pre-existing virtual networks.

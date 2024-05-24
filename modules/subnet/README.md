@@ -5,7 +5,7 @@ This module is used to manage Azure Virtual Network Subnets.
 
 ## Features
 
-This module supports managing virtual networks and their associated subnets together or independently.
+This module supports managing virtual networks subnets.
 
 The module supports:
 
@@ -22,16 +22,16 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 ### Example - Basic Subnet
 
-This example shows the most basic usage of the module. It creates a new virtual network with no subnets.
+This example shows the most basic usage of the module. It creates a new subnet.
 
 ```terraform
 module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  resource_group_name  = "myResourceGroup"
-  virtual_network_name = "myVNet"
-  name                 = "mySubnet"
-  address_prefixes     = ["10.0.0.0/24"]
+  virtual_network = {
+    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
+  }
+  address_prefixes = ["10.0.0.0/24"]
 }
 ```
 
@@ -79,11 +79,19 @@ Description: (Optional) The name of the subnet to create.
 
 Type: `string`
 
-### <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name)
+### <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network)
 
-Description:   (Required) The name of the Virtual Network, into which the subnet will be created.
+Description:   (Required) The Virtual Network, into which the subnet will be created.
 
-Type: `string`
+  - resource\_id - The ID of the Virtual Network.
+
+Type:
+
+```hcl
+object({
+    resource_id = string
+  })
+```
 
 ## Optional Inputs
 
@@ -166,14 +174,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: (Optional) The name of the resource group where the parent virtual network is deployed.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -239,14 +239,6 @@ Default: `null`
 Description: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
 
 Type: `set(string)`
-
-Default: `null`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: (Optional) The Subscription ID of the Parent Virtual Network. If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription.
-
-Type: `string`
 
 Default: `null`
 

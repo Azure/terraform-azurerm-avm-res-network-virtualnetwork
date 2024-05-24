@@ -177,7 +177,9 @@ module "vnet1" {
       }
       service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
       service_endpoint_policies = {
-        policy1 = { id = azurerm_subnet_service_endpoint_storage_policy.this.id }
+        policy1 = {
+          id = azurerm_subnet_service_endpoint_storage_policy.this.id
+        }
       }
       role_assignments = {
         role1 = {
