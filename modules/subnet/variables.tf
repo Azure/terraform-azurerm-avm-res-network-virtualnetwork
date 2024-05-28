@@ -87,6 +87,7 @@ variable "private_endpoint_network_policies" {
   description = <<DESCRIPTION
 (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
 DESCRIPTION
+  nullable    = false
 
   validation {
     condition     = can(regex("^(Disabled|Enabled|NetworkSecurityGroupEnabled|RouteTableEnabled)$", var.private_endpoint_network_policies))
@@ -100,6 +101,7 @@ variable "private_link_service_network_policies_enabled" {
   description = <<DESCRIPTION
 (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "role_assignments" {
