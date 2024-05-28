@@ -9,7 +9,7 @@ Information about the peerings created in the module.
 
 Please refer to the peering module documentation for details of the outputs
 DESCRIPTION
-  value       = module.subnet
+  value       = module.peering
 }
 
 output "resource" {
@@ -28,5 +28,5 @@ Information about the peerings created in the module.
 
 Please refer to the subnet module documentation for details of the outputs.
 DESCRIPTION
-  value       = module.peering
+  value       = module.subnet
 }
