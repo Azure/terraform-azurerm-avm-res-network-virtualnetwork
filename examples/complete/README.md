@@ -286,6 +286,10 @@ Description: The virtual network resource.
 
 Description: The resource ID of the virtual network.
 
+### <a name="output_subnet1"></a> [subnet1](#output\_subnet1)
+
+Description: The subnet resource.
+
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
 Description: Information about the subnets created in the module.

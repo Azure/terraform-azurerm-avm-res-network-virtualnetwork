@@ -16,6 +16,11 @@ output "resource_id" {
   value       = module.vnet1.resource_id
 }
 
+output "subnet1" {
+  description = "The subnet resource."
+  value       = module.vnet1.subnets["subnet1"]
+}
+
 #Output subnets
 output "subnets" {
   description = "Information about the subnets created in the module."
