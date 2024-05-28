@@ -1,32 +1,48 @@
+variable "address_space" {
+  type        = set(string)
+  description = "(Optional) The address spaces applied to the virtual network. You can supply more than one address space."
+  nullable    = false
+
+  validation {
+    condition     = length(var.address_space) > 0
+    error_message = "Address space must contain at least one element."
+  }
+}
+
 variable "location" {
   type        = string
   description = <<DESCRIPTION
-The location/region where the virtual network is created. Changing this forces a new resource to be created.
+(Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created. 
 DESCRIPTION
+  nullable    = false
 }
 
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
-The name of the resource group where the resources will be deployed.
+(Required) The name of the resource group where the resources will be deployed. 
 DESCRIPTION
 }
 
-variable "virtual_network_address_space" {
-  type        = list(string)
-  description = " (Required) The address space that is used the virtual network. You can supply more than one address space."
-  nullable    = false
+variable "ddos_protection_plan" {
+  type = object({
+    id     = string
+    enable = bool
+  })
+  default     = null
+  description = <<DESCRIPTION
+Specifies an AzureNetwork DDoS Protection Plan.
 
-  validation {
-    condition     = length(var.virtual_network_address_space) > 0
-    error_message = "Please provide at least one cidr as address space."
-  }
+- `id`: The ID of the DDoS Protection Plan. (Required)
+- `enable`: Enables or disables the DDoS Protection Plan on the Virtual Network. (Required)
+DESCRIPTION
 }
 
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
-    log_categories_and_groups                = optional(set(string), ["VMProtectionAlerts"])
+    log_categories                           = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
@@ -47,6 +63,18 @@ variable "diagnostic_settings" {
   }
 }
 
+variable "dns_servers" {
+  type = object({
+    dns_servers = set(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies a list of IP addresses representing DNS servers.
+
+- `dns_servers`: Set of IP addresses of DNS servers.
+DESCRIPTION
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -59,27 +87,65 @@ DESCRIPTION
 
 variable "lock" {
   type = object({
+    kind = string
     name = optional(string, null)
-    kind = optional(string, "None")
-
-
   })
-  default     = {}
-  description = "The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
-  nullable    = false
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
+  
+  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  DESCRIPTION
 
   validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
+    condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
+    error_message = "Lock kind must be either `\"CanNotDelete\"` or `\"ReadOnly\"`."
   }
 }
 
 variable "name" {
   type        = string
-  default     = "acctvnet"
+  default     = null
   description = <<DESCRIPTION
-The name of the virtual network to create.
+(Optional) The name of the virtual network to create.  If null, existing_virtual_network must be supplied.
 DESCRIPTION
+}
+
+variable "peerings" {
+  type = map(object({
+    name                                 = string
+    remote_virtual_network_resource_id   = string
+    allow_forwarded_traffic              = optional(bool, false)
+    allow_gateway_transit                = optional(bool, false)
+    allow_virtual_network_access         = optional(bool, true)
+    use_remote_gateways                  = optional(bool, false)
+    create_reverse_peering               = optional(bool, false)
+    reverse_name                         = optional(string)
+    reverse_allow_forwarded_traffic      = optional(bool, false)
+    reverse_allow_gateway_transit        = optional(bool, false)
+    reverse_allow_virtual_network_access = optional(bool, true)
+    reverse_use_remote_gateways          = optional(bool, false)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+
+- `name`: The name of the virtual network peering configuration.
+- `remote_virtual_network_resource_id`: The resource ID of the remote virtual network.
+- `allow_forwarded_traffic`: (Optional) Enables forwarded traffic between the virtual networks. Defaults to false.
+- `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
+- `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
+- `create_reverse_peering`: (Optional) Creates the reverse peering to form a complete peering.
+- `reverse_name`: (Optional) If you have selected `create_reverse_peering`, then this name will be used for the reverse peer.
+- `reverse_allow_forwarded_traffic`: (Optional) If you have selected `create_reverse_peering`, enables forwarded traffic between the virtual networks. Defaults to false.
+- `reverse_allow_gateway_transit`: (Optional) If you have selected `create_reverse_peering`, enables gateway transit for the virtual networks. Defaults to false.
+- `reverse_allow_virtual_network_access`: (Optional) If you have selected `create_reverse_peering`, enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
+
+DESCRIPTION
+  nullable    = false
 }
 
 variable "role_assignments" {
@@ -91,103 +157,129 @@ variable "role_assignments" {
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
   }))
   default     = {}
   description = <<DESCRIPTION
-  Map of configurations required to configure RBAC
+  (Optional) A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  
+  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+  - `principal_id` - The ID of the principal to assign the role to.
+  - `description` - (Optional) The description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+  - `condition` - (Optional) The condition which will be used to scope the role assignment.
+  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+  
+  > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
+  nullable    = false
 }
 
 variable "subnets" {
-  type = map(object(
-    {
-      address_prefixes = list(string) # (Required) The address prefixes to use for the subnet.
-      nat_gateway = optional(object({
-        id = string # (Required) The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
-      }))
-      network_security_group = optional(object({
-        id = string # (Required) The ID of the Network Security Group which should be associated with the Subnet. Changing this forces a new association to be created.
-      }))
-      private_endpoint_network_policies_enabled     = optional(bool, true) # (Optional) Enable or Disable network policies for the private endpoint on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
-      private_link_service_network_policies_enabled = optional(bool, true) # (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
-      route_table = optional(object({
-        id = string # (Required) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
-      }))
-      service_endpoints           = optional(set(string)) # (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage` and `Microsoft.Web`.
-      service_endpoint_policy_ids = optional(set(string)) # (Optional) The list of IDs of Service Endpoint Policies to associate with the subnet.
-      delegations = optional(list(
-        object(
-          {
-            name = string # (Required) A name for this delegation.
-            service_delegation = object({
-              name    = string                 # (Required) The name of service to delegate to. Possible values include `Microsoft.ApiManagement/service`, `Microsoft.AzureCosmosDB/clusters`, `Microsoft.BareMetal/AzureVMware`, `Microsoft.BareMetal/CrayServers`, `Microsoft.Batch/batchAccounts`, `Microsoft.ContainerInstance/containerGroups`, `Microsoft.ContainerService/managedClusters`, `Microsoft.Databricks/workspaces`, `Microsoft.DBforMySQL/flexibleServers`, `Microsoft.DBforMySQL/serversv2`, `Microsoft.DBforPostgreSQL/flexibleServers`, `Microsoft.DBforPostgreSQL/serversv2`, `Microsoft.DBforPostgreSQL/singleServers`, `Microsoft.HardwareSecurityModules/dedicatedHSMs`, `Microsoft.Kusto/clusters`, `Microsoft.Logic/integrationServiceEnvironments`, `Microsoft.MachineLearningServices/workspaces`, `Microsoft.Netapp/volumes`, `Microsoft.Network/managedResolvers`, `Microsoft.Orbital/orbitalGateways`, `Microsoft.PowerPlatform/vnetaccesslinks`, `Microsoft.ServiceFabricMesh/networks`, `Microsoft.Sql/managedInstances`, `Microsoft.Sql/servers`, `Microsoft.StoragePool/diskPools`, `Microsoft.StreamAnalytics/streamingJobs`, `Microsoft.Synapse/workspaces`, `Microsoft.Web/hostingEnvironments`, `Microsoft.Web/serverFarms`, `NGINX.NGINXPLUS/nginxDeployments` and `PaloAltoNetworks.Cloudngfw/firewalls`.
-              actions = optional(list(string)) # (Optional) A list of Actions which should be delegated. This list is specific to the service to delegate to. Possible values include `Microsoft.Network/networkinterfaces/*`, `Microsoft.Network/virtualNetworks/subnets/action`, `Microsoft.Network/virtualNetworks/subnets/join/action`, `Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action` and `Microsoft.Network/virtualNetworks/subnets/unprepareNetworkPolicies/action`.
-            })
-          }
-        )
-      ))
-    }
-  ))
-  default     = {} # Set the default value to an empty map
-  description = <<DESCRIPTION
-The subnets to create
-DESCRIPTION
-}
-
-variable "tags" {
-  type = map(any)
-  default = {
-
-  }
-  description = <<DESCRIPTION
-The tags to associate with your network and subnets.
-DESCRIPTION
-}
-
-variable "tracing_tags_enabled" {
-  type        = bool
-  default     = false
-  description = <<DESCRIPTION
-Whether enable tracing tags that generated by BridgeCrew Yor.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "tracing_tags_prefix" {
-  type        = string
-  default     = "avm_"
-  description = <<DESCRIPTION
-Default prefix for generated tracing tags.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "virtual_network_ddos_protection_plan" {
-  type = object({
-    id     = string #  (Required) The ID of DDoS Protection Plan.
-    enable = bool   # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
-  })
-  default     = null
-  description = "AzureNetwork DDoS Protection Plan."
-}
-
-variable "virtual_network_dns_servers" {
-  type = object({
-    dns_servers = list(string)
-  })
-  default     = null
-  description = "(Optional) List of IP addresses of DNS servers"
-}
-
-variable "vnet_peering_config" {
   type = map(object({
-    remote_vnet_id          = string
-    allow_forwarded_traffic = bool
-    allow_gateway_transit   = bool
-    use_remote_gateways     = bool
+    address_prefixes = list(string)
+    name             = string
+    nat_gateway = optional(object({
+      id = string
+    }))
+    network_security_group = optional(object({
+      id = string
+    }))
+    private_endpoint_network_policies             = optional(string, "Enabled")
+    private_link_service_network_policies_enabled = optional(bool, true)
+    route_table = optional(object({
+      id = string
+    }))
+    service_endpoint_policies = optional(map(object({
+      id = string
+    })))
+    service_endpoints               = optional(set(string))
+    default_outbound_access_enabled = optional(bool, false)
+    delegation = optional(list(object({
+      name = string
+      service_delegation = object({
+        name = string
+      })
+    })))
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })))
   }))
   default     = {}
   description = <<DESCRIPTION
-A map of virtual network peering configurations. Each entry specifies a remote virtual network by ID and includes settings for traffic forwarding, gateway transit, and remote gateways usage.
+(Optional) A map of subnets to create
+
+ - `address_prefixes` - (Required) The address prefixes to use for the subnet.
+ - `enforce_private_link_endpoint_network_policies` - 
+ - `enforce_private_link_service_network_policies` - 
+ - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
+ - `default_outbound_access_enabled` - (Optional) Whether to allow internet access from the subnet. Defaults to `false`.
+ - `private_endpoint_network_policies` - (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
+ - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
+ - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
+ - `service_endpoints` - (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+
+ ---
+ `delegation` supports the following:
+ - `name` - (Required) A name for this delegation.
+
+ ---
+ `nat_gateway` supports the following:
+ - `id` - (Optional) The ID of the NAT Gateway which should be associated with the Subnet. Changing this forces a new resource to be created.
+
+ ---
+ `network_security_group` supports the following:
+ - `id` - (Optional) The ID of the Network Security Group which should be associated with the Subnet. Changing this forces a new association to be created.
+
+ ---
+ `route_table` supports the following:
+ - `id` - (Optional) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
+
+ ---
+ `timeouts` supports the following:
+ - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
+ - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
+
+ ---
+ `role_assignments` supports the following:
+
+ - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+ - `principal_id` - The ID of the principal to assign the role to.
+ - `description` - (Optional) The description of the role assignment.
+ - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+ - `condition` - (Optional) The condition which will be used to scope the role assignment.
+ - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+ - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+ - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+ 
 DESCRIPTION
+}
+
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+}
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) Tags of the resource."
 }

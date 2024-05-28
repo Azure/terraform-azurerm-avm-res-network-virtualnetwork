@@ -46,40 +46,37 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-resource "azurerm_route_table" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "MyRouteTable"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-resource "azurerm_route" "this" {
-  address_prefix      = local.address_space
-  name                = "acceptanceTestRoute1"
-  next_hop_type       = "VnetLocal"
-  resource_group_name = azurerm_resource_group.this.name
-  route_table_name    = azurerm_route_table.this.name
-}
-
-locals {
-  address_space = "10.0.0.0/16"
-  subnets = {
-    for i in range(3) :
-    "subnet${i}" => {
-      name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
-      route_table = {
-        id = azurerm_route_table.this.id
-      }
-    }
-  }
-}
-
-module "vnet" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azurerm_virtual_network" "local" {
   address_space       = ["10.0.0.0/16"]
-  subnets             = local.subnets
   location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name
+  name                = "${module.naming.virtual_network.name_unique}-1"
+  resource_group_name = azurerm_resource_group.this.name
 }
 
+resource "azurerm_virtual_network" "remote" {
+  address_space       = ["10.1.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-2"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+module "peering" {
+  source = "../../modules/peering"
+  virtual_network = {
+    resource_id = azurerm_virtual_network.local.id
+  }
+  remote_virtual_network = {
+    resource_id = azurerm_virtual_network.remote.id
+  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
+  allow_forwarded_traffic              = true
+  allow_gateway_transit                = true
+  allow_virtual_network_access         = true
+  use_remote_gateways                  = false
+  create_reverse_peering               = true
+  reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-remote-to-local"
+  reverse_allow_forwarded_traffic      = false
+  reverse_allow_gateway_transit        = false
+  reverse_allow_virtual_network_access = true
+  reverse_use_remote_gateways          = false
+}

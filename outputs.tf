@@ -1,22 +1,32 @@
-output "subnets" {
-  description = "Information about the subnets created in the module."
-  value = {
-    for s in azurerm_subnet.subnet : s.name => {
-      id                 = s.id
-      address_prefixes   = s.address_prefixes
-      resource_group     = s.resource_group_name
-      virtual_network    = s.virtual_network_name
-      nsg_association_id = try(azurerm_subnet_network_security_group_association.vnet[s.name].id, null)
-    }
-  }
+output "name" {
+  description = "The resource name of the virtual network."
+  value       = azapi_resource.vnet.name
 }
 
-output "virtual_network_id" {
+output "peerings" {
+  description = <<DESCRIPTION
+Information about the peerings created in the module.
+
+Please refer to the peering module documentation for details of the outputs
+DESCRIPTION
+  value       = module.subnet
+}
+
+output "resource" {
+  description = "The Azure Virtual Network resource.  This will be null if an existing vnet is supplied."
+  value       = azapi_resource.vnet
+}
+
+output "resource_id" {
   description = "The resource ID of the virtual network."
-  value       = azurerm_virtual_network.vnet.id
+  value       = azapi_resource.vnet.id
 }
 
-output "vnet_resource" {
-  description = "The Azure Virtual Network resource"
-  value       = azurerm_virtual_network.vnet
+output "subnets" {
+  description = <<DESCRIPTION
+Information about the peerings created in the module.
+
+Please refer to the subnet module documentation for details of the outputs.
+DESCRIPTION
+  value       = module.peering
 }

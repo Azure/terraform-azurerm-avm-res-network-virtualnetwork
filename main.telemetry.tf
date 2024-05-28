@@ -7,7 +7,7 @@ resource "random_id" "telem" {
 # This is the module telemetry deployment that is only created if telemetry is enabled.
 # It is deployed to the resource's resource group.
 resource "azurerm_resource_group_template_deployment" "telemetry" {
-  count = var.enable_telemetry ? 1 : 0
+  count = local.enable_telemetry ? 1 : 0
 
   deployment_mode     = "Incremental"
   name                = local.telem_arm_deployment_name

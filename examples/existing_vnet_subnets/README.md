@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Simple example for the Azure Virtual Network module
+# Example of Subnets with pre-existing virtual networks
 
-This shows how to create and manage Azure Virtual Networks (vNets) using the minimal, default values from the module.
+This code sample shows how to create and manage subnets for pre-existing virtual networks.
 
 ```hcl
 terraform {
@@ -52,15 +52,32 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-# Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
-module "vnet" {
-  source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = true
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+locals {
+  address_space = "10.0.0.0/16"
+  subnets = {
+    for i in range(2) :
+    "subnet${i}" => {
+      name             = "${module.naming.subnet.name_unique}${i}"
+      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
+    }
+  }
+}
 
-  address_space = ["10.0.0.0/16"]
+resource "azurerm_virtual_network" "this" {
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.virtual_network.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+module "subnets" {
+  for_each = local.subnets
+  source   = "../../modules/subnet"
+  virtual_network = {
+    resource_id = azurerm_virtual_network.this.id
+  }
+  name             = each.value.name
+  address_prefixes = each.value.address_prefixes
 }
 ```
 
@@ -88,6 +105,7 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -119,9 +137,9 @@ Source: Azure/regions/azurerm
 
 Version: ~> 0.3
 
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
+### <a name="module_subnets"></a> [subnets](#module\_subnets)
 
-Source: ../../
+Source: ../../modules/subnet
 
 Version:
 
