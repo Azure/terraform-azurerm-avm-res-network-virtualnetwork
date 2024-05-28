@@ -433,7 +433,7 @@ Description: The resource ID of the virtual network.
 
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
-Description: Information about the peerings created in the module.
+Description: Information about the subnets created in the module.
 
 Please refer to the subnet module documentation for details of the outputs.
 
