@@ -22,7 +22,7 @@ This example shows the basic usage of the module. It creates a new bi-directiona
 
 ```terraform
 module "avm-res-network-virtualnetwork-subnet" {
-  source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
+  source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
 
   virtual_network = {
     resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroupSpoke/providers/Microsoft.Network/virtualNetworks/myVNetLocal"
