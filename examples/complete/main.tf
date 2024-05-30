@@ -125,6 +125,12 @@ resource "azurerm_subnet_service_endpoint_storage_policy" "this" {
   }
 }
 
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source              = "../../"
@@ -187,6 +193,14 @@ module "vnet1" {
           role_definition_id_or_name = "Contributor"
         }
       }
+    }
+  }
+
+  diagnostic_settings = {
+    sendToLogAnalytics = {
+      name                           = "sendToLogAnalytics"
+      workspace_resource_id          = azurerm_log_analytics_workspace.this.id
+      log_analytics_destination_type = "Dedicated"
     }
   }
 }

@@ -131,6 +131,12 @@ resource "azurerm_subnet_service_endpoint_storage_policy" "this" {
   }
 }
 
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source              = "../../"
@@ -195,6 +201,14 @@ module "vnet1" {
       }
     }
   }
+
+  diagnostic_settings = {
+    sendToLogAnalytics = {
+      name                           = "sendToLogAnalytics"
+      workspace_resource_id          = azurerm_log_analytics_workspace.this.id
+      log_analytics_destination_type = "Dedicated"
+    }
+  }
 }
 
 module "vnet2" {
@@ -250,6 +264,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_nat_gateway.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
 - [azurerm_network_ddos_protection_plan.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_ddos_protection_plan) (resource)
 - [azurerm_network_security_group.https](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
