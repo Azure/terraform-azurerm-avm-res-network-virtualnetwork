@@ -206,7 +206,7 @@ module "vnet1" {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics"
       workspace_resource_id          = azurerm_log_analytics_workspace.this.id
-      log_analytics_destination_type = "AzureDiagnostics"
+      log_analytics_destination_type = "Dedicated"
     }
   }
 }
