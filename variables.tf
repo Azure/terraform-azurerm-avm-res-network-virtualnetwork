@@ -273,7 +273,8 @@ variable "role_assignments" {
 
 variable "subnets" {
   type = map(object({
-    address_prefixes = list(string)
+    address_prefix   = optional(string)
+    address_prefixes = optional(list(string))
     name             = string
     nat_gateway = optional(object({
       id = string
@@ -319,7 +320,8 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefixes` - (Required) The address prefixes to use for the subnet.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` - 
  - `enforce_private_link_service_network_policies` - 
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -365,6 +367,11 @@ variable "subnets" {
  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
  
 DESCRIPTION
+
+  validation {
+    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
+    error_message = "One of `address_prefix` or `address_prefixes` must be set."
+  }
 }
 
 variable "subscription_id" {

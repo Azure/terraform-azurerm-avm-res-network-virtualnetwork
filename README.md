@@ -75,7 +75,7 @@ module "avm-res-network-subnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
@@ -389,7 +389,8 @@ Default: `{}`
 
 Description: (Optional) A map of subnets to create
 
- - `address_prefixes` - (Required) The address prefixes to use for the subnet.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -438,7 +439,8 @@ Type:
 
 ```hcl
 map(object({
-    address_prefixes = list(string)
+    address_prefix   = optional(string)
+    address_prefixes = optional(list(string))
     name             = string
     nat_gateway = optional(object({
       id = string

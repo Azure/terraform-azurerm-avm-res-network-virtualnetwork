@@ -5,6 +5,7 @@ module "subnet" {
 
   virtual_network                               = { resource_id = azapi_resource.vnet.id }
   name                                          = each.value.name
+  address_prefix                                = each.value.address_prefix
   address_prefixes                              = each.value.address_prefixes
   delegation                                    = each.value.delegation
   default_outbound_access_enabled               = each.value.default_outbound_access_enabled

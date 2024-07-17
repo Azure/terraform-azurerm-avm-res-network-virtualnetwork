@@ -40,7 +40,7 @@ module "avm-res-network-virtualnetwork-subnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
@@ -69,12 +69,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
-
-Description:   (Required) The address prefixes for the subnet. You can supply more than one address prefix."
-
-Type: `list(string)`
-
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: (Optional) The name of the subnet to create.
@@ -98,6 +92,22 @@ object({
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_address_prefix"></a> [address\_prefix](#input\_address\_prefix)
+
+Description:   (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
+
+Description:   (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+
+Type: `list(string)`
+
+Default: `null`
 
 ### <a name="input_default_outbound_access_enabled"></a> [default\_outbound\_access\_enabled](#input\_default\_outbound\_access\_enabled)
 

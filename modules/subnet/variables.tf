@@ -1,16 +1,3 @@
-variable "address_prefixes" {
-  type        = list(string)
-  description = <<DESCRIPTION
-  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
-  DESCRIPTION
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_prefixes) > 0
-    error_message = "At least one address prefix must be supplied."
-  }
-}
-
 variable "name" {
   type        = string
   description = <<DESCRIPTION
@@ -29,6 +16,27 @@ variable "virtual_network" {
   - resource_id - The ID of the Virtual Network.
   DESCRIPTION
   nullable    = false
+}
+
+variable "address_prefix" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+DESCRIPTION
+}
+
+variable "address_prefixes" {
+  type        = list(string)
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+  DESCRIPTION
+
+  validation {
+    condition     = var.address_prefixes != null ? length(var.address_prefixes) > 0 : var.address_prefix != null
+    error_message = "One of `address_prefix` or `address_prefixes` must be supplied."
+  }
 }
 
 variable "default_outbound_access_enabled" {
