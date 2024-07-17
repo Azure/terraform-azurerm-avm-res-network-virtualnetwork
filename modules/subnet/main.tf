@@ -40,10 +40,10 @@ resource "azapi_resource" "subnet" {
   name                      = var.name
   parent_id                 = var.virtual_network.resource_id
   schema_validation_enabled = true
-  
-  depends_on = [ 
-    azapi_update_resource.AllowDeletionOfIpPrefixFromSubnet, 
-    azapi_update_resource.AllowMultipleAddressPrefixesOnSubnet 
+
+  depends_on = [
+    azapi_update_resource.AllowDeletionOfIpPrefixFromSubnet,
+    azapi_update_resource.AllowMultipleAddressPrefixesOnSubnet
   ]
 }
 
@@ -62,18 +62,20 @@ resource "azurerm_role_assignment" "subnet" {
 
 resource "azapi_update_resource" "AllowMultipleAddressPrefixesOnSubnet" {
   count = local.has_multiple_address_prefixes ? 1 : 0
+
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultipleAddressPrefixesOnSubnet"
   body = jsonencode({
     properties = {}
   })
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultipleAddressPrefixesOnSubnet"
 }
 
 resource "azapi_update_resource" "AllowDeletionOfIpPrefixFromSubnet " {
   count = local.has_multiple_address_prefixes ? 1 : 0
+
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDeletionOfIpPrefixFromSubnet"
   body = jsonencode({
     properties = {}
   })
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDeletionOfIpPrefixFromSubnet"
 }

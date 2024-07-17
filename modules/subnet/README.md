@@ -59,6 +59,8 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.AllowDeletionOfIpPrefixFromSubnet ](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.AllowMultipleAddressPrefixesOnSubnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_role_assignment.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -248,6 +250,14 @@ Description: (Optional) The sharing scope for the subnet. Possible values are `D
 Type: `string`
 
 Default: `"DelegatedServices"`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description:   (Optional) The subscription ID to use for the feature registration.
+
+Type: `string`
+
+Default: `null`
 
 ## Outputs
 

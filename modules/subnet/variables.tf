@@ -176,8 +176,8 @@ DESCRIPTION
 
 variable "subscription_id" {
   type        = string
+  default     = null
   description = <<DESCRIPTION
   (Optional) The subscription ID to use for the feature registration.
 DESCRIPTION
-  default = null
 }
