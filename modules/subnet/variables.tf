@@ -173,3 +173,11 @@ DESCRIPTION
     error_message = "sharing_scope must be one of DelegatedServices or Tenant."
   }
 }
+
+variable "subscription_id" {
+  type        = string
+  description = <<DESCRIPTION
+  (Optional) The subscription ID to use for the feature registration.
+DESCRIPTION
+  default = null
+}

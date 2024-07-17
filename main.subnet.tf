@@ -17,6 +17,7 @@ module "subnet" {
   service_endpoints                             = each.value.service_endpoints
   service_endpoint_policies                     = each.value.service_endpoint_policies
   role_assignments                              = each.value.role_assignments
+  subscription_id                               = local.subscription_id
 
   depends_on = [
     azapi_resource.vnet
