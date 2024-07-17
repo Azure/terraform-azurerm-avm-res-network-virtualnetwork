@@ -161,7 +161,7 @@ module "vnet1" {
 
   encryption = {
     enabled = true
-    #enforcement = "DropUnencrypted"  # NOTE: This preview feature was not available publically at time of publish Microsoft.Network/AllowDropUnecryptedVnet
+    #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
     enforcement = "AllowUnencrypted"
   }
 
@@ -171,7 +171,7 @@ module "vnet1" {
     subnet0 = {
       name                            = "${module.naming.subnet.name_unique}0"
       default_outbound_access_enabled = false
-      #sharing_scope                   = "Tenant"  #NOTE: This preview feature was not available publically at time of publish Microsoft.Network/EnableSharedVNet
+      #sharing_scope                   = "Tenant"  #NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/EnableSharedVNet
       address_prefixes = ["192.168.0.0/24", "192.168.2.0/24"]
     }
     subnet1 = {
@@ -238,7 +238,7 @@ module "vnet2" {
       allow_virtual_network_access          = true
       do_not_verify_remote_gateways         = false
       enable_only_ipv6_peering              = false
-      peer_complete_vnets                   = false
+      peer_complete_vnets                   = true
       use_remote_gateways                   = false
       create_reverse_peering                = true
       reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
@@ -247,7 +247,7 @@ module "vnet2" {
       reverse_allow_virtual_network_access  = true
       reverse_do_not_verify_remote_gateways = false
       reverse_enable_only_ipv6_peering      = false
-      reverse_peer_complete_vnets           = false
+      reverse_peer_complete_vnets           = true
       reverse_use_remote_gateways           = false
     }
   }

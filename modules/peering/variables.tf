@@ -72,7 +72,7 @@ variable "enable_only_ipv6_peering" {
 
 variable "peer_complete_vnets" {
   type        = bool
-  default     = false
+  default     = true
   description = "Peer complete virtual networks for the virtual network peering"
   nullable    = false
 }
@@ -120,7 +120,7 @@ variable "reverse_name" {
 
 variable "reverse_peer_complete_vnets" {
   type        = bool
-  default     = false
+  default     = true
   description = "Peer complete virtual networks for the reverse peering"
   nullable    = false
 }
@@ -130,6 +130,14 @@ variable "reverse_use_remote_gateways" {
   default     = false
   description = "Use remote gateways for the reverse peering"
   nullable    = false
+}
+
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The subscription ID to use for the feature registration.
+DESCRIPTION
 }
 
 variable "use_remote_gateways" {

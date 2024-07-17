@@ -21,6 +21,7 @@ module "peering" {
   reverse_enable_only_ipv6_peering      = each.value.reverse_enable_only_ipv6_peering
   reverse_peer_complete_vnets           = each.value.reverse_peer_complete_vnets
   reverse_use_remote_gateways           = each.value.reverse_use_remote_gateways
+  subscription_id                       = local.subscription_id
 
   depends_on = [
     azapi_resource.vnet

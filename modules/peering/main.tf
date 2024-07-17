@@ -10,7 +10,7 @@ resource "azapi_resource" "this" {
       allowGatewayTransit       = var.allow_gateway_transit
       doNotVerifyRemoteGateways = var.do_not_verify_remote_gateways
       enableOnlyIPv6Peering     = var.enable_only_ipv6_peering
-      peerCompleteVnets         = var.peer_complete_vnets ? true : null
+      peerCompleteVnets         = var.peer_complete_vnets
 
       useRemoteGateways = var.use_remote_gateways
     }
@@ -36,11 +36,24 @@ resource "azapi_resource" "reverse" {
       useRemoteGateways         = var.reverse_use_remote_gateways
       doNotVerifyRemoteGateways = var.reverse_do_not_verify_remote_gateways
       enableOnlyIPv6Peering     = var.reverse_enable_only_ipv6_peering
-      peerCompleteVnets         = var.reverse_peer_complete_vnets ? true : null
+      peerCompleteVnets         = var.reverse_peer_complete_vnets
     }
   }
   locks                     = [var.remote_virtual_network.resource_id]
   name                      = var.reverse_name
   parent_id                 = var.remote_virtual_network.resource_id
   schema_validation_enabled = true
+
+  depends_on = [azapi_update_resource.allow_multiple_peering_links_between_vnets]
 }
+
+resource "azapi_update_resource" "allow_multiple_peering_links_between_vnets" {
+  count = !var.peer_complete_vnets || !var.reverse_peer_complete_vnets ? 1 : 0
+
+  type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
+  body = jsonencode({
+    properties = {}
+  })
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
+}
+

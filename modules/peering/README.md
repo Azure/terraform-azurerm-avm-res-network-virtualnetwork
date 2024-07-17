@@ -65,6 +65,7 @@ The following resources are used by this module:
 
 - [azapi_resource.reverse](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.allow_multiple_peering_links_between_vnets](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -163,7 +164,7 @@ Description: Peer complete virtual networks for the virtual network peering
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_reverse_allow_forwarded_traffic"></a> [reverse\_allow\_forwarded\_traffic](#input\_reverse\_allow\_forwarded\_traffic)
 
@@ -219,7 +220,7 @@ Description: Peer complete virtual networks for the reverse peering
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_reverse_use_remote_gateways"></a> [reverse\_use\_remote\_gateways](#input\_reverse\_use\_remote\_gateways)
 
@@ -228,6 +229,14 @@ Description: Use remote gateways for the reverse peering
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description:   (Optional) The subscription ID to use for the feature registration.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_use_remote_gateways"></a> [use\_remote\_gateways](#input\_use\_remote\_gateways)
 

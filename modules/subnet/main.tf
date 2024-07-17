@@ -43,7 +43,8 @@ resource "azapi_resource" "subnet" {
 
   depends_on = [
     azapi_update_resource.allow_multiple_address_prefixes_on_subnet,
-    azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet
+    azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet,
+    azapi_update_resource.enable_shared_vnet
   ]
 }
 
