@@ -40,7 +40,7 @@ module "avm-res-network-virtualnetwork-subnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
@@ -59,18 +59,15 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.allow_multiple_address_prefixes_on_subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.enable_shared_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_role_assignment.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
-
-Description:   (Required) The address prefixes for the subnet. You can supply more than one address prefix."
-
-Type: `list(string)`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
@@ -95,6 +92,22 @@ object({
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_address_prefix"></a> [address\_prefix](#input\_address\_prefix)
+
+Description:   (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
+
+Description:   (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+
+Type: `list(string)`
+
+Default: `null`
 
 ### <a name="input_default_outbound_access_enabled"></a> [default\_outbound\_access\_enabled](#input\_default\_outbound\_access\_enabled)
 
@@ -238,6 +251,22 @@ Default: `null`
 Description: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
 
 Type: `set(string)`
+
+Default: `null`
+
+### <a name="input_sharing_scope"></a> [sharing\_scope](#input\_sharing\_scope)
+
+Description: (Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description:   (Optional) The subscription ID to use for the feature registration.
+
+Type: `string`
 
 Default: `null`
 

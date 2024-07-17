@@ -46,7 +46,6 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-# Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
 module "vnet" {
   source              = "../../"
   name                = module.naming.virtual_network.name
@@ -55,4 +54,38 @@ module "vnet" {
   location            = azurerm_resource_group.this.location
 
   address_space = ["10.0.0.0/16"]
+  subnets = {
+    subnet1 = {
+      name                            = "subnet1"
+      address_prefix                  = "10.0.0.0/24"
+      default_outbound_access_enabled = true
+      delegation = [{
+        name = "aca_delegation"
+        service_delegation = {
+          name    = "Microsoft.App/environments"
+          actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+        }
+      }]
+    }
+  }
 }
+
+/* # NOTE: This resource take a long time to create and destroy, so we are removing from e2e tests.
+resource "azurerm_container_app_environment" "aca" {
+  name                       = module.naming.container_app_environment.name
+  location                   = azurerm_resource_group.this.location
+  resource_group_name        = azurerm_resource_group.this.name
+
+  infrastructure_resource_group_name = "${module.naming.resource_group.name_unique}-aca"
+  infrastructure_subnet_id           = module.vnet.subnets["subnet1"].resource_id
+  internal_load_balancer_enabled = true
+
+  workload_profile {
+    name = "Consumption"
+    workload_profile_type  = "Consumption"
+    maximum_count = 1
+    minimum_count = 0
+  }
+  zone_redundancy_enabled = false
+}
+*/

@@ -49,7 +49,7 @@ module "avm-res-network-virtualnetwork-subnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
@@ -65,6 +65,7 @@ The following resources are used by this module:
 
 - [azapi_resource.reverse](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.allow_multiple_peering_links_between_vnets](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -141,6 +142,30 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_do_not_verify_remote_gateways"></a> [do\_not\_verify\_remote\_gateways](#input\_do\_not\_verify\_remote\_gateways)
+
+Description: Do not verify remote gateways for the virtual network peering
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_enable_only_ipv6_peering"></a> [enable\_only\_ipv6\_peering](#input\_enable\_only\_ipv6\_peering)
+
+Description: Enable only IPv6 peering for the virtual network peering
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_peer_complete_vnets"></a> [peer\_complete\_vnets](#input\_peer\_complete\_vnets)
+
+Description: Peer complete virtual networks for the virtual network peering
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_reverse_allow_forwarded_traffic"></a> [reverse\_allow\_forwarded\_traffic](#input\_reverse\_allow\_forwarded\_traffic)
 
 Description: Allow forwarded traffic for the reverse peering
@@ -165,6 +190,22 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_reverse_do_not_verify_remote_gateways"></a> [reverse\_do\_not\_verify\_remote\_gateways](#input\_reverse\_do\_not\_verify\_remote\_gateways)
+
+Description: Do not verify remote gateways for the reverse peering
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_reverse_enable_only_ipv6_peering"></a> [reverse\_enable\_only\_ipv6\_peering](#input\_reverse\_enable\_only\_ipv6\_peering)
+
+Description: Enable only IPv6 peering for the reverse peering
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_reverse_name"></a> [reverse\_name](#input\_reverse\_name)
 
 Description: The name of the reverse peering
@@ -173,6 +214,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_reverse_peer_complete_vnets"></a> [reverse\_peer\_complete\_vnets](#input\_reverse\_peer\_complete\_vnets)
+
+Description: Peer complete virtual networks for the reverse peering
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_reverse_use_remote_gateways"></a> [reverse\_use\_remote\_gateways](#input\_reverse\_use\_remote\_gateways)
 
 Description: Use remote gateways for the reverse peering
@@ -180,6 +229,14 @@ Description: Use remote gateways for the reverse peering
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description:   (Optional) The subscription ID to use for the feature registration.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_use_remote_gateways"></a> [use\_remote\_gateways](#input\_use\_remote\_gateways)
 

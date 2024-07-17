@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~> 1.6"
+  required_version = ">= 1.9.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -157,15 +157,27 @@ module "vnet1" {
     }
   }
 
+  enable_vm_protection = true
+
+  encryption = {
+    enabled = true
+    #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
+    enforcement = "AllowUnencrypted"
+  }
+
+  flow_timeout_in_minutes = 30
+
   subnets = {
     subnet0 = {
-      name             = "${module.naming.subnet.name_unique}0"
-      address_prefixes = ["192.168.0.0/24"]
+      name                            = "${module.naming.subnet.name_unique}0"
+      default_outbound_access_enabled = false
+      #sharing_scope                   = "Tenant"  #NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/EnableSharedVNet
+      address_prefixes = ["192.168.0.0/24", "192.168.2.0/24"]
     }
     subnet1 = {
       name                            = "${module.naming.subnet.name_unique}1"
       address_prefixes                = ["192.168.1.0/24"]
-      default_outbound_access_enabled = true
+      default_outbound_access_enabled = false
       delegation = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
@@ -212,20 +224,31 @@ module "vnet2" {
   name                = "${module.naming.virtual_network.name_unique}2"
   address_space       = ["10.0.0.0/27"]
 
+  encryption = {
+    enabled     = true
+    enforcement = "AllowUnencrypted"
+  }
+
   peerings = {
     peertovnet1 = {
-      name                                 = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
-      remote_virtual_network_resource_id   = module.vnet1.resource_id
-      allow_forwarded_traffic              = true
-      allow_gateway_transit                = true
-      allow_virtual_network_access         = true
-      use_remote_gateways                  = false
-      create_reverse_peering               = true
-      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
-      reverse_allow_forwarded_traffic      = false
-      reverse_allow_gateway_transit        = false
-      reverse_allow_virtual_network_access = true
-      reverse_use_remote_gateways          = false
+      name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      remote_virtual_network_resource_id    = module.vnet1.resource_id
+      allow_forwarded_traffic               = true
+      allow_gateway_transit                 = true
+      allow_virtual_network_access          = true
+      do_not_verify_remote_gateways         = false
+      enable_only_ipv6_peering              = false
+      peer_complete_vnets                   = true
+      use_remote_gateways                   = false
+      create_reverse_peering                = true
+      reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_allow_forwarded_traffic       = false
+      reverse_allow_gateway_transit         = false
+      reverse_allow_virtual_network_access  = true
+      reverse_do_not_verify_remote_gateways = false
+      reverse_enable_only_ipv6_peering      = false
+      reverse_peer_complete_vnets           = true
+      reverse_use_remote_gateways           = false
     }
   }
 }

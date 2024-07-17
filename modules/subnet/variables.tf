@@ -1,16 +1,3 @@
-variable "address_prefixes" {
-  type        = list(string)
-  description = <<DESCRIPTION
-  (Required) The address prefixes for the subnet. You can supply more than one address prefix."
-  DESCRIPTION
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_prefixes) > 0
-    error_message = "At least one address prefix must be supplied."
-  }
-}
-
 variable "name" {
   type        = string
   description = <<DESCRIPTION
@@ -29,6 +16,27 @@ variable "virtual_network" {
   - resource_id - The ID of the Virtual Network.
   DESCRIPTION
   nullable    = false
+}
+
+variable "address_prefix" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+DESCRIPTION
+}
+
+variable "address_prefixes" {
+  type        = list(string)
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+  DESCRIPTION
+
+  validation {
+    condition     = var.address_prefixes != null ? length(var.address_prefixes) > 0 : var.address_prefix != null
+    error_message = "One of `address_prefix` or `address_prefixes` must be supplied."
+  }
 }
 
 variable "default_outbound_access_enabled" {
@@ -159,4 +167,25 @@ variable "service_endpoints" {
   description = <<DESCRIPTION
 (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
   DESCRIPTION
+}
+
+variable "sharing_scope" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.
+DESCRIPTION
+
+  validation {
+    condition     = var.sharing_scope != null ? can(regex("^(DelegatedServices|Tenant)$", var.sharing_scope)) : true
+    error_message = "sharing_scope must be one of DelegatedServices or Tenant."
+  }
+}
+
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The subscription ID to use for the feature registration.
+DESCRIPTION
 }

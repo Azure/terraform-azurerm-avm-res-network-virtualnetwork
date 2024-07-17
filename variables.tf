@@ -24,6 +24,14 @@ variable "resource_group_name" {
 DESCRIPTION
 }
 
+variable "bgp_community" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The BGP community to send to the virtual network gateway.
+DESCRIPTION
+}
+
 variable "ddos_protection_plan" {
   type = object({
     id     = string
@@ -105,6 +113,60 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
+variable "enable_vm_protection" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+(Optional) Enable VM Protection for the virtual network. Defaults to false.
+DESCRIPTION
+}
+
+variable "encryption" {
+  type = object({
+    enabled     = bool
+    enforcement = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies the encryption settings for the virtual network.
+
+- `enabled`: Specifies whether encryption is enabled for the virtual network.
+- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `Enabled` and `Disabled`.
+DESCRIPTION
+
+  validation {
+    condition     = var.encryption != null ? contains(["AllowUnencrypted", "DropUnencrypted"], var.encryption.enforcement) : true
+    error_message = "Encryption enforcement must be one of: 'AllowUnencrypted', 'DropUnencrypted'."
+  }
+}
+
+variable "extended_location" {
+  type = object({
+    name = string
+    type = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies the extended location of the virtual network.
+
+- `name`: The name of the extended location.
+- `type`: The type of the extended location.
+DESCRIPTION
+
+  validation {
+    condition     = var.extended_location != null ? contains("EdgeZone", var.extended_location.type) : true
+    error_message = "Extended location type must be EdgeZone"
+  }
+}
+
+variable "flow_timeout_in_minutes" {
+  type        = number
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The flow timeout in minutes for the virtual network. Defaults to 4.
+DESCRIPTION
+}
+
 variable "lock" {
   type = object({
     kind = string
@@ -134,18 +196,24 @@ DESCRIPTION
 
 variable "peerings" {
   type = map(object({
-    name                                 = string
-    remote_virtual_network_resource_id   = string
-    allow_forwarded_traffic              = optional(bool, false)
-    allow_gateway_transit                = optional(bool, false)
-    allow_virtual_network_access         = optional(bool, true)
-    use_remote_gateways                  = optional(bool, false)
-    create_reverse_peering               = optional(bool, false)
-    reverse_name                         = optional(string)
-    reverse_allow_forwarded_traffic      = optional(bool, false)
-    reverse_allow_gateway_transit        = optional(bool, false)
-    reverse_allow_virtual_network_access = optional(bool, true)
-    reverse_use_remote_gateways          = optional(bool, false)
+    name                                  = string
+    remote_virtual_network_resource_id    = string
+    allow_forwarded_traffic               = optional(bool, false)
+    allow_gateway_transit                 = optional(bool, false)
+    allow_virtual_network_access          = optional(bool, true)
+    do_not_verify_remote_gateways         = optional(bool, false)
+    enable_only_ipv6_peering              = optional(bool, false)
+    peer_complete_vnets                   = optional(bool, false)
+    use_remote_gateways                   = optional(bool, false)
+    create_reverse_peering                = optional(bool, false)
+    reverse_name                          = optional(string)
+    reverse_allow_forwarded_traffic       = optional(bool, false)
+    reverse_allow_gateway_transit         = optional(bool, false)
+    reverse_allow_virtual_network_access  = optional(bool, true)
+    reverse_do_not_verify_remote_gateways = optional(bool, false)
+    reverse_enable_only_ipv6_peering      = optional(bool, false)
+    reverse_peer_complete_vnets           = optional(bool, false)
+    reverse_use_remote_gateways           = optional(bool, false)
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -156,12 +224,18 @@ variable "peerings" {
 - `allow_forwarded_traffic`: (Optional) Enables forwarded traffic between the virtual networks. Defaults to false.
 - `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
 - `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `do_not_verify_remote_gateways`: (Optional) Disables the verification of remote gateways for the virtual networks. Defaults to false.
+- `enable_only_ipv6_peering`: (Optional) Enables only IPv6 peering for the virtual networks. Defaults to false.
+- `peer_complete_vnets`: (Optional) Enables the peering of complete virtual networks for the virtual networks. Defaults to false.
 - `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
 - `create_reverse_peering`: (Optional) Creates the reverse peering to form a complete peering.
 - `reverse_name`: (Optional) If you have selected `create_reverse_peering`, then this name will be used for the reverse peer.
 - `reverse_allow_forwarded_traffic`: (Optional) If you have selected `create_reverse_peering`, enables forwarded traffic between the virtual networks. Defaults to false.
 - `reverse_allow_gateway_transit`: (Optional) If you have selected `create_reverse_peering`, enables gateway transit for the virtual networks. Defaults to false.
 - `reverse_allow_virtual_network_access`: (Optional) If you have selected `create_reverse_peering`, enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `reverse_do_not_verify_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, disables the verification of remote gateways for the virtual networks. Defaults to false.
+- `reverse_enable_only_ipv6_peering`: (Optional) If you have selected `create_reverse_peering`, enables only IPv6 peering for the virtual networks. Defaults to false.
+- `reverse_peer_complete_vnets`: (Optional) If you have selected `create_reverse_peering`, enables the peering of complete virtual networks for the virtual networks. Defaults to false.
 - `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
 
 DESCRIPTION
@@ -199,7 +273,8 @@ variable "role_assignments" {
 
 variable "subnets" {
   type = map(object({
-    address_prefixes = list(string)
+    address_prefix   = optional(string)
+    address_prefixes = optional(list(string))
     name             = string
     nat_gateway = optional(object({
       id = string
@@ -217,6 +292,7 @@ variable "subnets" {
     })))
     service_endpoints               = optional(set(string))
     default_outbound_access_enabled = optional(bool, false)
+    sharing_scope                   = optional(string, null)
     delegation = optional(list(object({
       name = string
       service_delegation = object({
@@ -244,7 +320,8 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefixes` - (Required) The address prefixes to use for the subnet.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` - 
  - `enforce_private_link_service_network_policies` - 
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -290,6 +367,11 @@ variable "subnets" {
  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
  
 DESCRIPTION
+
+  validation {
+    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
+    error_message = "One of `address_prefix` or `address_prefixes` must be set."
+  }
 }
 
 variable "subscription_id" {
