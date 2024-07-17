@@ -241,6 +241,14 @@ Type: `set(string)`
 
 Default: `null`
 
+### <a name="input_sharing_scope"></a> [sharing\_scope](#input\_sharing\_scope)
+
+Description: (Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.
+
+Type: `string`
+
+Default: `"DelegatedServices"`
+
 ## Outputs
 
 The following outputs are exported:

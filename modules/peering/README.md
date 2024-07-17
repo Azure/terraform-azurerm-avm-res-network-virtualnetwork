@@ -141,6 +141,30 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_do_not_verify_remote_gateways"></a> [do\_not\_verify\_remote\_gateways](#input\_do\_not\_verify\_remote\_gateways)
+
+Description: Do not verify remote gateways for the virtual network peering
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_enable_only_ipv6_peering"></a> [enable\_only\_ipv6\_peering](#input\_enable\_only\_ipv6\_peering)
+
+Description: Enable only IPv6 peering for the virtual network peering
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_peer_complete_vnets"></a> [peer\_complete\_vnets](#input\_peer\_complete\_vnets)
+
+Description: Peer complete virtual networks for the virtual network peering
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_reverse_allow_forwarded_traffic"></a> [reverse\_allow\_forwarded\_traffic](#input\_reverse\_allow\_forwarded\_traffic)
 
 Description: Allow forwarded traffic for the reverse peering
@@ -165,6 +189,22 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_reverse_do_not_verify_remote_gateways"></a> [reverse\_do\_not\_verify\_remote\_gateways](#input\_reverse\_do\_not\_verify\_remote\_gateways)
+
+Description: Do not verify remote gateways for the reverse peering
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_reverse_enable_only_ipv6_peering"></a> [reverse\_enable\_only\_ipv6\_peering](#input\_reverse\_enable\_only\_ipv6\_peering)
+
+Description: Enable only IPv6 peering for the reverse peering
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_reverse_name"></a> [reverse\_name](#input\_reverse\_name)
 
 Description: The name of the reverse peering
@@ -172,6 +212,14 @@ Description: The name of the reverse peering
 Type: `string`
 
 Default: `null`
+
+### <a name="input_reverse_peer_complete_vnets"></a> [reverse\_peer\_complete\_vnets](#input\_reverse\_peer\_complete\_vnets)
+
+Description: Peer complete virtual networks for the reverse peering
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_reverse_use_remote_gateways"></a> [reverse\_use\_remote\_gateways](#input\_reverse\_use\_remote\_gateways)
 

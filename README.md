@@ -138,6 +138,14 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### <a name="input_bgp_communities"></a> [bgp\_communities](#input\_bgp\_communities)
+
+Description: (Optional) A list of BGP communities to send to the virtual network gateway.
+
+Type: `map(string)`
+
+Default: `{}`
+
 ### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
 
 Description: Specifies an AzureNetwork DDoS Protection Plan.
@@ -216,6 +224,58 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_enable_vm_protection"></a> [enable\_vm\_protection](#input\_enable\_vm\_protection)
+
+Description: (Optional) Enable VM Protection for the virtual network. Defaults to false.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_encryption"></a> [encryption](#input\_encryption)
+
+Description: (Optional) Specifies the encryption settings for the virtual network.
+
+- `enabled`: Specifies whether encryption is enabled for the virtual network.
+- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `Enabled` and `Disabled`.
+
+Type:
+
+```hcl
+object({
+    enabled     = bool
+    enforcement = string
+  })
+```
+
+Default: `null`
+
+### <a name="input_extended_location"></a> [extended\_location](#input\_extended\_location)
+
+Description: (Optional) Specifies the extended location of the virtual network.
+
+- `name`: The name of the extended location.
+- `type`: The type of the extended location.
+
+Type:
+
+```hcl
+object({
+    name = string
+    type = string
+  })
+```
+
+Default: `null`
+
+### <a name="input_flow_timeout_in_minutes"></a> [flow\_timeout\_in\_minutes](#input\_flow\_timeout\_in\_minutes)
+
+Description: (Optional) The flow timeout in minutes for the virtual network. Defaults to 4.
+
+Type: `number`
+
+Default: `null`
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
 Description:   (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
@@ -251,30 +311,42 @@ Description: (Optional) A map of virtual network peering configurations. Each en
 - `allow_forwarded_traffic`: (Optional) Enables forwarded traffic between the virtual networks. Defaults to false.
 - `allow_gateway_transit`: (Optional) Enables gateway transit for the virtual networks. Defaults to false.
 - `allow_virtual_network_access`: (Optional) Enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `do_not_verify_remote_gateways`: (Optional) Disables the verification of remote gateways for the virtual networks. Defaults to false.
+- `enable_only_ipv6_peering`: (Optional) Enables only IPv6 peering for the virtual networks. Defaults to false.
+- `peer_complete_vnets`: (Optional) Enables the peering of complete virtual networks for the virtual networks. Defaults to false.
 - `use_remote_gateways`: (Optional) Enables the use of remote gateways for the virtual networks. Defaults to false.
 - `create_reverse_peering`: (Optional) Creates the reverse peering to form a complete peering.
 - `reverse_name`: (Optional) If you have selected `create_reverse_peering`, then this name will be used for the reverse peer.
 - `reverse_allow_forwarded_traffic`: (Optional) If you have selected `create_reverse_peering`, enables forwarded traffic between the virtual networks. Defaults to false.
 - `reverse_allow_gateway_transit`: (Optional) If you have selected `create_reverse_peering`, enables gateway transit for the virtual networks. Defaults to false.
 - `reverse_allow_virtual_network_access`: (Optional) If you have selected `create_reverse_peering`, enables access from the local virtual network to the remote virtual network. Defaults to true.
+- `reverse_do_not_verify_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, disables the verification of remote gateways for the virtual networks. Defaults to false.
+- `reverse_enable_only_ipv6_peering`: (Optional) If you have selected `create_reverse_peering`, enables only IPv6 peering for the virtual networks. Defaults to false.
+- `reverse_peer_complete_vnets`: (Optional) If you have selected `create_reverse_peering`, enables the peering of complete virtual networks for the virtual networks. Defaults to false.
 - `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
 
 Type:
 
 ```hcl
 map(object({
-    name                                 = string
-    remote_virtual_network_resource_id   = string
-    allow_forwarded_traffic              = optional(bool, false)
-    allow_gateway_transit                = optional(bool, false)
-    allow_virtual_network_access         = optional(bool, true)
-    use_remote_gateways                  = optional(bool, false)
-    create_reverse_peering               = optional(bool, false)
-    reverse_name                         = optional(string)
-    reverse_allow_forwarded_traffic      = optional(bool, false)
-    reverse_allow_gateway_transit        = optional(bool, false)
-    reverse_allow_virtual_network_access = optional(bool, true)
-    reverse_use_remote_gateways          = optional(bool, false)
+    name                                  = string
+    remote_virtual_network_resource_id    = string
+    allow_forwarded_traffic               = optional(bool, false)
+    allow_gateway_transit                 = optional(bool, false)
+    allow_virtual_network_access          = optional(bool, true)
+    do_not_verify_remote_gateways         = optional(bool, false)
+    enable_only_ipv6_peering              = optional(bool, false)
+    peer_complete_vnets                   = optional(bool, false)
+    use_remote_gateways                   = optional(bool, false)
+    create_reverse_peering                = optional(bool, false)
+    reverse_name                          = optional(string)
+    reverse_allow_forwarded_traffic       = optional(bool, false)
+    reverse_allow_gateway_transit         = optional(bool, false)
+    reverse_allow_virtual_network_access  = optional(bool, true)
+    reverse_do_not_verify_remote_gateways = optional(bool, false)
+    reverse_enable_only_ipv6_peering      = optional(bool, false)
+    reverse_peer_complete_vnets           = optional(bool, false)
+    reverse_use_remote_gateways           = optional(bool, false)
   }))
 ```
 
@@ -383,6 +455,7 @@ map(object({
     })))
     service_endpoints               = optional(set(string))
     default_outbound_access_enabled = optional(bool, false)
+    sharing_scope                   = optional(string, null)
     delegation = optional(list(object({
       name = string
       service_delegation = object({

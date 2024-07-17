@@ -33,6 +33,7 @@ resource "azapi_resource" "subnet" {
           id = service_endpoint_policy.id
         }
       ] : null
+      sharingScope = var.sharing_scope
     }
   }
   locks                     = [var.virtual_network.resource_id]

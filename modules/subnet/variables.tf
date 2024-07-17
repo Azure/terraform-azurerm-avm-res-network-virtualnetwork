@@ -160,3 +160,16 @@ variable "service_endpoints" {
 (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
   DESCRIPTION
 }
+
+variable "sharing_scope" {
+  type        = string
+  default     = "DelegatedServices"
+  description = <<DESCRIPTION
+(Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^(DelegatedServices|Tenant)$", var.sharing_scope))
+    error_message = "sharing_scope must be one of DelegatedServices or Tenant."
+  }
+}

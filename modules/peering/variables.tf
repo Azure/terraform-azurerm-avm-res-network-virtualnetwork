@@ -56,6 +56,27 @@ variable "create_reverse_peering" {
   nullable    = false
 }
 
+variable "do_not_verify_remote_gateways" {
+  type        = bool
+  default     = false
+  description = "Do not verify remote gateways for the virtual network peering"
+  nullable    = false
+}
+
+variable "enable_only_ipv6_peering" {
+  type        = bool
+  default     = false
+  description = "Enable only IPv6 peering for the virtual network peering"
+  nullable    = false
+}
+
+variable "peer_complete_vnets" {
+  type        = bool
+  default     = false
+  description = "Peer complete virtual networks for the virtual network peering"
+  nullable    = false
+}
+
 variable "reverse_allow_forwarded_traffic" {
   type        = bool
   default     = false
@@ -77,10 +98,31 @@ variable "reverse_allow_virtual_network_access" {
   nullable    = false
 }
 
+variable "reverse_do_not_verify_remote_gateways" {
+  type        = bool
+  default     = false
+  description = "Do not verify remote gateways for the reverse peering"
+  nullable    = false
+}
+
+variable "reverse_enable_only_ipv6_peering" {
+  type        = bool
+  default     = false
+  description = "Enable only IPv6 peering for the reverse peering"
+  nullable    = false
+}
+
 variable "reverse_name" {
   type        = string
   default     = null
   description = "The name of the reverse peering"
+}
+
+variable "reverse_peer_complete_vnets" {
+  type        = bool
+  default     = false
+  description = "Peer complete virtual networks for the reverse peering"
+  nullable    = false
 }
 
 variable "reverse_use_remote_gateways" {

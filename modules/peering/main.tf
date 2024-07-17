@@ -8,7 +8,11 @@ resource "azapi_resource" "this" {
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
       allowGatewayTransit       = var.allow_gateway_transit
-      useRemoteGateways         = var.use_remote_gateways
+      doNotVerifyRemoteGateways = var.do_not_verify_remote_gateways
+      enableOnlyIPv6Peering     = var.enable_only_ipv6_peering
+      peerCompleteVnets         = var.peer_complete_vnets
+
+      useRemoteGateways = var.use_remote_gateways
     }
   }
   locks                     = [var.virtual_network.resource_id]
@@ -30,6 +34,9 @@ resource "azapi_resource" "reverse" {
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic
       allowGatewayTransit       = var.reverse_allow_gateway_transit
       useRemoteGateways         = var.reverse_use_remote_gateways
+      doNotVerifyRemoteGateways = var.reverse_do_not_verify_remote_gateways
+      enableOnlyIPv6Peering     = var.reverse_enable_only_ipv6_peering
+      peerCompleteVnets         = var.reverse_peer_complete_vnets
     }
   }
   locks                     = [var.remote_virtual_network.resource_id]

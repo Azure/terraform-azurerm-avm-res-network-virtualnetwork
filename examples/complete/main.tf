@@ -157,10 +157,21 @@ module "vnet1" {
     }
   }
 
+  enable_vm_protection = true
+
+  encryption = {
+    enabled     = true
+    enforcement = "DropUnencrypted"
+  }
+
+  flow_timeout_in_minutes = 30
+
   subnets = {
     subnet0 = {
-      name             = "${module.naming.subnet.name_unique}0"
-      address_prefixes = ["192.168.0.0/24"]
+      name                            = "${module.naming.subnet.name_unique}0"
+      default_outbound_access_enabled = false
+      sharing_scope                   = "DelegatedServices"
+      address_prefixes                = ["192.168.0.0/24"]
     }
     subnet1 = {
       name                            = "${module.naming.subnet.name_unique}1"
@@ -214,18 +225,24 @@ module "vnet2" {
 
   peerings = {
     peertovnet1 = {
-      name                                 = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
-      remote_virtual_network_resource_id   = module.vnet1.resource_id
-      allow_forwarded_traffic              = true
-      allow_gateway_transit                = true
-      allow_virtual_network_access         = true
-      use_remote_gateways                  = false
-      create_reverse_peering               = true
-      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
-      reverse_allow_forwarded_traffic      = false
-      reverse_allow_gateway_transit        = false
-      reverse_allow_virtual_network_access = true
-      reverse_use_remote_gateways          = false
+      name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      remote_virtual_network_resource_id    = module.vnet1.resource_id
+      allow_forwarded_traffic               = true
+      allow_gateway_transit                 = true
+      allow_virtual_network_access          = true
+      do_not_verify_remote_gateways         = false
+      enable_only_ipv6_peering              = false
+      peer_complete_vnets                   = false
+      use_remote_gateways                   = false
+      create_reverse_peering                = true
+      reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_allow_forwarded_traffic       = false
+      reverse_allow_gateway_transit         = false
+      reverse_allow_virtual_network_access  = true
+      reverse_do_not_verify_remote_gateways = false
+      reverse_enable_only_ipv6_peering      = false
+      reverse_peer_complete_vnets           = false
+      reverse_use_remote_gateways           = false
     }
   }
 }
