@@ -163,13 +163,13 @@ variable "service_endpoints" {
 
 variable "sharing_scope" {
   type        = string
-  default     = "DelegatedServices"
+  default     = null
   description = <<DESCRIPTION
 (Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.
 DESCRIPTION
 
   validation {
-    condition     = can(regex("^(DelegatedServices|Tenant)$", var.sharing_scope))
+    condition     = var.sharing_scope != null ? can(regex("^(DelegatedServices|Tenant)$", var.sharing_scope)) : true
     error_message = "sharing_scope must be one of DelegatedServices or Tenant."
   }
 }

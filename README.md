@@ -102,6 +102,7 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azapi_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
@@ -138,13 +139,13 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_bgp_communities"></a> [bgp\_communities](#input\_bgp\_communities)
+### <a name="input_bgp_community"></a> [bgp\_community](#input\_bgp\_community)
 
-Description: (Optional) A list of BGP communities to send to the virtual network gateway.
+Description: (Optional) The BGP community to send to the virtual network gateway.
 
-Type: `map(string)`
+Type: `string`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_ddos_protection_plan"></a> [ddos\_protection\_plan](#input\_ddos\_protection\_plan)
 

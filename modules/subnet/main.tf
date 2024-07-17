@@ -42,8 +42,8 @@ resource "azapi_resource" "subnet" {
   schema_validation_enabled = true
 
   depends_on = [
-    azapi_update_resource.AllowDeletionOfIpPrefixFromSubnet,
-    azapi_update_resource.AllowMultipleAddressPrefixesOnSubnet
+    azapi_update_resource.allow_multiple_address_prefixes_on_subnet,
+    azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet
   ]
 }
 
@@ -67,7 +67,7 @@ resource "azapi_update_resource" "allow_multiple_address_prefixes_on_subnet" {
   body = jsonencode({
     properties = {}
   })
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/allow_multiple_address_prefixes_on_subnet"
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultipleAddressPrefixesOnSubnet"
 }
 
 resource "azapi_update_resource" "allow_deletion_of_ip_prefix_from_subnet" {
@@ -77,5 +77,15 @@ resource "azapi_update_resource" "allow_deletion_of_ip_prefix_from_subnet" {
   body = jsonencode({
     properties = {}
   })
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/allow_deletion_of_ip_prefix_from_subnet"
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDeletionOfIpPrefixFromSubnet"
+}
+
+resource "azapi_update_resource" "enable_shared_vnet" {
+  count = var.sharing_scope == "Tenant" ? 1 : 0
+
+  type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
+  body = jsonencode({
+    properties = {}
+  })
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/EnableSharedVNet"
 }

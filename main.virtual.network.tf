@@ -5,7 +5,9 @@ resource "azapi_resource" "vnet" {
       addressSpace = {
         addressPrefixes = var.address_space
       }
-      bgpCommunities = local.bgp_communities
+      bgpCommunities = var.bgp_community != null ? {
+        virtualNetworkCommunity = var.bgp_community
+      } : null
       dhcpOptions = var.dns_servers != null ? {
         dnsServers = var.dns_servers.dns_servers
       } : null
@@ -30,4 +32,16 @@ resource "azapi_resource" "vnet" {
   parent_id                 = "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}"
   schema_validation_enabled = true
   tags                      = var.tags
+
+  depends_on = [azapi_update_resource.allow_drop_unencrypted_vnet]
+}
+
+resource "azapi_update_resource" "allow_drop_unencrypted_vnet" {
+  count = var.encryption != null ? (var.encryption.enforcement == "DropUnencrypted" ? 1 : 0) : 0
+
+  type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
+  body = jsonencode({
+    properties = {}
+  })
+  resource_id = "/subscriptions/${local.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDropUnecryptedVnet"
 }

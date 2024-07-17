@@ -24,11 +24,11 @@ variable "resource_group_name" {
 DESCRIPTION
 }
 
-variable "bgp_communities" {
-  type        = map(string)
-  default     = {}
+variable "bgp_community" {
+  type        = string
+  default     = null
   description = <<DESCRIPTION
-(Optional) A list of BGP communities to send to the virtual network gateway.
+(Optional) The BGP community to send to the virtual network gateway.
 DESCRIPTION
 }
 

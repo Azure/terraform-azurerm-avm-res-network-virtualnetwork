@@ -10,7 +10,7 @@ resource "azapi_resource" "this" {
       allowGatewayTransit       = var.allow_gateway_transit
       doNotVerifyRemoteGateways = var.do_not_verify_remote_gateways
       enableOnlyIPv6Peering     = var.enable_only_ipv6_peering
-      peerCompleteVnets         = var.peer_complete_vnets
+      peerCompleteVnets         = var.peer_complete_vnets ? true : null
 
       useRemoteGateways = var.use_remote_gateways
     }
@@ -36,7 +36,7 @@ resource "azapi_resource" "reverse" {
       useRemoteGateways         = var.reverse_use_remote_gateways
       doNotVerifyRemoteGateways = var.reverse_do_not_verify_remote_gateways
       enableOnlyIPv6Peering     = var.reverse_enable_only_ipv6_peering
-      peerCompleteVnets         = var.reverse_peer_complete_vnets
+      peerCompleteVnets         = var.reverse_peer_complete_vnets ? true : null
     }
   }
   locks                     = [var.remote_virtual_network.resource_id]

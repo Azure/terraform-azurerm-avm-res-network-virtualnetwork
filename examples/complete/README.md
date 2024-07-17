@@ -166,8 +166,9 @@ module "vnet1" {
   enable_vm_protection = true
 
   encryption = {
-    enabled     = true
-    enforcement = "DropUnencrypted"
+    enabled = true
+    #enforcement = "DropUnencrypted"  # NOTE: This preview feature was not available publically at time of publish Microsoft.Network/AllowDropUnecryptedVnet
+    enforcement = "AllowUnencrypted"
   }
 
   flow_timeout_in_minutes = 30
@@ -176,13 +177,13 @@ module "vnet1" {
     subnet0 = {
       name                            = "${module.naming.subnet.name_unique}0"
       default_outbound_access_enabled = false
-      sharing_scope                   = "DelegatedServices"
-      address_prefixes                = ["192.168.0.0/24"]
+      #sharing_scope                   = "Tenant"  #NOTE: This preview feature was not available publically at time of publish Microsoft.Network/EnableSharedVNet
+      address_prefixes = ["192.168.0.0/24", "192.168.2.0/24"]
     }
     subnet1 = {
       name                            = "${module.naming.subnet.name_unique}1"
-      address_prefixes                = ["192.168.1.0/24", "192.168.2.0/24"]
-      default_outbound_access_enabled = true
+      address_prefixes                = ["192.168.1.0/24"]
+      default_outbound_access_enabled = false
       delegation = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
@@ -228,6 +229,11 @@ module "vnet2" {
   location            = azurerm_resource_group.this.location
   name                = "${module.naming.virtual_network.name_unique}2"
   address_space       = ["10.0.0.0/27"]
+
+  encryption = {
+    enabled     = true
+    enforcement = "AllowUnencrypted"
+  }
 
   peerings = {
     peertovnet1 = {
