@@ -9,34 +9,32 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: ">=1.5.0"
 
-    - name: terraform init
-      run: terraform init
+    - name: terraform fmt check
       shell: bash
+      run: |
+        export TFENV_TERRAFORM_VERSION="1.9.2"
+        docker run --rm -v $(pwd):/src -w /src -e TFENV_TERRAFORM_VERSION mcr.microsoft.com/azterraform make tffmtcheck
 
     - name: terraform validate
-      run: terraform validate
       shell: bash
-
-    - uses: terraform-linters/setup-tflint@v3
-      name: Setup TFLint
-      with:
-        tflint_version: v0.48.0
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-
-    - name: get tflint config
       run: |
-        curl --header "Authorization: Bearer ${{ inputs.github-token }}" https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-template/main/.tflint.hcl -o .tflint.hcl
-      shell: bash
+        export TFENV_TERRAFORM_VERSION="1.9.2"
+        docker run --rm -v $(pwd):/src -w /src -e TFENV_TERRAFORM_VERSION mcr.microsoft.com/azterraform make tfvalidatecheck
 
-    - name: tflint init
-      run: tflint --init
+    - name: terrafmt check
       shell: bash
+      run: |
+        export TFENV_TERRAFORM_VERSION="1.9.2"
+        docker run --rm -v $(pwd):/src -w /src -e TFENV_TERRAFORM_VERSION mcr.microsoft.com/azterraform make terrafmtcheck
 
     - name: tflint
-      run: tflint
       shell: bash
+      run: |
+        export TFENV_TERRAFORM_VERSION="1.9.2"
+        docker run --rm -v $(pwd):/src -w /src -e TFENV_TERRAFORM_VERSION mcr.microsoft.com/azterraform make tflint
+
+    - name: tfsec
+      shell: bash
+      run: |
+        echo "Bypass tfsec for now"
