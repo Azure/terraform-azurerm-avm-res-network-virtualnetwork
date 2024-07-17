@@ -60,22 +60,22 @@ resource "azurerm_role_assignment" "subnet" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
 
-resource "azapi_update_resource" "AllowMultipleAddressPrefixesOnSubnet" {
+resource "azapi_update_resource" "allow_multiple_address_prefixes_on_subnet" {
   count = local.has_multiple_address_prefixes ? 1 : 0
 
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
   body = jsonencode({
     properties = {}
   })
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultipleAddressPrefixesOnSubnet"
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/allow_multiple_address_prefixes_on_subnet"
 }
 
-resource "azapi_update_resource" "AllowDeletionOfIpPrefixFromSubnet " {
+resource "azapi_update_resource" "allow_deletion_of_ip_prefix_from_subnet" {
   count = local.has_multiple_address_prefixes ? 1 : 0
 
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
   body = jsonencode({
     properties = {}
   })
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDeletionOfIpPrefixFromSubnet"
+  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/allow_deletion_of_ip_prefix_from_subnet"
 }
