@@ -238,7 +238,6 @@ module "vnet2" {
       allow_virtual_network_access          = true
       do_not_verify_remote_gateways         = false
       enable_only_ipv6_peering              = false
-      peer_complete_vnets                   = true
       use_remote_gateways                   = false
       create_reverse_peering                = true
       reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
@@ -247,7 +246,6 @@ module "vnet2" {
       reverse_allow_virtual_network_access  = true
       reverse_do_not_verify_remote_gateways = false
       reverse_enable_only_ipv6_peering      = false
-      reverse_peer_complete_vnets           = true
       reverse_use_remote_gateways           = false
     }
   }

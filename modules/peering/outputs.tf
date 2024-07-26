@@ -1,29 +1,19 @@
 output "name" {
   description = "The name of the peering resource"
-  value       = azapi_resource.this.name
-}
-
-output "resource" {
-  description = "All attributes of the peering resource"
-  value       = azapi_resource.this
+  value       = local.output_resource_name
 }
 
 output "resource_id" {
   description = "The resource ID of the peering resource."
-  value       = azapi_resource.this.id
+  value       = local.output_resource_id
 }
 
 output "reverse_name" {
   description = "The name of the reverse peering resource"
-  value       = var.create_reverse_peering ? azapi_resource.reverse[0].name : null
-}
-
-output "reverse_resource" {
-  description = "All attributes of the reverse peering resource"
-  value       = var.create_reverse_peering ? azapi_resource.reverse[0] : null
+  value       = local.output_reverse_resource_name
 }
 
 output "reverse_resource_id" {
   description = "The resource ID of the reverse peering resource."
-  value       = var.create_reverse_peering ? azapi_resource.reverse[0].id : null
+  value       = local.output_reverse_resource_id
 }
