@@ -244,7 +244,6 @@ module "vnet2" {
       allow_virtual_network_access          = true
       do_not_verify_remote_gateways         = false
       enable_only_ipv6_peering              = false
-      peer_complete_vnets                   = true
       use_remote_gateways                   = false
       create_reverse_peering                = true
       reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
@@ -253,7 +252,6 @@ module "vnet2" {
       reverse_allow_virtual_network_access  = true
       reverse_do_not_verify_remote_gateways = false
       reverse_enable_only_ipv6_peering      = false
-      reverse_peer_complete_vnets           = true
       reverse_use_remote_gateways           = false
     }
   }
@@ -272,16 +270,6 @@ The following requirements are needed by this module:
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
-
-- <a name="provider_http"></a> [http](#provider\_http) (~> 3.4)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
 ## Resources
 

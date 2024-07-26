@@ -278,6 +278,10 @@ The following outputs are exported:
 
 Description: The application gateway ip configurations resource id.
 
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The resource name of the subnet.
+
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: All attributes of the subnet

@@ -3,6 +3,11 @@ output "application_gateway_ip_configuration_resource_id" {
   value       = try(azapi_resource.subnet.body.properties.applicationGatewayIPConfigurations.id, null)
 }
 
+output "name" {
+  description = "The resource name of the subnet."
+  value       = azapi_resource.subnet.name
+}
+
 output "resource" {
   description = "All attributes of the subnet"
   value       = azapi_resource.subnet

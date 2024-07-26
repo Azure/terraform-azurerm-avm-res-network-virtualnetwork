@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Example of Subnets with pre-existing virtual networks
+# Peer only specified address spaces example for Azure Virtual Network module
 
-This code sample shows how to create and manage subnets for pre-existing virtual networks.
+This sample shows how to create peerings only for specific address spaces in a virtual network.
 
 ```hcl
 terraform {
@@ -52,32 +52,102 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-locals {
-  address_space = "10.0.0.0/16"
+#Defining the first virtual network (vnet-1) with its subnets and settings.
+module "vnet1" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-1"
+
+  address_space = ["10.4.0.0/16", "10.5.0.0/16"]
+
   subnets = {
-    for i in range(2) :
-    "subnet${i}" => {
-      name             = "${module.naming.subnet.name_unique}${i}"
-      address_prefixes = [cidrsubnet(local.address_space, 8, i)]
+    subnet1 = {
+      name             = "${module.naming.subnet.name_unique}-1-1"
+      address_prefixes = ["10.4.1.0/24", "10.4.2.0/24"]
+    }
+    subnet2 = {
+      name             = "${module.naming.subnet.name_unique}-1-2"
+      address_prefixes = ["10.4.3.0/24", "10.4.4.0/24"]
+    }
+    subnet3 = {
+      name             = "${module.naming.subnet.name_unique}-1-3"
+      address_prefixes = ["10.5.5.0/24", "10.5.6.0/24"]
     }
   }
 }
 
-resource "azurerm_virtual_network" "this" {
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
+module "vnet2" {
+  source              = "../../"
   resource_group_name = azurerm_resource_group.this.name
-}
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-2"
+  address_space       = ["10.6.0.0/16", "10.7.0.0/16"]
 
-module "subnets" {
-  for_each = local.subnets
-  source   = "../../modules/subnet"
-  virtual_network = {
-    resource_id = azurerm_virtual_network.this.id
+  subnets = {
+    subnet1 = {
+      name             = "${module.naming.subnet.name_unique}-2-1"
+      address_prefixes = ["10.6.1.0/24", "10.6.2.0/24"]
+    }
+    subnet2 = {
+      name             = "${module.naming.subnet.name_unique}-2-2"
+      address_prefixes = ["10.6.3.0/24", "10.6.4.0/24"]
+    }
+    subnet3 = {
+      name             = "${module.naming.subnet.name_unique}-2-3"
+      address_prefixes = ["10.7.5.0/24", "10.7.6.0/24"]
+    }
   }
-  name             = each.value.name
-  address_prefixes = each.value.address_prefixes
+
+  peerings = {
+    peertovnet1 = {
+      name                               = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      remote_virtual_network_resource_id = module.vnet1.resource_id
+      allow_forwarded_traffic            = true
+      allow_gateway_transit              = true
+      allow_virtual_network_access       = true
+      peer_complete_vnets                = false
+      local_peered_address_spaces = [
+        {
+          address_prefix = "10.6.1.0/24"
+        },
+        {
+          address_prefix = "10.6.2.0/24"
+        }
+      ]
+      remote_peered_address_spaces = [
+        {
+          address_prefix = "10.4.1.0/24"
+        },
+        {
+          address_prefix = "10.4.2.0/24"
+        }
+      ]
+
+      create_reverse_peering               = true
+      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_allow_forwarded_traffic      = false
+      reverse_allow_gateway_transit        = false
+      reverse_allow_virtual_network_access = true
+      reverse_peer_complete_vnets          = false
+      reverse_local_peered_address_spaces = [
+        {
+          address_prefix = "10.4.1.0/24"
+        },
+        {
+          address_prefix = "10.4.2.0/24"
+        }
+      ]
+      reverse_remote_peered_address_spaces = [
+        {
+          address_prefix = "10.6.1.0/24"
+        },
+        {
+          address_prefix = "10.6.2.0/24"
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -97,7 +167,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -111,7 +180,27 @@ No optional inputs.
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The resource name of the virtual network.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The virtual network resource.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource ID of the virtual network.
+
+### <a name="output_subnet1"></a> [subnet1](#output\_subnet1)
+
+Description: The subnet resource.
+
+### <a name="output_subnets"></a> [subnets](#output\_subnets)
+
+Description: Information about the subnets created in the module.
 
 ## Modules
 
@@ -129,9 +218,15 @@ Source: Azure/regions/azurerm
 
 Version: ~> 0.3
 
-### <a name="module_subnets"></a> [subnets](#module\_subnets)
+### <a name="module_vnet1"></a> [vnet1](#module\_vnet1)
 
-Source: ../../modules/subnet
+Source: ../../
+
+Version:
+
+### <a name="module_vnet2"></a> [vnet2](#module\_vnet2)
+
+Source: ../../
 
 Version:
 
@@ -146,6 +241,7 @@ terraform init
 terraform plan
 terraform apply
 ```
+
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
 

@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Example of using teh singular address prefix on a subnet
+# Peer only specified subnets example for Azure Virtual Network module
 
-Some Azure resource types don't support the addressPrefix array, so we need to support the singular option too.
+This sample shows how to create peerings only for specific subnets in a virtual network.
 
 ```hcl
 terraform {
@@ -52,49 +52,103 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-module "vnet" {
+#Defining the first virtual network (vnet-1) with its subnets and settings.
+module "vnet1" {
   source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = true
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-1"
 
-  address_space = ["10.0.0.0/16"]
+  address_space = ["10.0.0.0/16", "10.1.0.0/16"]
+
   subnets = {
     subnet1 = {
-      name                            = "subnet1"
-      address_prefix                  = "10.0.0.0/24"
-      default_outbound_access_enabled = true
-      delegation = [{
-        name = "aca_delegation"
-        service_delegation = {
-          name    = "Microsoft.App/environments"
-          actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-        }
-      }]
+      name             = "${module.naming.subnet.name_unique}-1-1"
+      address_prefixes = ["10.0.1.0/24", "10.0.2.0/24"]
+    }
+    subnet2 = {
+      name             = "${module.naming.subnet.name_unique}-1-2"
+      address_prefixes = ["10.0.3.0/24", "10.0.4.0/24"]
+    }
+    subnet3 = {
+      name             = "${module.naming.subnet.name_unique}-1-3"
+      address_prefixes = ["10.0.5.0/24", "10.0.6.0/24"]
     }
   }
 }
 
-/* # NOTE: This resource take a long time to create and destroy, so we are removing from e2e tests.
-resource "azurerm_container_app_environment" "aca" {
-  name                       = module.naming.container_app_environment.name
-  location                   = azurerm_resource_group.this.location
-  resource_group_name        = azurerm_resource_group.this.name
+module "vnet2" {
+  source              = "../../"
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.virtual_network.name_unique}-2"
+  address_space       = ["10.2.0.0/16", "10.3.0.0/16"]
 
-  infrastructure_resource_group_name = "${module.naming.resource_group.name_unique}-aca"
-  infrastructure_subnet_id           = module.vnet.subnets["subnet1"].resource_id
-  internal_load_balancer_enabled = true
-
-  workload_profile {
-    name = "Consumption"
-    workload_profile_type  = "Consumption"
-    maximum_count = 1
-    minimum_count = 0
+  subnets = {
+    subnet1 = {
+      name             = "${module.naming.subnet.name_unique}-2-1"
+      address_prefixes = ["10.2.1.0/24", "10.2.2.0/24"]
+    }
+    subnet2 = {
+      name             = "${module.naming.subnet.name_unique}-2-2"
+      address_prefixes = ["10.2.3.0/24", "10.2.4.0/24"]
+    }
+    subnet3 = {
+      name             = "${module.naming.subnet.name_unique}-2-3"
+      address_prefixes = ["10.2.5.0/24", "10.2.6.0/24"]
+    }
   }
-  zone_redundancy_enabled = false
+
+  peerings = {
+    peertovnet1 = {
+      name                               = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      remote_virtual_network_resource_id = module.vnet1.resource_id
+      allow_forwarded_traffic            = true
+      allow_gateway_transit              = true
+      allow_virtual_network_access       = true
+      peer_complete_vnets                = false
+      local_peered_subnets = [
+        {
+          subnet_name = "${module.naming.subnet.name_unique}-2-1"
+        },
+        {
+          subnet_name = "${module.naming.subnet.name_unique}-2-2"
+        }
+      ]
+      remote_peered_subnets = [
+        {
+          subnet_name = module.vnet1.subnets["subnet1"].name # NOTE: We are building an implicit dependency here as we need the peering to be destroyed prior to the subnet
+        },
+        {
+          subnet_name = module.vnet1.subnets["subnet2"].name
+        }
+      ]
+
+      create_reverse_peering               = true
+      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_allow_forwarded_traffic      = false
+      reverse_allow_gateway_transit        = false
+      reverse_allow_virtual_network_access = true
+      reverse_peer_complete_vnets          = false
+      reverse_local_peered_subnets = [
+        {
+          subnet_name = module.vnet1.subnets["subnet1"].name
+        },
+        {
+          subnet_name = module.vnet1.subnets["subnet2"].name
+        }
+      ]
+      reverse_remote_peered_subnets = [
+        {
+          subnet_name = "${module.naming.subnet.name_unique}-2-1"
+        },
+        {
+          subnet_name = "${module.naming.subnet.name_unique}-2-2"
+        }
+      ]
+    }
+  }
 }
-*/
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -126,7 +180,27 @@ No optional inputs.
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The resource name of the virtual network.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The virtual network resource.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource ID of the virtual network.
+
+### <a name="output_subnet1"></a> [subnet1](#output\_subnet1)
+
+Description: The subnet resource.
+
+### <a name="output_subnets"></a> [subnets](#output\_subnets)
+
+Description: Information about the subnets created in the module.
 
 ## Modules
 
@@ -144,7 +218,13 @@ Source: Azure/regions/azurerm
 
 Version: ~> 0.3
 
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
+### <a name="module_vnet1"></a> [vnet1](#module\_vnet1)
+
+Source: ../../
+
+Version:
+
+### <a name="module_vnet2"></a> [vnet2](#module\_vnet2)
 
 Source: ../../
 
@@ -161,6 +241,7 @@ terraform init
 terraform plan
 terraform apply
 ```
+
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
 
