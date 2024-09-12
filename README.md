@@ -1,5 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
 # Azure Virtual Network Module
+# OIDC Test
 
 This module is used to manage Azure Virtual Networks, Subnets and Peerings.
 
