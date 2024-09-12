@@ -1,0 +1,17 @@
+---
+  name: test examples
+  on:
+    pull_request:
+      types: ['opened', 'reopened', 'synchronize']
+    merge_group:
+    workflow_dispatch:
+  
+  jobs:
+    run-e2e-tests:
+      if: github.event.repository.name != 'terraform-azurerm-avm-template' && github.event.pull_request.head.repo.fork == false
+      uses: Azure/terraform-azurerm-avm-template/.github/workflows/test-examples-template.yml@use-oidc-for-e2e-tests
+      name: end to end
+      permissions:
+        id-token: write
+        contents: read
+  
