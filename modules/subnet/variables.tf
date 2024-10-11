@@ -54,8 +54,7 @@ variable "delegation" {
   type = list(object({
     name = string
     service_delegation = object({
-      name    = string
-      actions = optional(list(string))
+      name = string
     })
   }))
   default     = null
@@ -65,7 +64,6 @@ variable "delegation" {
     - `name` - (Required) A name for this delegation.
     - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
       - `name` - (Required) The name of the service to delegate to.
-      - `actions` - (Optional) The list of actions which should be delegated. This list is specific to the service to delegate to.
 DESCRIPTION
 }
 
