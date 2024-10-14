@@ -31,7 +31,7 @@ resource "azapi_resource" "vnet" {
   name                      = var.name
   parent_id                 = "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}"
   schema_validation_enabled = true
-  tags                      = var.tags
+  tags                      = local.tags
 
   depends_on = [azapi_update_resource.allow_drop_unencrypted_vnet]
 }

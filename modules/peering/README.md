@@ -53,12 +53,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.13)
-
 ## Resources
 
 The following resources are used by this module:

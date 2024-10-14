@@ -412,6 +412,15 @@ variable "subscription_id" {
   description = "(Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
 }
 
+variable "tag_inheritance" {
+  type = object({
+    subscription   = optional(bool, false)
+    resource_group = optional(bool, false)
+  })
+  default     = null
+  description = "(Optional) The level(s) from which tags should be inherited."
+}
+
 variable "tags" {
   type        = map(string)
   default     = null

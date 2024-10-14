@@ -98,6 +98,8 @@ The following resources are used by this module:
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_resource_group.tags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
+- [azurerm_subscription.tags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -511,6 +513,21 @@ Default: `{}`
 Description: (Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription.
 
 Type: `string`
+
+Default: `null`
+
+### <a name="input_tag_inheritance"></a> [tag\_inheritance](#input\_tag\_inheritance)
+
+Description: (Optional) The level(s) from which tags should be inherited.
+
+Type:
+
+```hcl
+object({
+    subscription   = optional(bool, false)
+    resource_group = optional(bool, false)
+  })
+```
 
 Default: `null`
 
