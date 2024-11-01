@@ -54,6 +54,8 @@ module "naming" {
   version = "~> 0.3"
 }
 
+data "azapi_client_config" "current" {}
+
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
   location = module.regions.regions[random_integer.region_index.result].name
@@ -225,6 +227,10 @@ module "vnet1" {
       log_analytics_destination_type = "Dedicated"
     }
   }
+
+  tags = {
+    azapi_linting_fix = data.azapi_client_config.current.subscription_id
+  }
 }
 
 module "vnet2" {
@@ -291,6 +297,7 @@ The following resources are used by this module:
 - [azurerm_subnet_service_endpoint_storage_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_service_endpoint_storage_policy) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [http_http.public_ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
 <!-- markdownlint-disable MD013 -->

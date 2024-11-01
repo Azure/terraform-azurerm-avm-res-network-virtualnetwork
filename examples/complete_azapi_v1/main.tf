@@ -48,6 +48,8 @@ module "naming" {
   version = "~> 0.3"
 }
 
+data "azapi_client_config" "current" {}
+
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
   location = module.regions.regions[random_integer.region_index.result].name
@@ -218,6 +220,10 @@ module "vnet1" {
       workspace_resource_id          = azurerm_log_analytics_workspace.this.id
       log_analytics_destination_type = "Dedicated"
     }
+  }
+
+  tags = {
+    azapi_linting_fix = data.azapi_client_config.current.subscription_id
   }
 }
 
