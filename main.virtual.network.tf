@@ -40,8 +40,8 @@ resource "azapi_update_resource" "allow_drop_unencrypted_vnet" {
   count = var.encryption != null ? (var.encryption.enforcement == "DropUnencrypted" ? 1 : 0) : 0
 
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = jsonencode({
+  body = {
     properties = {}
-  })
+  }
   resource_id = "/subscriptions/${local.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDropUnecryptedVnet"
 }

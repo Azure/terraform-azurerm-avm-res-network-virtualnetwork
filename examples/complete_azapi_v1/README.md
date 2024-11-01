@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Complete example for Azure Virtual Network module using azurerm v4
+# Complete example for Azure Virtual Network module with azurerm v3 and azapi v1
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
@@ -7,9 +7,13 @@ This sample shows how to create and manage Azure Virtual Networks (vNets) and th
 terraform {
   required_version = ">= 1.9.2"
   required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 1.13"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.7"
+      version = "~> 3.74"
     }
     http = {
       source  = "hashicorp/http"
@@ -49,6 +53,8 @@ module "naming" {
   source  = "Azure/naming/azurerm"
   version = "~> 0.3"
 }
+
+data "azapi_client_config" "current" {}
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
@@ -221,6 +227,10 @@ module "vnet1" {
       log_analytics_destination_type = "Dedicated"
     }
   }
+
+  tags = {
+    azapi_linting_fix = data.azapi_client_config.current.subscription_id
+  }
 }
 
 module "vnet2" {
@@ -265,7 +275,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.7)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
+
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
@@ -285,6 +297,7 @@ The following resources are used by this module:
 - [azurerm_subnet_service_endpoint_storage_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_service_endpoint_storage_policy) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [http_http.public_ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
 <!-- markdownlint-disable MD013 -->
