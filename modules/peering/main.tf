@@ -183,9 +183,9 @@ resource "azapi_update_resource" "allow_multiple_peering_links_between_vnets" {
   count = local.is_address_space_peering || local.is_subnet_peering ? 1 : 0
 
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = jsonencode({
+  body = {
     properties = {}
-  })
+  }
   resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
 }
 
@@ -194,8 +194,8 @@ resource "azapi_update_resource" "remote_allow_multiple_peering_links_between_vn
   count = local.is_reverse_address_space_peering || local.is_reverse_subnet_peering ? 1 : 0
 
   type = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = jsonencode({
+  body = {
     properties = {}
-  })
+  }
   resource_id = "/subscriptions/${local.remote_subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
 }
