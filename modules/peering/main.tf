@@ -17,7 +17,7 @@ resource "azapi_resource" "this" {
       peerCompleteVnets         = var.peer_complete_vnets
     }
   }
-  locks                     = [var.virtual_network.resource_id, var.remote_virtual_network.resource_id]
+  locks                     = [var.virtual_network.resource_id]
   name                      = var.name
   parent_id                 = var.virtual_network.resource_id
   schema_validation_enabled = true
@@ -41,7 +41,7 @@ resource "azapi_resource" "reverse" {
       peerCompleteVnets         = var.reverse_peer_complete_vnets
     }
   }
-  locks                     = [var.remote_virtual_network.resource_id, var.virtual_network.resource_id]
+  locks                     = [var.remote_virtual_network.resource_id]
   name                      = var.reverse_name
   parent_id                 = var.remote_virtual_network.resource_id
   schema_validation_enabled = true
@@ -73,7 +73,7 @@ resource "azapi_resource" "address_space_peering" {
       }
     }
   }
-  locks                     = [var.virtual_network.resource_id, var.remote_virtual_network.resource_id]
+  locks                     = [var.virtual_network.resource_id]
   name                      = var.name
   parent_id                 = var.virtual_network.resource_id
   schema_validation_enabled = true
@@ -108,7 +108,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
       }
     }
   }
-  locks                     = [var.remote_virtual_network.resource_id, var.virtual_network.resource_id]
+  locks                     = [var.remote_virtual_network.resource_id]
   name                      = var.reverse_name
   parent_id                 = var.remote_virtual_network.resource_id
   schema_validation_enabled = true
@@ -140,7 +140,7 @@ resource "azapi_resource" "subnet_peering" {
       remoteSubnetNames         = [for subnet in var.remote_peered_subnets : subnet.subnet_name]
     }
   }
-  locks                     = [var.virtual_network.resource_id, var.remote_virtual_network.resource_id]
+  locks                     = [var.virtual_network.resource_id]
   name                      = var.name
   parent_id                 = var.virtual_network.resource_id
   schema_validation_enabled = true
@@ -171,7 +171,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
       remoteSubnetNames         = [for subnet in var.reverse_remote_peered_subnets : subnet.subnet_name]
     }
   }
-  locks                     = [var.remote_virtual_network.resource_id, var.virtual_network.resource_id]
+  locks                     = [var.remote_virtual_network.resource_id]
   name                      = var.reverse_name
   parent_id                 = var.remote_virtual_network.resource_id
   schema_validation_enabled = true
