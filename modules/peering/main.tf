@@ -45,6 +45,8 @@ resource "azapi_resource" "reverse" {
   name                      = var.reverse_name
   parent_id                 = var.remote_virtual_network.resource_id
   schema_validation_enabled = true
+
+  depends_on = [azapi_resource.this]
 }
 
 resource "azapi_resource" "address_space_peering" {
@@ -112,6 +114,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
   schema_validation_enabled = true
 
   depends_on = [
+    azapi_resource.address_space_peering,
     azapi_update_resource.allow_multiple_peering_links_between_vnets,
     azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
   ]
@@ -174,6 +177,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
   schema_validation_enabled = true
 
   depends_on = [
+    azapi_resource.subnet_peering,
     azapi_update_resource.allow_multiple_peering_links_between_vnets,
     azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
   ]
