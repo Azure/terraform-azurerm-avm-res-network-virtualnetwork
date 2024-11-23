@@ -96,6 +96,7 @@ The following resources are used by this module:
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [azapi_resource.vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
@@ -104,12 +105,6 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
-
-Description: (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
-
-Type: `set(string)`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -126,6 +121,15 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
+
+Description: (Optional) The address spaces applied to the virtual network. You can supply more than one address space.  
+Leave this empty if you want to use IPAM for address allocation.
+
+Type: `set(string)`
+
+Default: `[]`
 
 ### <a name="input_bgp_community"></a> [bgp\_community](#input\_bgp\_community)
 
@@ -262,6 +266,21 @@ Default: `null`
 Description: (Optional) The flow timeout in minutes for the virtual network. Defaults to 4.
 
 Type: `number`
+
+Default: `null`
+
+### <a name="input_ipam_pool"></a> [ipam\_pool](#input\_ipam\_pool)
+
+Description: (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool.
+
+Type:
+
+```hcl
+object({
+    id                  = string
+    number_of_addresses = number
+  })
+```
 
 Default: `null`
 
@@ -409,8 +428,9 @@ Default: `{}`
 
 Description: (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefix_size` or `address_prefixes` must be specified.
+ - `address_prefix_size` - (Optional) The size of the address prefix to use for the subnet. Subnet address\_prefix will be dynamically allocated from the first Virtual Network addressSpace.addressPrefixes entry in lexical order of the subnet keys (be mindful when ordering/adding/removing subnets).
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefix_size` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -459,9 +479,10 @@ Type:
 
 ```hcl
 map(object({
-    address_prefix   = optional(string)
-    address_prefixes = optional(list(string))
-    name             = string
+    address_prefix      = optional(string)
+    address_prefix_size = optional(string)
+    address_prefixes    = optional(list(string))
+    name                = string
     nat_gateway = optional(object({
       id = string
     }))

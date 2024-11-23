@@ -1,7 +1,29 @@
+data "azapi_resource" "vnet" {
+  type                   = "Microsoft.Network/virtualNetworks@2024-03-01"
+  name                   = azapi_resource.vnet.name
+  parent_id              = azapi_resource.vnet.parent_id
+  response_export_values = ["properties.addressSpace.addressPrefixes"]
+}
+
+locals {
+  # for each subnet locate the ones which require dynamic allocation of IP addresses and calculate the bit offset
+  subnet_newbits = { for key, value in var.subnets :
+    key => try(value.address_prefix_size, 32) - try(split("/", jsondecode(data.azapi_resource.vnet.output).properties.addressSpace.addressPrefixes[0])[1], 0) if can(value.address_prefix_size)
+  }
+  #Generate the prefixes
+  subnet_prefixes = cidrsubnets(jsondecode(data.azapi_resource.vnet.output).properties.addressSpace.addressPrefixes[0], values(local.subnet_newbits)...)
+  subnets = { for key, value in var.subnets : key => merge(
+    value,
+    {
+      address_prefix = contains(keys(local.subnet_newbits), key) ? element(local.subnet_prefixes, index(keys(local.subnet_newbits), key)) : value.address_prefix,
+    }
+  ) }
+}
+
 module "subnet" {
   source = "./modules/subnet"
 
-  for_each = var.subnets
+  for_each = local.subnets
 
   virtual_network                               = { resource_id = azapi_resource.vnet.id }
   name                                          = each.value.name
