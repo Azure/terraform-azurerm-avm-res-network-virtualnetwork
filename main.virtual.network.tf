@@ -1,5 +1,8 @@
 locals {
-  # Define which addressSpace values to use based on the presence of the IPAM variable
+  # Define which addressSpace values to use based on the presence of the IPAM variable.
+  # If the IPAM pool is not provided, use the addressPrefixes.
+  # If the IPAM pool is provided, use the ipamPoolPrefixAllocations, exclude the addressPrefixes so TF doesn't 
+  # generate a diff when it is set after calling IPAM.
   address_options = {
     addressPrefixes = {
       addressPrefixes = var.address_space
