@@ -1,10 +1,30 @@
+locals {
+  # Define which addressSpace values to use based on the presence of the IPAM variable.
+  # If the IPAM pool is not provided, use the addressPrefixes.
+  # If the IPAM pool is provided, use the ipamPoolPrefixAllocations, exclude the addressPrefixes so TF doesn't 
+  # generate a diff when it is set after calling IPAM.
+  address_options = {
+    addressPrefixes = {
+      addressPrefixes = var.address_space
+    }
+    ipamPoolPrefixAllocations = {
+      ipamPoolPrefixAllocations = [
+        {
+          numberOfIpAddresses = tostring(try(var.ipam_pool.number_of_addresses, 0))
+          pool = {
+            id = try(var.ipam_pool.id, "")
+          }
+        }
+      ]
+    }
+  }
+}
+
 resource "azapi_resource" "vnet" {
-  type = "Microsoft.Network/virtualNetworks@2023-11-01"
+  type = "Microsoft.Network/virtualNetworks@2024-03-01"
   body = {
     properties = {
-      addressSpace = {
-        addressPrefixes = var.address_space
-      }
+      addressSpace = local.address_options[can(var.ipam_pool.id) ? "ipamPoolPrefixAllocations" : "addressPrefixes"]
       bgpCommunities = var.bgp_community != null ? {
         virtualNetworkCommunity = var.bgp_community
       } : null
@@ -30,7 +50,7 @@ resource "azapi_resource" "vnet" {
   location                  = var.location
   name                      = var.name
   parent_id                 = "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}"
-  schema_validation_enabled = true
+  schema_validation_enabled = !can(var.ipam_pool.id)
   tags                      = var.tags
 
   depends_on = [azapi_update_resource.allow_drop_unencrypted_vnet]

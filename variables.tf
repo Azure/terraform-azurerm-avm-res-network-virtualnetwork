@@ -1,14 +1,3 @@
-variable "address_space" {
-  type        = set(string)
-  description = "(Optional) The address spaces applied to the virtual network. You can supply more than one address space."
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_space) > 0
-    error_message = "Address space must contain at least one element."
-  }
-}
-
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -21,6 +10,15 @@ variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
 (Required) The name of the resource group where the resources will be deployed. 
+DESCRIPTION
+}
+
+variable "address_space" {
+  type        = set(string)
+  default     = []
+  description = <<DESCRIPTION
+(Optional) The address spaces applied to the virtual network. You can supply more than one address space.
+Leave this empty if you want to use IPAM for address allocation.
 DESCRIPTION
 }
 
@@ -167,6 +165,26 @@ variable "flow_timeout_in_minutes" {
 DESCRIPTION
 }
 
+variable "ipam_pool" {
+  type = object({
+    id                  = string
+    number_of_addresses = number
+  })
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies the IPAM settings for requesting an address_space from an IP Pool.
+DESCRIPTION
+
+  validation {
+    condition     = var.ipam_pool == null || can(regex("^\\/subscriptions\\/[\\w-]+\\/resourceGroups\\/[\\w-]+\\/providers\\/Microsoft\\.Network\\/networkManagers\\/[\\w-]+\\/ipamPools\\/[\\w-]+$", try(var.ipam_pool.id, "")))
+    error_message = "IPAM pool ID must be a valid ipamPools resource ID."
+  }
+  validation {
+    condition     = var.ipam_pool == null || try(var.ipam_pool.number_of_addresses, 1) % 8 == 0
+    error_message = "Number of addresses must be a multiple of 8."
+  }
+}
+
 variable "lock" {
   type = object({
     kind = string
@@ -305,9 +323,10 @@ variable "role_assignments" {
 
 variable "subnets" {
   type = map(object({
-    address_prefix   = optional(string)
-    address_prefixes = optional(list(string))
-    name             = string
+    address_prefix       = optional(string)
+    address_prefix_sizes = optional(list(number))
+    address_prefixes     = optional(list(string))
+    name                 = string
     nat_gateway = optional(object({
       id = string
     }))
@@ -352,8 +371,9 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefix_size` or `address_prefixes` must be specified.
+ - `address_prefix_sizes` - (Optional) The sizes of the address prefixes to allocate for the subnet. Subnet address_prefixes will be dynamically allocated from the first Virtual Network addressSpace.addressPrefixes entry in lexical order of the subnet keys (be mindful when ordering/adding/removing subnets). 
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefix_size` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` - 
  - `enforce_private_link_service_network_policies` - 
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -401,8 +421,8 @@ variable "subnets" {
 DESCRIPTION
 
   validation {
-    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
-    error_message = "One of `address_prefix` or `address_prefixes` must be set."
+    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null || subnet.address_prefix_sizes != null])
+    error_message = "One of `address_prefix`, `address_prefixes` or `address_prefix_sizes` must be set."
   }
 }
 
