@@ -323,10 +323,10 @@ variable "role_assignments" {
 
 variable "subnets" {
   type = map(object({
-    address_prefix      = optional(string)
-    address_prefix_size = optional(string)
-    address_prefixes    = optional(list(string))
-    name                = string
+    address_prefix       = optional(string)
+    address_prefix_sizes = optional(list(number))
+    address_prefixes     = optional(list(string))
+    name                 = string
     nat_gateway = optional(object({
       id = string
     }))
@@ -372,7 +372,7 @@ variable "subnets" {
 (Optional) A map of subnets to create
 
  - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefix_size` or `address_prefixes` must be specified.
- - `address_prefix_size` - (Optional) The size of the address prefix to use for the subnet. Subnet address_prefix will be dynamically allocated from the first Virtual Network addressSpace.addressPrefixes entry in lexical order of the subnet keys (be mindful when ordering/adding/removing subnets). 
+ - `address_prefix_sizes` - (Optional) The sizes of the address prefixes to allocate for the subnet. Subnet address_prefixes will be dynamically allocated from the first Virtual Network addressSpace.addressPrefixes entry in lexical order of the subnet keys (be mindful when ordering/adding/removing subnets). 
  - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefix_size` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` - 
  - `enforce_private_link_service_network_policies` - 
@@ -421,8 +421,8 @@ variable "subnets" {
 DESCRIPTION
 
   validation {
-    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null || subnet.address_prefix_size != null])
-    error_message = "One of `address_prefix`, `address_prefixes` or `address_prefix_size` must be set."
+    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null || subnet.address_prefix_sizes != null])
+    error_message = "One of `address_prefix`, `address_prefixes` or `address_prefix_sizes` must be set."
   }
 }
 

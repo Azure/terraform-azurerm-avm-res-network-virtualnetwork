@@ -67,6 +67,15 @@ variable "delegation" {
 DESCRIPTION
 }
 
+variable "multiple_address_prefixes_enabled" {
+  type        = bool
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Should multiple address prefixes be enabled for this subnet.
+If null, value will be determined by the value of address_prefixes
+DESCRIPTION
+}
+
 variable "nat_gateway" {
   type = object({
     id = string

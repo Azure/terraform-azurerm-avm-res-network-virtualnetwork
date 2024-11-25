@@ -9,6 +9,7 @@ module "subnet" {
   address_prefixes                              = each.value.address_prefixes
   delegation                                    = each.value.delegation
   default_outbound_access_enabled               = each.value.default_outbound_access_enabled
+  multiple_address_prefixes_enabled             = each.value.multiple_address_prefixes_enabled
   sharing_scope                                 = each.value.sharing_scope
   nat_gateway                                   = each.value.nat_gateway
   network_security_group                        = each.value.network_security_group

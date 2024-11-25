@@ -140,6 +140,15 @@ list(object({
 
 Default: `null`
 
+### <a name="input_multiple_address_prefixes_enabled"></a> [multiple\_address\_prefixes\_enabled](#input\_multiple\_address\_prefixes\_enabled)
+
+Description: (Optional) Should multiple address prefixes be enabled for this subnet.  
+If null, value will be determined by the value of address\_prefixes
+
+Type: `bool`
+
+Default: `null`
+
 ### <a name="input_nat_gateway"></a> [nat\_gateway](#input\_nat\_gateway)
 
 Description: (Optional) The ID of the NAT Gateway to associate with the subnet. Changing this forces a new resource to be created.
