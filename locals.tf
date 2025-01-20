@@ -8,8 +8,8 @@ locals {
     ]
     if length(value.address_prefix_sizes != null ? value.address_prefix_sizes : []) > 0
   }
-  # Generate the prefixes
-  subnet_prefixes = cidrsubnets(
+  # Generate the prefixes if there is a more then one subnet with a length shorter then the address prefix
+  subnet_prefixes = flatten(values(local.subnet_newbits)) == [0] ? [data.azapi_resource.vnet.output.properties.addressSpace.addressPrefixes[0]]: cidrsubnets(
     data.azapi_resource.vnet.output.properties.addressSpace.addressPrefixes[0],
     flatten(values(local.subnet_newbits))...
   )
