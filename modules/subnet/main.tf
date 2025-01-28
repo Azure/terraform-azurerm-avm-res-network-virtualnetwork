@@ -47,6 +47,12 @@ resource "azapi_resource" "subnet" {
     azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet,
     azapi_update_resource.enable_shared_vnet
   ]
+
+  lifecycle {
+    ignore_changes = [
+      body.properties.ipConfigurations
+    ]
+  }
 }
 
 resource "azurerm_role_assignment" "subnet" {
