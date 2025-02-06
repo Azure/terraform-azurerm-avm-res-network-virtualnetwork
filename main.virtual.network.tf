@@ -34,6 +34,12 @@ resource "azapi_resource" "vnet" {
   tags                      = var.tags
 
   depends_on = [azapi_update_resource.allow_drop_unencrypted_vnet]
+
+  lifecycle {
+    ignore_changes = [
+      body.properties.subnets,
+    ]
+  }
 }
 
 resource "azapi_update_resource" "allow_drop_unencrypted_vnet" {
