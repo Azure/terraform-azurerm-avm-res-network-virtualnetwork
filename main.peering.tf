@@ -1,4 +1,5 @@
 module "peering" {
+  # tflint-ignore: required_module_source_tffr1
   source   = "./modules/peering"
   for_each = var.peerings
 

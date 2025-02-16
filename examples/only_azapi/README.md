@@ -1,15 +1,17 @@
 <!-- BEGIN_TF_DOCS -->
-# Complete example for Azure Virtual Network module
+# Complete example using only AzAPI resources
 
 This sample shows how to create and manage Azure Virtual Networks (vNets) and their associated resources with all options enabled.
 
+It is a copy of the 'Complete' example, except all resources are created using AzAPI.
+
 ```hcl
 terraform {
-  required_version = ">= 1.9, < 2.0"
+  required_version = ">= 1.9.2"
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -18,14 +20,6 @@ terraform {
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
     }
   }
 }
@@ -51,30 +45,52 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "resource_group" {
+  type = "Microsoft.Resources/resourceGroups@2024-03-01"
+  name = module.naming.resource_group.name_unique
+  body = {
+    location   = module.regions.regions[random_integer.region_index.result].name
+    properties = {}
+  }
 }
 
 #Creating a Route Table with a unique name in the specified location.
-resource "azurerm_route_table" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.route_table.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "route_table" {
+  type      = "Microsoft.Network/routeTables@2024-05-01"
+  name      = module.naming.route_table.name_unique
+  location  = azapi_resource.resource_group.location
+  parent_id = azapi_resource.resource_group.id
+
+  body = {
+    properties = {}
+  }
 }
 
 # Creating a DDoS Protection Plan in the specified location.
-resource "azurerm_network_ddos_protection_plan" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_ddos_protection_plan.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "network_ddos_protection_plan" {
+  type      = "Microsoft.Network/ddosProtectionPlans@2024-05-01"
+  name      = module.naming.network_ddos_protection_plan.name_unique
+  location  = azapi_resource.resource_group.location
+  parent_id = azapi_resource.resource_group.id
+
+  body = {
+    properties = {}
+  }
 }
 
 #Creating a NAT Gateway in the specified location.
-resource "azurerm_nat_gateway" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.nat_gateway.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "nat_gateway" {
+  type      = "Microsoft.Network/natGateways@2024-05-01"
+  name      = module.naming.nat_gateway.name_unique
+  location  = azapi_resource.resource_group.location
+  parent_id = azapi_resource.resource_group.id
+
+  body = {
+    sku = {
+      name = "Standard"
+    }
+    properties = {}
+  }
 }
 
 # Fetching the public IP address of the Terraform executor used for NSG
@@ -83,65 +99,102 @@ data "http" "public_ip" {
   url    = "http://api.ipify.org?format=json"
 }
 
-resource "azurerm_network_security_group" "https" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_security_group.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "network_security_group" {
+  type      = "Microsoft.Network/networkSecurityGroups@2024-05-01"
+  name      = module.naming.network_security_group.name_unique
+  location  = azapi_resource.resource_group.location
+  parent_id = azapi_resource.resource_group.id
 
-  security_rule {
-    access                     = "Allow"
-    destination_address_prefix = "*"
-    destination_port_range     = "443"
-    direction                  = "Inbound"
-    name                       = "AllowInboundHTTPS"
-    priority                   = 100
-    protocol                   = "Tcp"
-    source_address_prefix      = jsondecode(data.http.public_ip.response_body).ip
-    source_port_range          = "*"
+  body = {
+    properties = {
+      securityRules = [
+        {
+          name = "AllowInboundHTTPS"
+          properties = {
+            access                   = "Allow"
+            destinationAddressPrefix = "*"
+            destinationPortRange     = "443"
+            direction                = "Inbound"
+            priority                 = 100
+            protocol                 = "Tcp"
+            sourceAddressPrefix      = jsondecode(data.http.public_ip.response_body).ip
+            sourcePortRange          = "*"
+          }
+        }
+      ]
+    }
   }
 }
 
-resource "azurerm_user_assigned_identity" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.user_assigned_identity.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-resource "azurerm_storage_account" "this" {
-  account_replication_type = "ZRS"
-  account_tier             = "Standard"
-  location                 = azurerm_resource_group.this.location
-  name                     = module.naming.storage_account.name_unique
-  resource_group_name      = azurerm_resource_group.this.name
-}
-
-resource "azurerm_subnet_service_endpoint_storage_policy" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "sep-${module.naming.unique-seed}"
-  resource_group_name = azurerm_resource_group.this.name
-
-  definition {
-    name = "name1"
-    service_resources = [
-      azurerm_resource_group.this.id,
-      azurerm_storage_account.this.id
-    ]
-    description = "definition1"
-    service     = "Microsoft.Storage"
+resource "azapi_resource" "user_assigned_identity" {
+  type      = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
+  name      = module.naming.user_assigned_identity.name_unique
+  parent_id = azapi_resource.resource_group.id
+  body = {
+    location = azapi_resource.resource_group.location
   }
 }
 
-resource "azurerm_log_analytics_workspace" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.log_analytics_workspace.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "storage_account" {
+  type = "Microsoft.Storage/storageAccounts@2023-05-01"
+  name = module.naming.storage_account.name_unique
+
+  parent_id = azapi_resource.resource_group.id
+
+  body = {
+    location   = azapi_resource.resource_group.location
+    sku        = { name = "Standard_ZRS" }
+    kind       = "StorageV2"
+    properties = {}
+  }
+}
+
+resource "azapi_resource" "subnet_service_endpoint_storage_policy" {
+  type      = "Microsoft.Network/serviceEndpointPolicies@2024-05-01"
+  name      = "sep-${module.naming.unique-seed}"
+  location  = azapi_resource.resource_group.location
+  parent_id = azapi_resource.resource_group.id
+
+  body = {
+    properties = {
+      serviceEndpointPolicyDefinitions = [
+        {
+          name = "name1"
+          properties = {
+            description = "definition1"
+            service     = "Microsoft.Storage"
+            serviceResources = [
+              azapi_resource.resource_group.id,
+              azapi_resource.storage_account.id
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+resource "azapi_resource" "log_analytics_workspace" {
+  type      = "Microsoft.OperationalInsights/workspaces@2023-09-01"
+  name      = module.naming.log_analytics_workspace.name_unique
+  parent_id = azapi_resource.resource_group.id
+
+  body = {
+    location = azapi_resource.resource_group.location
+    properties = {
+      sku = {
+        name = "PerGB2018"
+      }
+    }
+  }
 }
 
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  resource_group_name = azapi_resource.resource_group.name
+  location            = azapi_resource.resource_group.location
   name                = module.naming.virtual_network.name_unique
 
   address_space = ["192.168.0.0/16"]
@@ -151,14 +204,14 @@ module "vnet1" {
   }
 
   ddos_protection_plan = {
-    id = azurerm_network_ddos_protection_plan.this.id
+    id = azapi_resource.network_ddos_protection_plan.id
     # due to resource cost
     enable = false
   }
 
   role_assignments = {
     role1 = {
-      principal_id               = azurerm_user_assigned_identity.this.principal_id
+      principal_id               = azapi_resource.user_assigned_identity.output.properties.principalId
       role_definition_id_or_name = "Contributor"
     }
   }
@@ -191,23 +244,23 @@ module "vnet1" {
         }
       }]
       nat_gateway = {
-        id = azurerm_nat_gateway.this.id
+        id = azapi_resource.nat_gateway.id
       }
       network_security_group = {
-        id = azurerm_network_security_group.https.id
+        id = azapi_resource.network_security_group.id
       }
       route_table = {
-        id = azurerm_route_table.this.id
+        id = azapi_resource.route_table.id
       }
       service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
       service_endpoint_policies = {
         policy1 = {
-          id = azurerm_subnet_service_endpoint_storage_policy.this.id
+          id = azapi_resource.subnet_service_endpoint_storage_policy.id
         }
       }
       role_assignments = {
         role1 = {
-          principal_id               = azurerm_user_assigned_identity.this.principal_id
+          principal_id               = azapi_resource.user_assigned_identity.output.properties.principalId
           role_definition_id_or_name = "Contributor"
         }
       }
@@ -217,7 +270,7 @@ module "vnet1" {
   diagnostic_settings = {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics"
-      workspace_resource_id          = azurerm_log_analytics_workspace.this.id
+      workspace_resource_id          = azapi_resource.log_analytics_workspace.id
       log_analytics_destination_type = "Dedicated"
     }
   }
@@ -225,8 +278,8 @@ module "vnet1" {
 
 module "vnet2" {
   source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  resource_group_name = azapi_resource.resource_group.name
+  location            = azapi_resource.resource_group.location
   name                = "${module.naming.virtual_network.name_unique}2"
   address_space       = ["10.0.0.0/27"]
 
@@ -263,9 +316,9 @@ module "vnet2" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
@@ -275,15 +328,15 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
-- [azurerm_nat_gateway.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
-- [azurerm_network_ddos_protection_plan.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_ddos_protection_plan) (resource)
-- [azurerm_network_security_group.https](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_route_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/route_table) (resource)
-- [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
-- [azurerm_subnet_service_endpoint_storage_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_service_endpoint_storage_policy) (resource)
-- [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
+- [azapi_resource.log_analytics_workspace](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.nat_gateway](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.network_ddos_protection_plan](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.network_security_group](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.resource_group](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.route_table](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.storage_account](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_service_endpoint_storage_policy](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.user_assigned_identity](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [http_http.public_ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 

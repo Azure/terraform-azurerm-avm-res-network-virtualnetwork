@@ -1,4 +1,5 @@
 module "subnet" {
+  # tflint-ignore: required_module_source_tffr1
   source = "./modules/subnet"
 
   for_each = var.subnets
