@@ -46,3 +46,4 @@ avm.tflint_example.merged.hcl
 avm.tflint_module.hcl
 avm.tflint_module.merged.hcl
 avmmakefile
+examples/*/policy
