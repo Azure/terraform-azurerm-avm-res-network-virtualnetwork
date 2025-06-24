@@ -12,7 +12,7 @@ variable "address_space" {
 variable "location" {
   type        = string
   description = <<DESCRIPTION
-(Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created. 
+(Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
 DESCRIPTION
   nullable    = false
 }
@@ -20,7 +20,7 @@ DESCRIPTION
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
-(Required) The name of the resource group where the resources will be deployed. 
+(Required) The name of the resource group where the resources will be deployed.
 DESCRIPTION
 }
 
@@ -62,7 +62,7 @@ variable "diagnostic_settings" {
   default     = {}
   description = <<DESCRIPTION
   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  
+
   - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
   - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
   - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
@@ -175,7 +175,7 @@ variable "lock" {
   default     = null
   description = <<DESCRIPTION
   (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
-  
+
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
   DESCRIPTION
@@ -238,6 +238,19 @@ variable "peerings" {
       subnet_name = string
     })))
     reverse_use_remote_gateways = optional(bool, false)
+    timeouts = optional(object({
+      create = optional(string, "30m")
+      read   = optional(string, "5m")
+      update = optional(string, "30m")
+      delete = optional(string, "30m")
+    }), {})
+    retry = optional(object({
+      error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+      interval_seconds     = optional(number, 10)
+      max_interval_seconds = optional(number, 180)
+      multiplier           = optional(number, 1.5)
+      randomization_factor = optional(number, 0.5)
+    }), {})
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -270,8 +283,35 @@ variable "peerings" {
 - `reverse_remote_peered_subnets`: (Optional) If you have selected `create_reverse_peering`, the subnets to peer from the remote virtual network. Only used when `reverse_peer_complete_vnets` is set to true.
 - `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
 
+ ---
+ `timeouts` (Optional) supports the following:
+ - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
+ - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
+
+---
+  `retry` (Optional) supports the following:
+  - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
+  - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
+  - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
+  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
+  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
+
 DESCRIPTION
   nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    interval_seconds     = optional(number, 10)
+    max_interval_seconds = optional(number, 180)
+    multiplier           = optional(number, 1.5)
+    randomization_factor = optional(number, 0.5)
+  })
+  default     = {}
+  description = "Retry configuration for the resource operations"
 }
 
 variable "role_assignments" {
@@ -288,7 +328,7 @@ variable "role_assignments" {
   default     = {}
   description = <<DESCRIPTION
   (Optional) A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  
+
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
   - `description` - (Optional) The description of the role assignment.
@@ -297,7 +337,7 @@ variable "role_assignments" {
   - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
   - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
   - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
-  
+
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
   nullable    = false
@@ -332,11 +372,18 @@ variable "subnets" {
       })
     })))
     timeouts = optional(object({
-      create = optional(string)
-      delete = optional(string)
-      read   = optional(string)
-      update = optional(string)
-    }))
+      create = optional(string, "30m")
+      read   = optional(string, "5m")
+      update = optional(string, "30m")
+      delete = optional(string, "30m")
+    }), {})
+    retry = optional(object({
+      error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+      interval_seconds     = optional(number, 10)
+      max_interval_seconds = optional(number, 180)
+      multiplier           = optional(number, 1.5)
+      randomization_factor = optional(number, 0.5)
+    }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -354,8 +401,8 @@ variable "subnets" {
 
  - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
  - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
- - `enforce_private_link_endpoint_network_policies` - 
- - `enforce_private_link_service_network_policies` - 
+ - `enforce_private_link_endpoint_network_policies` -
+ - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
  - `default_outbound_access_enabled` - (Optional) Whether to allow internet access from the subnet. Defaults to `false`.
  - `private_endpoint_network_policies` - (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
@@ -380,15 +427,22 @@ variable "subnets" {
  - `id` - (Optional) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
 
  ---
- `timeouts` supports the following:
+ `timeouts` (Optional) supports the following:
  - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
  - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
  - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
  - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
 
+---
+  `retry` (optional) supports the following:
+  - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
+  - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
+  - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
+  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
+  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
+
  ---
  `role_assignments` supports the following:
-
  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
  - `principal_id` - The ID of the principal to assign the role to.
  - `description` - (Optional) The description of the role assignment.
@@ -397,7 +451,7 @@ variable "subnets" {
  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
- 
+
 DESCRIPTION
 
   validation {
@@ -416,4 +470,15 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string, "30m")
+    read   = optional(string, "5m")
+    update = optional(string, "30m")
+    delete = optional(string, "30m")
+  })
+  default     = {}
+  description = "Timeouts for the resource operations"
 }

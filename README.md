@@ -77,9 +77,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.13, < 3)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -322,6 +322,21 @@ Description: (Optional) A map of virtual network peering configurations. Each en
 - `reverse_remote_peered_subnets`: (Optional) If you have selected `create_reverse_peering`, the subnets to peer from the remote virtual network. Only used when `reverse_peer_complete_vnets` is set to true.
 - `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
 
+ ---
+ `timeouts` (Optional) supports the following:
+ - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
+ - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
+
+---
+  `retry` (Optional) supports the following:
+  - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
+  - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
+  - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
+  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
+  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
+
 Type:
 
 ```hcl
@@ -368,7 +383,38 @@ map(object({
       subnet_name = string
     })))
     reverse_use_remote_gateways = optional(bool, false)
+    timeouts = optional(object({
+      create = optional(string, "30m")
+      read   = optional(string, "5m")
+      update = optional(string, "30m")
+      delete = optional(string, "30m")
+    }), {})
+    retry = optional(object({
+      error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+      interval_seconds     = optional(number, 10)
+      max_interval_seconds = optional(number, 180)
+      multiplier           = optional(number, 1.5)
+      randomization_factor = optional(number, 0.5)
+    }), {})
   }))
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration for the resource operations
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    interval_seconds     = optional(number, 10)
+    max_interval_seconds = optional(number, 180)
+    multiplier           = optional(number, 1.5)
+    randomization_factor = optional(number, 0.5)
+  })
 ```
 
 Default: `{}`
@@ -437,15 +483,22 @@ Description: (Optional) A map of subnets to create
  - `id` - (Optional) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
 
  ---
- `timeouts` supports the following:
+ `timeouts` (Optional) supports the following:
  - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
  - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
  - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
  - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
 
+---
+  `retry` (optional) supports the following:
+  - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
+  - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
+  - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
+  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
+  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
+
  ---
  `role_assignments` supports the following:
-
  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
  - `principal_id` - The ID of the principal to assign the role to.
  - `description` - (Optional) The description of the role assignment.
@@ -486,11 +539,18 @@ map(object({
       })
     })))
     timeouts = optional(object({
-      create = optional(string)
-      delete = optional(string)
-      read   = optional(string)
-      update = optional(string)
-    }))
+      create = optional(string, "30m")
+      read   = optional(string, "5m")
+      update = optional(string, "30m")
+      delete = optional(string, "30m")
+    }), {})
+    retry = optional(object({
+      error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+      interval_seconds     = optional(number, 10)
+      max_interval_seconds = optional(number, 180)
+      multiplier           = optional(number, 1.5)
+      randomization_factor = optional(number, 0.5)
+    }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -521,6 +581,23 @@ Description: (Optional) Tags of the resource.
 Type: `map(string)`
 
 Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Timeouts for the resource operations
+
+Type:
+
+```hcl
+object({
+    create = optional(string, "30m")
+    read   = optional(string, "5m")
+    update = optional(string, "30m")
+    delete = optional(string, "30m")
+  })
+```
+
+Default: `{}`
 
 ## Outputs
 

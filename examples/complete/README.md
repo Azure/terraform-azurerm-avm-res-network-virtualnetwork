@@ -6,10 +6,11 @@ This sample shows how to create and manage Azure Virtual Networks (vNets) and th
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -139,40 +140,40 @@ resource "azurerm_log_analytics_workspace" "this" {
 
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
+  source = "../../"
+
+  address_space       = ["192.168.0.0/16"]
   location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
-
-  address_space = ["192.168.0.0/16"]
-
-  dns_servers = {
-    dns_servers = ["8.8.8.8"]
-  }
-
+  resource_group_name = azurerm_resource_group.this.name
   ddos_protection_plan = {
     id = azurerm_network_ddos_protection_plan.this.id
     # due to resource cost
     enable = false
   }
-
+  diagnostic_settings = {
+    sendToLogAnalytics = {
+      name                           = "sendToLogAnalytics"
+      workspace_resource_id          = azurerm_log_analytics_workspace.this.id
+      log_analytics_destination_type = "Dedicated"
+    }
+  }
+  dns_servers = {
+    dns_servers = ["8.8.8.8"]
+  }
+  enable_vm_protection = true
+  encryption = {
+    enabled = true
+    #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
+    enforcement = "AllowUnencrypted"
+  }
+  flow_timeout_in_minutes = 30
+  name                    = module.naming.virtual_network.name_unique
   role_assignments = {
     role1 = {
       principal_id               = azurerm_user_assigned_identity.this.principal_id
       role_definition_id_or_name = "Contributor"
     }
   }
-
-  enable_vm_protection = true
-
-  encryption = {
-    enabled = true
-    #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
-    enforcement = "AllowUnencrypted"
-  }
-
-  flow_timeout_in_minutes = 30
-
   subnets = {
     subnet0 = {
       name                            = "${module.naming.subnet.name_unique}0"
@@ -213,28 +214,19 @@ module "vnet1" {
       }
     }
   }
-
-  diagnostic_settings = {
-    sendToLogAnalytics = {
-      name                           = "sendToLogAnalytics"
-      workspace_resource_id          = azurerm_log_analytics_workspace.this.id
-      log_analytics_destination_type = "Dedicated"
-    }
-  }
 }
 
 module "vnet2" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.virtual_network.name_unique}2"
-  address_space       = ["10.0.0.0/27"]
+  source = "../../"
 
+  address_space       = ["10.0.0.0/27"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   encryption = {
     enabled     = true
     enforcement = "AllowUnencrypted"
   }
-
+  name = "${module.naming.virtual_network.name_unique}2"
   peerings = {
     peertovnet1 = {
       name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
@@ -265,7 +257,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 

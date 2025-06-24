@@ -1,9 +1,10 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -75,11 +76,12 @@ locals {
 }
 
 module "vnet" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
+  source = "../../"
+
   address_space       = ["10.0.0.0/16"]
-  subnets             = local.subnets
   location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   name                = module.naming.virtual_network.name
+  subnets             = local.subnets
 }
 

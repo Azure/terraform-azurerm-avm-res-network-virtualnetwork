@@ -6,10 +6,11 @@ This code sample shows how to create and manage peerings for pre-existing virtua
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -53,38 +54,39 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_virtual_network" "local" {
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
   name                = "${module.naming.virtual_network.name_unique}-1"
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
 }
 
 resource "azurerm_virtual_network" "remote" {
-  address_space       = ["10.1.0.0/16"]
   location            = azurerm_resource_group.this.location
   name                = "${module.naming.virtual_network.name_unique}-2"
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.1.0.0/16"]
 }
 
 module "peering" {
   source = "../../modules/peering"
-  virtual_network = {
-    resource_id = azurerm_virtual_network.local.id
-  }
+
+  name = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
   remote_virtual_network = {
     resource_id = azurerm_virtual_network.remote.id
   }
-  name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
+  virtual_network = {
+    resource_id = azurerm_virtual_network.local.id
+  }
   allow_forwarded_traffic              = true
   allow_gateway_transit                = true
   allow_virtual_network_access         = true
-  use_remote_gateways                  = false
   create_reverse_peering               = true
-  reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-remote-to-local"
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true
+  reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-remote-to-local"
   reverse_use_remote_gateways          = false
+  use_remote_gateways                  = false
 }
 ```
 
@@ -95,7 +97,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

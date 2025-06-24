@@ -118,6 +118,18 @@ variable "remote_peered_subnets" {
   description = "The subnets of the remote virtual network to peer. Only relevant if peer_complete_vnets is false"
 }
 
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    interval_seconds     = optional(number, 10)
+    max_interval_seconds = optional(number, 180)
+    multiplier           = optional(number, 1.5)
+    randomization_factor = optional(number, 0.5)
+  })
+  default     = {}
+  description = "Retry configuration for the resource operations"
+}
+
 variable "reverse_allow_forwarded_traffic" {
   type        = bool
   default     = false
@@ -220,6 +232,17 @@ variable "subscription_id" {
   description = <<DESCRIPTION
   (Optional) The subscription ID to use for the feature registration.
 DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string, "30m")
+    read   = optional(string, "5m")
+    update = optional(string, "30m")
+    delete = optional(string, "30m")
+  })
+  default     = {}
+  description = "Timeouts for the resource operations"
 }
 
 variable "use_remote_gateways" {

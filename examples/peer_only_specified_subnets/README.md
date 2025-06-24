@@ -6,10 +6,11 @@ This sample shows how to create peerings only for specific subnets in a virtual 
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -54,13 +55,12 @@ resource "azurerm_resource_group" "this" {
 
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
+  source = "../../"
+
+  address_space       = ["10.0.0.0/16", "10.1.0.0/16"]
   location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   name                = "${module.naming.virtual_network.name_unique}-1"
-
-  address_space = ["10.0.0.0/16", "10.1.0.0/16"]
-
   subnets = {
     subnet1 = {
       name             = "${module.naming.subnet.name_unique}-1-1"
@@ -78,27 +78,12 @@ module "vnet1" {
 }
 
 module "vnet2" {
-  source              = "../../"
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.virtual_network.name_unique}-2"
+  source = "../../"
+
   address_space       = ["10.2.0.0/16", "10.3.0.0/16"]
-
-  subnets = {
-    subnet1 = {
-      name             = "${module.naming.subnet.name_unique}-2-1"
-      address_prefixes = ["10.2.1.0/24", "10.2.2.0/24"]
-    }
-    subnet2 = {
-      name             = "${module.naming.subnet.name_unique}-2-2"
-      address_prefixes = ["10.2.3.0/24", "10.2.4.0/24"]
-    }
-    subnet3 = {
-      name             = "${module.naming.subnet.name_unique}-2-3"
-      address_prefixes = ["10.2.5.0/24", "10.2.6.0/24"]
-    }
-  }
-
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  name                = "${module.naming.virtual_network.name_unique}-2"
   peerings = {
     peertovnet1 = {
       name                               = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
@@ -148,6 +133,20 @@ module "vnet2" {
       ]
     }
   }
+  subnets = {
+    subnet1 = {
+      name             = "${module.naming.subnet.name_unique}-2-1"
+      address_prefixes = ["10.2.1.0/24", "10.2.2.0/24"]
+    }
+    subnet2 = {
+      name             = "${module.naming.subnet.name_unique}-2-2"
+      address_prefixes = ["10.2.3.0/24", "10.2.4.0/24"]
+    }
+    subnet3 = {
+      name             = "${module.naming.subnet.name_unique}-2-3"
+      address_prefixes = ["10.2.5.0/24", "10.2.6.0/24"]
+    }
+  }
 }
 ```
 
@@ -158,7 +157,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

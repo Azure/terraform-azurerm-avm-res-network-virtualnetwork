@@ -6,10 +6,11 @@ This shows what happens if you associate a NIC with a subnet and tests for idemp
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -54,20 +55,19 @@ resource "azurerm_resource_group" "this" {
 
 # Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
 module "vnet" {
-  source              = "../../"
-  name                = module.naming.virtual_network.name
-  enable_telemetry    = true
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  source = "../../"
 
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = true
+  name                = module.naming.virtual_network.name
   subnets = {
     test = {
       address_prefixes = ["10.0.0.0/16"]
       name             = "subnet0"
     }
   }
-
-  address_space = ["10.0.0.0/16"]
 }
 
 resource "azurerm_network_interface" "test" {
@@ -90,7 +90,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

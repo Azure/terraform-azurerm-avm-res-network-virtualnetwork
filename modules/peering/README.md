@@ -51,13 +51,13 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.13, < 3)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (>= 1.13, < 3)
+- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 2.0)
 
 ## Resources
 
@@ -227,6 +227,24 @@ list(object({
 
 Default: `[]`
 
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration for the resource operations
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    interval_seconds     = optional(number, 10)
+    max_interval_seconds = optional(number, 180)
+    multiplier           = optional(number, 1.5)
+    randomization_factor = optional(number, 0.5)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_reverse_allow_forwarded_traffic"></a> [reverse\_allow\_forwarded\_traffic](#input\_reverse\_allow\_forwarded\_traffic)
 
 Description: Allow forwarded traffic for the reverse peering
@@ -354,6 +372,23 @@ Description:   (Optional) The subscription ID to use for the feature registratio
 Type: `string`
 
 Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Timeouts for the resource operations
+
+Type:
+
+```hcl
+object({
+    create = optional(string, "30m")
+    read   = optional(string, "5m")
+    update = optional(string, "30m")
+    delete = optional(string, "30m")
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_use_remote_gateways"></a> [use\_remote\_gateways](#input\_use\_remote\_gateways)
 

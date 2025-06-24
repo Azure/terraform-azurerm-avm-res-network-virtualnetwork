@@ -6,10 +6,11 @@ This code sample shows how to create and manage subnets for pre-existing virtual
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -64,19 +65,20 @@ locals {
 }
 
 resource "azurerm_virtual_network" "this" {
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
   name                = module.naming.virtual_network.name_unique
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
 }
 
 module "subnets" {
-  for_each = local.subnets
   source   = "../../modules/subnet"
+  for_each = local.subnets
+
+  name = each.value.name
   virtual_network = {
     resource_id = azurerm_virtual_network.this.id
   }
-  name             = each.value.name
   address_prefixes = each.value.address_prefixes
 }
 ```
@@ -88,7 +90,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

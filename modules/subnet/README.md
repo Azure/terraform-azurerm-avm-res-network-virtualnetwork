@@ -42,17 +42,17 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.13, < 3)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (>= 1.13, < 3)
+- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 2.0)
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.116, < 5)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 4.0)
 
 ## Resources
 
@@ -184,6 +184,24 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration for the resource operations
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    interval_seconds     = optional(number, 10)
+    max_interval_seconds = optional(number, 180)
+    multiplier           = optional(number, 1.5)
+    randomization_factor = optional(number, 0.5)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -267,6 +285,23 @@ Description:   (Optional) The subscription ID to use for the feature registratio
 Type: `string`
 
 Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Timeouts for the resource operations
+
+Type:
+
+```hcl
+object({
+    create = optional(string, "30m")
+    read   = optional(string, "5m")
+    update = optional(string, "30m")
+    delete = optional(string, "30m")
+  })
+```
+
+Default: `{}`
 
 ## Outputs
 
