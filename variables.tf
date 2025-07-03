@@ -1,14 +1,3 @@
-variable "address_space" {
-  type        = set(string)
-  description = "(Optional) The address spaces applied to the virtual network. You can supply more than one address space."
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_space) > 0
-    error_message = "Address space must contain at least one element."
-  }
-}
-
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -22,6 +11,21 @@ variable "resource_group_name" {
   description = <<DESCRIPTION
 (Required) The name of the resource group where the resources will be deployed.
 DESCRIPTION
+}
+
+variable "address_space" {
+  type        = set(string)
+  default     = []
+  description = <<DESCRIPTION
+  (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
+  Leave this as an empty set if you want to use IPAM for address allocation.
+  DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = var.ipam_pools == null ? length(var.address_space) > 0 : length(var.address_space) == 0
+    error_message = "Address space must contain at least one element if ipam_pools is not set."
+  }
 }
 
 variable "bgp_community" {
@@ -165,6 +169,51 @@ variable "flow_timeout_in_minutes" {
   description = <<DESCRIPTION
 (Optional) The flow timeout in minutes for the virtual network. Defaults to 4.
 DESCRIPTION
+}
+
+variable "ipam_pools" {
+  type = list(object({
+    id            = string
+    prefix_length = number
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies the IPAM settings for requesting an address_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+
+- `id`: The ID of the IPAM pool.
+- `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.
+DESCRIPTION
+
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : can(regex("^\\/subscriptions\\/[\\w-]+\\/resourceGroups\\/[\\w-]+\\/providers\\/Microsoft\\.Network\\/networkManagers\\/[\\w-]+\\/ipamPools\\/[\\w-]+$", ipam_pool.id))
+    ]) || var.ipam_pools == null
+    error_message = "IPAM pool ID must be a valid ipamPools resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : (ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29) || (ipam_pool.prefix_length >= 48 && ipam_pool.prefix_length <= 64)
+    ]) || var.ipam_pools == null
+    error_message = "Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6."
+  }
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : length(ipam_pool) >= 1 && length(ipam_pool) <= 2
+    ]) || var.ipam_pools == null
+    error_message = "Only one or two IPAM pools can be specified."
+  }
+  validation {
+    condition = length([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length == 64
+    ]) <= 1 || var.ipam_pools == null
+    error_message = "Only one IPv6 pool can be specified."
+  }
+  validation {
+    condition = length([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
+    ]) <= 1 || var.ipam_pools == null
+    error_message = "Only one IPv4 pool can be specified."
+  }
 }
 
 variable "lock" {
@@ -347,7 +396,11 @@ variable "subnets" {
   type = map(object({
     address_prefix   = optional(string)
     address_prefixes = optional(list(string))
-    name             = string
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = number
+    })))
+    name = string
     nat_gateway = optional(object({
       id = string
     }))
@@ -399,8 +452,8 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be specified.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -409,6 +462,11 @@ variable "subnets" {
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
  - `service_endpoints` - (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+
+ ---
+`ipam_pools` supports the following: Only one IPv4 and one IPv6 pool can be specified.
+ - `id` - (Required) The ID of the IPAM pool.
+ - `prefix_length` - (Required) The length of the /XX CIDR range to request. for example 24 for a /24.
 
  ---
  `delegation` supports the following:
@@ -455,8 +513,8 @@ variable "subnets" {
 DESCRIPTION
 
   validation {
-    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
-    error_message = "One of `address_prefix` or `address_prefixes` must be set."
+    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null || subnet.ipam_pools != null])
+    error_message = "One of `address_prefix`, `address_prefixes` or `ipam_pools` must be set."
   }
 }
 

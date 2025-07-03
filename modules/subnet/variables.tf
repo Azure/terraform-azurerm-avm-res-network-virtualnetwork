@@ -22,20 +22,20 @@ variable "address_prefix" {
   type        = string
   default     = null
   description = <<DESCRIPTION
-  (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
-DESCRIPTION
+  (Optional) The address prefix for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
+  DESCRIPTION
 }
 
 variable "address_prefixes" {
   type        = list(string)
   default     = null
   description = <<DESCRIPTION
-  (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+  (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
   DESCRIPTION
 
   validation {
-    condition     = var.address_prefixes != null ? length(var.address_prefixes) > 0 : var.address_prefix != null
-    error_message = "One of `address_prefix` or `address_prefixes` must be supplied."
+    condition     = var.address_prefixes == null ? var.address_prefix != null || var.ipam_pools != null : length(var.address_prefixes) > 0 && var.address_prefix == null && var.ipam_pools == null
+    error_message = "One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied."
   }
 }
 
@@ -65,6 +65,51 @@ variable "delegation" {
     - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
       - `name` - (Required) The name of the service to delegate to.
 DESCRIPTION
+}
+
+variable "ipam_pools" {
+  type = list(object({
+    id            = string
+    prefix_length = number
+  }))
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) Specifies the IPAM settings for requesting an address_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+  One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
+  - `id`: The ID of the IPAM pool.
+  - `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24.
+  DESCRIPTION
+
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : can(regex("^\\/subscriptions\\/[\\w-]+\\/resourceGroups\\/[\\w-]+\\/providers\\/Microsoft\\.Network\\/networkManagers\\/[\\w-]+\\/ipamPools\\/[\\w-]+$", ipam_pool.id))
+    ]) || var.ipam_pools == null
+    error_message = "IPAM pool ID must be a valid ipamPools resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : (ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29) || ipam_pool.prefix_length == 64
+    ]) || var.ipam_pools == null
+    error_message = "Prefix length must be between 2 and 29 for IPv4 and 64 for IPv6."
+  }
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : length(ipam_pool) >= 1 && length(ipam_pool) <= 2
+    ]) || var.ipam_pools == null
+    error_message = "Only one or two IPAM pools can be specified."
+  }
+  validation {
+    condition = length([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length == 64
+    ]) <= 1 || var.ipam_pools == null
+    error_message = "Only one IPv6 pool can be specified."
+  }
+  validation {
+    condition = length([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
+    ]) <= 1 || var.ipam_pools == null
+    error_message = "Only one IPv4 pool can be specified."
+  }
 }
 
 variable "nat_gateway" {

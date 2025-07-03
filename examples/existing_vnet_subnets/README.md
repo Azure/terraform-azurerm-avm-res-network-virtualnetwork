@@ -65,10 +65,10 @@ locals {
 }
 
 resource "azurerm_virtual_network" "this" {
+  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
   name                = module.naming.virtual_network.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
 }
 
 module "subnets" {
