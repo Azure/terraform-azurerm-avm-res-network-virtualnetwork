@@ -23,9 +23,7 @@ resource "azapi_resource" "vnet" {
         enabled     = var.encryption.enabled
         enforcement = var.encryption.enforcement
       } : null
-      flowTimeoutInMinutes   = var.flow_timeout_in_minutes
-      subnets                = []
-      virtualNetworkPeerings = []
+      flowTimeoutInMinutes = var.flow_timeout_in_minutes
     }
     extendedLocation = var.extended_location != null ? {
       name = var.extended_location.name
