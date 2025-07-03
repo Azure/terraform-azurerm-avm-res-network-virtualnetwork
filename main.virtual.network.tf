@@ -1,13 +1,34 @@
+locals {
+  # When IPAM is used, after the prefix has been allocated, it is populated to addressPrefixes.
+  # The next time TF is planned it will try to assert addressPrefixes back to null
+  # ignore_changes is not dynamic and cannot be used to ignore changes to the addressPrefixes property based on the presence of IPAM.
+  # To avoid this, we need to check if the IPAM pool is requested and define which values to use based on the presence of the IPAM variable.
+  # If the IPAM pool is not provided, use the addressPrefixes.
+  # If the IPAM pool is provided, use the ipamPoolPrefixAllocations
+  address_options = {
+    addressPrefixes = {
+      addressPrefixes = var.address_space
+    }
+    ipamPoolPrefixAllocations = {
+      ipamPoolPrefixAllocations = var.ipam_pools != null ? [
+        for ipam_pool in var.ipam_pools : {
+          numberOfIpAddresses = tostring(pow(2, (ipam_pool.prefix_length >= 48 ? 128 : 32) - ipam_pool.prefix_length))
+          pool = {
+            id = ipam_pool.id
+          }
+      }] : []
+    }
+  }
+}
+
 resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
   parent_id = "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}"
-  type      = "Microsoft.Network/virtualNetworks@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
-      addressSpace = {
-        addressPrefixes = var.address_space
-      }
+      addressSpace = local.address_options[var.ipam_pools != null ? "ipamPoolPrefixAllocations" : "addressPrefixes"]
       bgpCommunities = var.bgp_community != null ? {
         virtualNetworkCommunity = var.bgp_community
       } : null
