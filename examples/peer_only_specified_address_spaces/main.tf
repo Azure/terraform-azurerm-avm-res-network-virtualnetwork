@@ -51,9 +51,9 @@ resource "azurerm_resource_group" "this" {
 module "vnet1" {
   source = "../../"
 
-  address_space       = ["10.4.0.0/16", "10.5.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.4.0.0/16", "10.5.0.0/16"]
   name                = "${module.naming.virtual_network.name_unique}-1"
   subnets = {
     subnet1 = {
@@ -74,9 +74,9 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  address_space       = ["10.6.0.0/16", "10.7.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.6.0.0/16", "10.7.0.0/16"]
   name                = "${module.naming.virtual_network.name_unique}-2"
   peerings = {
     peertovnet1 = {
