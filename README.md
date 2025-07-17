@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Azure Verfied Module for Virtual Network
+# Azure Virtual Network Module
 
 This module is used to manage Azure Virtual Networks, Subnets and Peerings.
 
