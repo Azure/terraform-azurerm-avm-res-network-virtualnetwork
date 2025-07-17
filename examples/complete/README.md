@@ -142,9 +142,9 @@ resource "azurerm_log_analytics_workspace" "this" {
 module "vnet1" {
   source = "../../"
 
-  address_space       = ["192.168.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["192.168.0.0/16"]
   ddos_protection_plan = {
     id = azurerm_network_ddos_protection_plan.this.id
     # due to resource cost
@@ -219,9 +219,9 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  address_space       = ["10.0.0.0/27"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/27"]
   encryption = {
     enabled     = true
     enforcement = "AllowUnencrypted"

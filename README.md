@@ -105,12 +105,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
-
-Description: (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
-
-Type: `set(string)`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: (Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
@@ -126,6 +120,15 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
+
+Description:   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.  
+  Leave this as an empty set if you want to use IPAM for address allocation.
+
+Type: `set(string)`
+
+Default: `[]`
 
 ### <a name="input_bgp_community"></a> [bgp\_community](#input\_bgp\_community)
 
@@ -262,6 +265,24 @@ Default: `null`
 Description: (Optional) The flow timeout in minutes for the virtual network. Defaults to 4.
 
 Type: `number`
+
+Default: `null`
+
+### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
+
+Description: (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+
+- `id`: The ID of the IPAM pool.
+- `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.
+
+Type:
+
+```hcl
+list(object({
+    id            = string
+    prefix_length = number
+  }))
+```
 
 Default: `null`
 
@@ -455,8 +476,8 @@ Default: `{}`
 
 Description: (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be specified.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -465,6 +486,11 @@ Description: (Optional) A map of subnets to create
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
  - `service_endpoints` - (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+
+ ---
+`ipam_pools` supports the following: Only one IPv4 and one IPv6 pool can be specified.
+ - `id` - (Required) The ID of the IPAM pool.
+ - `prefix_length` - (Required) The length of the /XX CIDR range to request. for example 24 for a /24.
 
  ---
  `delegation` supports the following:
@@ -514,7 +540,11 @@ Type:
 map(object({
     address_prefix   = optional(string)
     address_prefixes = optional(list(string))
-    name             = string
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = number
+    })))
+    name = string
     nat_gateway = optional(object({
       id = string
     }))

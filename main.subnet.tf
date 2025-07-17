@@ -8,6 +8,7 @@ module "subnet" {
   address_prefixes                              = each.value.address_prefixes
   default_outbound_access_enabled               = each.value.default_outbound_access_enabled
   delegation                                    = each.value.delegation
+  ipam_pools                                    = each.value.ipam_pools
   nat_gateway                                   = each.value.nat_gateway
   network_security_group                        = each.value.network_security_group
   private_endpoint_network_policies             = each.value.private_endpoint_network_policies
