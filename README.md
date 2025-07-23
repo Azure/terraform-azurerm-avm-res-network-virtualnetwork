@@ -467,8 +467,13 @@ Description: (Optional) A map of subnets to create
  - `service_endpoints` - (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
 
  ---
- `delegation` supports the following:
+ `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
  - `name` - (Required) A name for this delegation.
+  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
+
+`delegations` supports the following:
+ - `name` - (Required) A name for this delegation.
+  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
 
  ---
  `nat_gateway` supports the following:
@@ -533,6 +538,12 @@ map(object({
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
     delegation = optional(list(object({
+      name = string
+      service_delegation = object({
+        name = string
+      })
+    })))
+    delegations = optional(list(object({
       name = string
       service_delegation = object({
         name = string

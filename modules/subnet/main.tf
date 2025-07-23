@@ -4,16 +4,9 @@ resource "azapi_resource" "subnet" {
   type      = "Microsoft.Network/virtualNetworks/subnets@2023-11-01"
   body = {
     properties = {
-      addressPrefix   = var.address_prefix
-      addressPrefixes = var.address_prefixes
-      delegations = var.delegation != null ? [
-        for delegation in var.delegation : {
-          name = delegation.name
-          properties = {
-            serviceName = delegation.service_delegation.name
-          }
-        }
-      ] : []
+      addressPrefix         = var.address_prefix
+      addressPrefixes       = var.address_prefixes
+      delegations           = local.delegations
       defaultOutboundAccess = var.default_outbound_access_enabled
       natGateway = var.nat_gateway != null ? {
         id = var.nat_gateway.id

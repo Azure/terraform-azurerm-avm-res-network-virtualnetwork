@@ -185,7 +185,7 @@ module "vnet1" {
       name                            = "${module.naming.subnet.name_unique}1"
       address_prefixes                = ["192.168.1.0/24"]
       default_outbound_access_enabled = false
-      delegation = [{
+      delegations = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
           name = "Microsoft.Web/serverFarms"
