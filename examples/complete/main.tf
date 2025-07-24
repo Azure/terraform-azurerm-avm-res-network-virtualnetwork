@@ -28,8 +28,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -42,7 +42,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # This is required for resource modules
@@ -179,7 +179,7 @@ module "vnet1" {
       name                            = "${module.naming.subnet.name_unique}1"
       address_prefixes                = ["192.168.1.0/24"]
       default_outbound_access_enabled = false
-      delegation = [{
+      delegations = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
           name = "Microsoft.Web/serverFarms"

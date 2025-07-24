@@ -121,6 +121,27 @@ Default: `false`
 
 ### <a name="input_delegation"></a> [delegation](#input\_delegation)
 
+Description: (Optional) (This variable is deprecated, use `delegations` instead). A list of delegations to apply to the subnet. Each delegation supports the following:
+
+    - `name` - (Required) A name for this delegation.
+    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+      - `name` - (Required) The name of the service to delegate to.
+
+Type:
+
+```hcl
+list(object({
+    name = string
+    service_delegation = object({
+      name = string
+    })
+  }))
+```
+
+Default: `null`
+
+### <a name="input_delegations"></a> [delegations](#input\_delegations)
+
 Description: (Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
 
     - `name` - (Required) A name for this delegation.

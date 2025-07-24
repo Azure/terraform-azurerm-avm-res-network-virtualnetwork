@@ -59,6 +59,23 @@ variable "delegation" {
   }))
   default     = null
   description = <<DESCRIPTION
+(Optional) (This variable is deprecated, use `delegations` instead). A list of delegations to apply to the subnet. Each delegation supports the following:
+
+    - `name` - (Required) A name for this delegation.
+    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+      - `name` - (Required) The name of the service to delegate to.
+DESCRIPTION
+}
+
+variable "delegations" {
+  type = list(object({
+    name = string
+    service_delegation = object({
+      name = string
+    })
+  }))
+  default     = null
+  description = <<DESCRIPTION
 (Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
 
     - `name` - (Required) A name for this delegation.
