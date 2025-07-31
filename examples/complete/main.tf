@@ -65,7 +65,7 @@ resource "azurerm_network_ddos_protection_plan" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-#Creating a NAT Gateway in the specified location.
+# Creating a NAT Gateway in the specified location.
 resource "azurerm_nat_gateway" "this" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.nat_gateway.name_unique

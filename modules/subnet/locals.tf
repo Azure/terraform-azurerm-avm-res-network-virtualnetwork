@@ -16,7 +16,7 @@ locals {
     ] : var.service_endpoints != null ? [
     for endpoint_string in var.service_endpoints : {
       service   = endpoint_string
-      locations = null
+      locations = ["*"]
     }
   ] : null
 }

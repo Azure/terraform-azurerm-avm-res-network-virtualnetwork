@@ -37,6 +37,9 @@ resource "azapi_resource" "subnet" {
   retry                     = var.retry
   schema_validation_enabled = true
 
+  # We do not use outputs, so disabling them
+  response_export_values = []
+
   timeouts {
     create = var.timeouts.create
     delete = var.timeouts.delete
@@ -49,13 +52,6 @@ resource "azapi_resource" "subnet" {
     azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet,
     azapi_update_resource.enable_shared_vnet
   ]
-
-  lifecycle {
-    ignore_changes = [
-      body.properties.ipConfigurations,
-      body.properties.privateEndpoints
-    ]
-  }
 }
 
 resource "azurerm_role_assignment" "subnet" {

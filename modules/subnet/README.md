@@ -42,7 +42,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.5)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
@@ -50,7 +50,7 @@ The following requirements are needed by this module:
 
 The following providers are used by this module:
 
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 2.0)
+- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 2.5)
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 4.0)
 
@@ -77,9 +77,9 @@ Type: `string`
 
 ### <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network)
 
-Description:   (Required) The Virtual Network, into which the subnet will be created.
+Description: (Required) The Virtual Network, into which the subnet will be created.
 
-  - resource\_id - The ID of the Virtual Network.
+- resource\_id - The ID of the Virtual Network.
 
 Type:
 
@@ -95,7 +95,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_address_prefix"></a> [address\_prefix](#input\_address\_prefix)
 
-Description:   (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+Description: (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
 
 Type: `string`
 
@@ -103,7 +103,7 @@ Default: `null`
 
 ### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
 
-Description:   (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+Description: (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
 
 Type: `list(string)`
 
@@ -123,9 +123,9 @@ Default: `false`
 
 Description: (Optional) (This variable is deprecated, use `delegations` instead). A list of delegations to apply to the subnet. Each delegation supports the following:
 
-    - `name` - (Required) A name for this delegation.
-    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
-      - `name` - (Required) The name of the service to delegate to.
+- `name` - (Required) A name for this delegation.
+- `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+  - `name` - (Required) The name of the service to delegate to.
 
 Type:
 
@@ -144,9 +144,9 @@ Default: `null`
 
 Description: (Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
 
-    - `name` - (Required) A name for this delegation.
-    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
-      - `name` - (Required) The name of the service to delegate to.
+- `name` - (Required) A name for this delegation.
+- `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+  - `name` - (Required) The name of the service to delegate to.
 
 Type:
 
@@ -225,18 +225,18 @@ Default: `{}`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description:   (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description: (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-  - `principal_id` - The ID of the principal to assign the role to.
-  - `description` - (Optional) The description of the role assignment.
-  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
-  - `condition` - (Optional) The condition which will be used to scope the role assignment.
-  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
-  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
-  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+- `principal_id` - The ID of the principal to assign the role to.
+- `description` - (Optional) The description of the role assignment.
+- `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+- `condition` - (Optional) The condition which will be used to scope the role assignment.
+- `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+- `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+- `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
 
-  > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+> Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 
 Type:
 
@@ -285,7 +285,9 @@ Default: `null`
 
 ### <a name="input_service_endpoints"></a> [service\_endpoints](#input\_service\_endpoints)
 
-Description: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
+Description: DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
+
+Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
 
 Type: `set(string)`
 
@@ -295,14 +297,14 @@ Default: `null`
 
 Description: (Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
 - `service` - (Required) The service name. Changing this forces a new resource to be created.
-- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Use `["*"]` to apply to all regions. If not specified, the service endpoint applies to the current region only.
+- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
 
 Type:
 
 ```hcl
 set(object({
     service   = string
-    locations = optional(set(string))
+    locations = optional(set(string), ["*"])
   }))
 ```
 
@@ -318,7 +320,7 @@ Default: `null`
 
 ### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
 
-Description:   (Optional) The subscription ID to use for the feature registration.
+Description: (Optional) The subscription ID to use for the feature registration.
 
 Type: `string`
 
