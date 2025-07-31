@@ -216,7 +216,7 @@ DESCRIPTION
   }
   validation {
     error_message = "Locations values must be unique"
-    condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(set(endpoint.locations)) == length(endpoint.locations)]) : true
+    condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(toset(endpoint.locations)) == length(endpoint.locations)]) : true
   }
   validation {
     error_message = "Service names must be unique"
