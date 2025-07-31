@@ -216,11 +216,11 @@ DESCRIPTION
   }
   validation {
     error_message = "Locations values must be unique"
-    condition     = alltrue([for endpoint in var.service_endpoints_with_location : length(set(endpoint.locations)) == length(endpoint.locations)])
+    condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(set(endpoint.locations)) == length(endpoint.locations)]) : true
   }
   validation {
     error_message = "Service names must be unique"
-    condition     = length([for endpoint in var.service_endpoints_with_location : endpoint.service]) == length(toset([for endpoint in var.service_endpoints_with_location : endpoint.service]))
+    condition     = var.service_endpoints_with_location != null ? length([for endpoint in var.service_endpoints_with_location : endpoint.service]) == length(toset([for endpoint in var.service_endpoints_with_location : endpoint.service])) : true
   }
 }
 
