@@ -196,11 +196,6 @@ DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. 
 
 Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
 DESCRIPTION
-
-  validation {
-    condition     = !(var.service_endpoints != null && var.service_endpoints_with_location != null)
-    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location`. Use only `service_endpoints_with_location` for location support."
-  }
 }
 
 variable "service_endpoints_with_location" {
