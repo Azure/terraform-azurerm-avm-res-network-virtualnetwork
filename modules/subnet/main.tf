@@ -33,12 +33,11 @@ resource "azapi_resource" "subnet" {
       sharingScope = var.sharing_scope
     }
   }
-  locks                     = [var.virtual_network.resource_id]
+  locks = [var.virtual_network.resource_id]
+  # We do not use outputs, so disabling them
+  response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-
-  # We do not use outputs, so disabling them
-  response_export_values = []
 
   timeouts {
     create = var.timeouts.create
