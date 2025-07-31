@@ -302,7 +302,7 @@ Description: (Optional) A set of service endpoints with location restrictions to
 Type:
 
 ```hcl
-set(object({
+list(object({
     service   = string
     locations = optional(set(string), ["*"])
   }))

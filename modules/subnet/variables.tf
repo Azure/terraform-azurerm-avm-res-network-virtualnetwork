@@ -196,10 +196,15 @@ DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. 
 
 Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
 DESCRIPTION
+
+  validation {
+    condition     = !(var.service_endpoints != null && var.service_endpoints_with_location != null)
+    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location`. Use only `service_endpoints_with_location` for location support."
+  }
 }
 
 variable "service_endpoints_with_location" {
-  type = set(object({
+  type = list(object({
     service   = string
     locations = optional(set(string), ["*"])
   }))
@@ -213,6 +218,14 @@ DESCRIPTION
   validation {
     condition     = !(var.service_endpoints != null && var.service_endpoints_with_location != null)
     error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location`. Use only `service_endpoints_with_location` for location support."
+  }
+  validation {
+    error_message = "Locations values must be unique"
+    condition     = alltrue([for endpoint in var.service_endpoints_with_location : length(set(endpoint.locations)) == length(endpoint.locations)])
+  }
+  validation {
+    error_message = "Service names must be unique"
+    condition     = length([for endpoint in var.service_endpoints_with_location : endpoint.service]) == length(toset([for endpoint in var.service_endpoints_with_location : endpoint.service]))
   }
 }
 

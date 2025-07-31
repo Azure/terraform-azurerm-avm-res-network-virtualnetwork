@@ -539,9 +539,9 @@ map(object({
       id = string
     })))
     service_endpoints = optional(set(string))
-    service_endpoints_with_location = optional(set(object({
+    service_endpoints_with_location = optional(list(object({
       service   = string
-      locations = optional(set(string), ["*"])
+      locations = optional(list(string), ["*"])
     })))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
