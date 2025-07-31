@@ -53,7 +53,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "v0.6.0"
+  version = "0.5.2"
 }
 
 resource "random_integer" "region_index" {
@@ -193,7 +193,7 @@ The following Modules are called:
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: v0.6.0
+Version: 0.5.2
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
