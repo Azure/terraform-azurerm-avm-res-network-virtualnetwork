@@ -30,9 +30,13 @@ resource "azapi_resource" "vnet" {
       type = var.extended_location.type
     } : null
   }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   retry                     = var.retry
   schema_validation_enabled = true
   tags                      = var.tags
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = var.timeouts.create
@@ -59,4 +63,6 @@ resource "azapi_update_resource" "allow_drop_unencrypted_vnet" {
   body = {
     properties = {}
   }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }

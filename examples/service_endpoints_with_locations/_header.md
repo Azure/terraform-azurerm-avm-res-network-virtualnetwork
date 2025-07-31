@@ -19,6 +19,6 @@ The example shows different ways to configure service endpoints:
 
 This enables fine-grained control over which Azure regions your service endpoints can access, which is useful for:
 - Compliance requirements
-- Data residency policies  
+- Data residency policies
 - Performance optimization
 - Security boundaries

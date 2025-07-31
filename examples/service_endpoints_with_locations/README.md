@@ -21,7 +21,7 @@ The example shows different ways to configure service endpoints:
 
 This enables fine-grained control over which Azure regions your service endpoints can access, which is useful for:
 - Compliance requirements
-- Data residency policies  
+- Data residency policies
 - Performance optimization
 - Security boundaries
 
@@ -71,7 +71,7 @@ resource "random_string" "this" {
 }
 
 ## Section to create a resource group for the virtual network
-# This creates a resource group in the specified location  
+# This creates a resource group in the specified location
 resource "azurerm_resource_group" "this" {
   location = module.regions.regions[random_integer.region_index.result].name
   name     = "rg-avm-vnet-service-endpoints-${random_string.this.result}"
@@ -107,7 +107,7 @@ module "virtualnetwork" {
         },
         {
           service   = "Microsoft.KeyVault"
-          locations = ["westeurope", "northeurope"] # Restrict to Western Europe regions  
+          locations = ["westeurope", "northeurope"] # Restrict to Western Europe regions
         }
       ]
     }
