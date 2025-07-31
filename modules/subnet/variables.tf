@@ -189,19 +189,24 @@ DESCRIPTION
 }
 
 variable "service_endpoints" {
-  type        = set(string)
+  type        = list(string)
   default     = null
   description = <<DESCRIPTION
 DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
 
 Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
 DESCRIPTION
+
+  validation {
+    error_message = "Service endpoints must be unique."
+    condition     = var.service_endpoints != null ? length(var.service_endpoints) == length(toset(var.service_endpoints)) : true
+  }
 }
 
 variable "service_endpoints_with_location" {
   type = list(object({
     service   = string
-    locations = optional(set(string), ["*"])
+    locations = optional(list(string), ["*"])
   }))
   default     = null
   description = <<DESCRIPTION

@@ -289,7 +289,7 @@ Description: DEPRECATED: (Optional) A set of service endpoints to associate with
 
 Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
 
-Type: `set(string)`
+Type: `list(string)`
 
 Default: `null`
 
@@ -304,7 +304,7 @@ Type:
 ```hcl
 list(object({
     service   = string
-    locations = optional(set(string), ["*"])
+    locations = optional(list(string), ["*"])
   }))
 ```
 

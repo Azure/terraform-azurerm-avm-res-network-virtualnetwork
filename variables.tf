@@ -363,7 +363,7 @@ variable "subnets" {
     service_endpoint_policies = optional(map(object({
       id = string
     })))
-    service_endpoints = optional(set(string))
+    service_endpoints = optional(list(string))
     service_endpoints_with_location = optional(list(object({
       service   = string
       locations = optional(list(string), ["*"])
