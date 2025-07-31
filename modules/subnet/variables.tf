@@ -196,6 +196,24 @@ variable "service_endpoints" {
   DESCRIPTION
 }
 
+variable "service_endpoints_with_location" {
+  type = set(object({
+    service   = string
+    locations = optional(set(string))
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+- `service` - (Required) The service name. Changing this forces a new resource to be created.
+- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Use `["*"]` to apply to all regions. If not specified, the service endpoint applies to the current region only.
+  DESCRIPTION
+
+  validation {
+    condition     = !(var.service_endpoints != null && var.service_endpoints_with_location != null)
+    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location`. Use only `service_endpoints_with_location` for location support."
+  }
+}
+
 variable "sharing_scope" {
   type        = string
   default     = null

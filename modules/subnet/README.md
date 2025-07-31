@@ -291,6 +291,23 @@ Type: `set(string)`
 
 Default: `null`
 
+### <a name="input_service_endpoints_with_location"></a> [service\_endpoints\_with\_location](#input\_service\_endpoints\_with\_location)
+
+Description: (Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+- `service` - (Required) The service name. Changing this forces a new resource to be created.
+- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Use `["*"]` to apply to all regions. If not specified, the service endpoint applies to the current region only.
+
+Type:
+
+```hcl
+set(object({
+    service   = string
+    locations = optional(set(string))
+  }))
+```
+
+Default: `null`
+
 ### <a name="input_sharing_scope"></a> [sharing\_scope](#input\_sharing\_scope)
 
 Description: (Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.

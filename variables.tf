@@ -362,7 +362,11 @@ variable "subnets" {
     service_endpoint_policies = optional(map(object({
       id = string
     })))
-    service_endpoints               = optional(set(string))
+    service_endpoints = optional(set(string))
+    service_endpoints_with_location = optional(set(object({
+      service   = string
+      locations = optional(set(string))
+    })))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
     delegation = optional(list(object({
@@ -415,6 +419,9 @@ variable "subnets" {
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
  - `service_endpoints` - (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+ - `service_endpoints_with_location` - (Optional) Service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+   - `service` - (Required) The service name. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+   - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Use `["*"]` to apply to all regions. If not specified, the service endpoint applies to the current region only.
 
  ---
  `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
@@ -468,6 +475,13 @@ DESCRIPTION
   validation {
     condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
     error_message = "One of `address_prefix` or `address_prefixes` must be set."
+  }
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      !(subnet.service_endpoints != null && subnet.service_endpoints_with_location != null)
+    ])
+    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location` for the same subnet. Use only `service_endpoints_with_location` for the new format with location support."
   }
 }
 

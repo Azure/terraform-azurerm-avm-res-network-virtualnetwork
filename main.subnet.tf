@@ -17,6 +17,7 @@ module "subnet" {
   route_table                                   = each.value.route_table
   service_endpoint_policies                     = each.value.service_endpoint_policies
   service_endpoints                             = each.value.service_endpoints
+  service_endpoints_with_location               = each.value.service_endpoints_with_location
   sharing_scope                                 = each.value.sharing_scope
   subscription_id                               = local.subscription_id
   timeouts                                      = each.value.timeouts

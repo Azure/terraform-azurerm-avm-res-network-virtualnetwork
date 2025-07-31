@@ -19,9 +19,10 @@ resource "azapi_resource" "subnet" {
       routeTable = var.route_table != null ? {
         id = var.route_table.id
       } : null
-      serviceEndpoints = var.service_endpoints != null ? [
-        for service_endpoint in var.service_endpoints : {
-          service = service_endpoint
+      serviceEndpoints = local.service_endpoints_to_use != null ? [
+        for service_endpoint in local.service_endpoints_to_use : {
+          service   = service_endpoint.service
+          locations = service_endpoint.locations
         }
       ] : null
       serviceEndpointPolicies = var.service_endpoint_policies != null ? [
