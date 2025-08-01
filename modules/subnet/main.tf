@@ -22,7 +22,7 @@ resource "azapi_resource" "subnet" {
       serviceEndpoints = local.service_endpoints_to_use != null ? [
         for service_endpoint in local.service_endpoints_to_use : {
           service   = service_endpoint.service
-          locations = service_endpoint.locations
+          locations = can(service_endpoint.locations) ? service_endpoint.locations : null
         }
       ] : null
       serviceEndpointPolicies = var.service_endpoint_policies != null ? [
@@ -33,7 +33,8 @@ resource "azapi_resource" "subnet" {
       sharingScope = var.sharing_scope
     }
   }
-  locks = [var.virtual_network.resource_id]
+  ignore_null_property = true
+  locks                = [var.virtual_network.resource_id]
   # We do not use outputs, so disabling them
   response_export_values    = []
   retry                     = var.retry

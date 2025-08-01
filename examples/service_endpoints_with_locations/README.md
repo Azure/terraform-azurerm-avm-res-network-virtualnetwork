@@ -6,24 +6,14 @@ This example demonstrates how to configure service endpoints with specific Azure
 
 ## Features Demonstrated
 
-- Virtual network with subnets
-- Service endpoints with location restrictions
-- Both legacy string format and new object format with locations
-- Service endpoints for Storage and Key Vault services
+- All known service endpoints are supported.
 
-## Key Configuration
+## Idempotency
 
-The example shows different ways to configure service endpoints:
+When using `Microsoft.Storage` or `Microsoft.Sql`, you must specify the `locations` attribute to ensure idempotency. This is crucial for maintaining consistent configurations across deployments:
 
-1. **Legacy format**: Simple string list (backward compatibility)
-2. **New format with specific regions**: Restrict service endpoint to specific Azure regions
-3. **New format with all regions**: Use "*" to allow all regions
-
-This enables fine-grained control over which Azure regions your service endpoints can access, which is useful for:
-- Compliance requirements
-- Data residency policies
-- Performance optimization
-- Security boundaries
+- Storage - use deployment region + paired region
+- SQL - use deployment region only
 
 ```hcl
 terraform {
@@ -53,7 +43,11 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.2"
+  version = "0.7.0"
+
+  has_pair           = true
+  is_recommended     = true
+  recommended_filter = false # disabling legacy filter
 }
 
 resource "random_integer" "region_index" {
@@ -70,10 +64,14 @@ resource "random_string" "this" {
   upper   = false
 }
 
+locals {
+  region = module.regions.regions[random_integer.region_index.result]
+}
+
 ## Section to create a resource group for the virtual network
 # This creates a resource group in the specified location
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = local.region.name
   name     = "rg-avm-vnet-service-endpoints-${random_string.this.result}"
 }
 
@@ -87,68 +85,61 @@ module "virtualnetwork" {
   resource_group_name = azurerm_resource_group.this.name
   name                = "vnet-avm-service-endpoints-${random_string.this.result}"
   subnets = {
-    # Subnet with legacy string format (backward compatibility)
-    subnet_legacy = {
-      name           = "subnet-legacy"
-      address_prefix = "10.0.1.0/24"
-      # Legacy format: simple string list
-      service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
-    }
-
-    # Subnet with new object format and specific regions
-    subnet_with_locations = {
-      name           = "subnet-with-locations"
-      address_prefix = "10.0.2.0/24"
-      # New format: objects with location restrictions
-      service_endpoints_with_location = [
-        {
-          service   = "Microsoft.Storage"
-          locations = ["uksouth", "ukwest"] # Restrict to UK regions
-        },
-        {
-          service   = "Microsoft.KeyVault"
-          locations = ["westeurope", "northeurope"] # Restrict to Western Europe regions
-        }
-      ]
-    }
-
     # Subnet with service endpoints for all regions
-    subnet_all_regions = {
+    subnet_all_endpoints = {
       name           = "subnet-all-regions"
-      address_prefix = "10.0.3.0/24"
+      address_prefix = "10.0.0.0/24"
       # New format: allow all regions with "*"
       service_endpoints_with_location = [
         {
           service   = "Microsoft.Storage"
-          locations = ["*"] # All regions
+          locations = [local.region.name, local.region.paired_region_name]
         },
         {
           service   = "Microsoft.Sql"
-          locations = ["*"] # All regions
-        }
-      ]
-    }
-
-    # Subnet with mixed format - some with locations, some without
-    subnet_mixed = {
-      name           = "subnet-mixed"
-      address_prefix = "10.0.4.0/24"
-      # New format: mix of with and without locations
-      service_endpoints_with_location = [
-        {
-          service = "Microsoft.Storage"
-          # No locations specified - defaults to current region
+          locations = [local.region.name]
         },
         {
-          service   = "Microsoft.ContainerRegistry"
-          locations = ["eastus", "westus2"] # Specific US regions
+          service   = "Microsoft.AzureCosmosDB"
+          locations = ["*"]
+        },
+        {
+          service   = "Microsoft.KeyVault"
+          locations = ["*"]
+        },
+        {
+          service   = "Microsoft.ServiceBus"
+          locations = ["*"]
+        },
+        {
+          service   = "Microsoft.EventHub"
+          locations = ["*"]
+        },
+        {
+          service   = "Microsoft.Web"
+          locations = ["*"]
+        },
+        {
+          service   = "Microsoft.CognitiveServices"
+          locations = ["*"]
         }
+        # Container registry is in preview and not available in all regions
+        # {
+        #   service   = "Microsoft.ContainerRegistry"
+        #   locations = ["*"]
+        # },
       ]
     }
-  }
-  tags = {
-    environment = "dev"
-    example     = "service-endpoints-with-locations"
+    subnet_storage_global = {
+      name           = "subnet-storage-global"
+      address_prefix = "10.0.1.0/24"
+      service_endpoints_with_location = [
+        {
+          service   = "Microsoft.Storage.Global"
+          locations = ["*"]
+        },
+      ]
+    }
   }
 }
 ```
@@ -193,7 +184,7 @@ The following Modules are called:
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.7.0
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
