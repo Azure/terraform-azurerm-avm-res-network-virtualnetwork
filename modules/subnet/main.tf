@@ -19,9 +19,10 @@ resource "azapi_resource" "subnet" {
       routeTable = var.route_table != null ? {
         id = var.route_table.id
       } : null
-      serviceEndpoints = var.service_endpoints != null ? [
-        for service_endpoint in var.service_endpoints : {
-          service = service_endpoint
+      serviceEndpoints = local.service_endpoints_to_use != null ? [
+        for service_endpoint in local.service_endpoints_to_use : {
+          service   = service_endpoint.service
+          locations = can(service_endpoint.locations) ? service_endpoint.locations : null
         }
       ] : null
       serviceEndpointPolicies = var.service_endpoint_policies != null ? [
@@ -32,7 +33,10 @@ resource "azapi_resource" "subnet" {
       sharingScope = var.sharing_scope
     }
   }
-  locks                     = [var.virtual_network.resource_id]
+  ignore_null_property = true
+  locks                = [var.virtual_network.resource_id]
+  # We do not use outputs, so disabling them
+  response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -48,13 +52,6 @@ resource "azapi_resource" "subnet" {
     azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet,
     azapi_update_resource.enable_shared_vnet
   ]
-
-  lifecycle {
-    ignore_changes = [
-      body.properties.ipConfigurations,
-      body.properties.privateEndpoints
-    ]
-  }
 }
 
 resource "azurerm_role_assignment" "subnet" {

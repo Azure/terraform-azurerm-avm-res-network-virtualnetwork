@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "terraform-mcp-eva": {
+      "command": "docker",
+      "type": "stdio",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "TRANSPORT_MODE=stdio",
+        "--pull=always",
+        "ghcr.io/matt-ffffff/terraform-mcp-eva"
+      ],
+    }
+  }
+}
