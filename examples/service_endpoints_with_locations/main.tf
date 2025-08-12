@@ -62,10 +62,10 @@ resource "azurerm_resource_group" "this" {
 module "virtualnetwork" {
   source = "../../"
 
-  address_space = ["10.0.0.0/16"]
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
-  name          = "vnet-avm-service-endpoints-${random_string.this.result}"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
+  name                = "vnet-avm-service-endpoints-${random_string.this.result}"
   subnets = {
     # Subnet with service endpoints for all regions
     subnet_all_endpoints = {

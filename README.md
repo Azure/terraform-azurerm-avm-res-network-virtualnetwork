@@ -122,7 +122,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
 
-Description:   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
+Description:   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.  
   Leave this as an empty set if you want to use IPAM for address allocation.
 
 Type: `set(string)`
@@ -207,8 +207,8 @@ Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`

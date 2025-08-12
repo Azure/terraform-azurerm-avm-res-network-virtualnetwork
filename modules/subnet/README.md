@@ -145,7 +145,7 @@ Default: `null`
 
 ### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
 
-Description:   (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+Description:   (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.  
   One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
   - `id`: The ID of the IPAM pool.
   - `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24.
