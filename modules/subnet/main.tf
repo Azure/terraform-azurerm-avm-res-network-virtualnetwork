@@ -1,22 +1,8 @@
 locals {
-  # When IPAM is used, after the prefix has been allocated, it is populated to addressPrefixes.
-  # The next time TF is planned it will try to assert addressPrefixes back to null
-  # ignore_changes is not dynamic and cannot be used to ignore changes to the addressPrefixes property based on the presence of IPAM.
-  # To avoid this, we need to check if the IPAM pool is requested and define which values to use based on the presence of the IPAM variable.
-  # If the IPAM pool is not provided, use the addressPrefixes.
-  # If the IPAM pool is provided, use the ipamPoolPrefixAllocations
+  # Define address options for the subnet
   address_options = {
     addressPrefixes = {
       addressPrefixes = var.address_prefixes
-    }
-    ipamPoolPrefixAllocations = {
-      ipamPoolPrefixAllocations = var.ipam_pools != null ? [
-        for ipam_pool in var.ipam_pools : {
-          numberOfIpAddresses = tostring(pow(2, (ipam_pool.prefix_length == 64 ? 128 : 32) - ipam_pool.prefix_length))
-          pool = {
-            id = ipam_pool.id
-          }
-      }] : []
     }
   }
 }
@@ -27,7 +13,7 @@ resource "azapi_resource" "subnet" {
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = merge(
-      local.address_options[var.ipam_pools != null ? "ipamPoolPrefixAllocations" : "addressPrefixes"],
+      local.address_options["addressPrefixes"],
       {
         addressPrefix         = var.address_prefix
         delegations           = local.delegations

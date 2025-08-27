@@ -39,51 +39,51 @@ provider "azurerm" {
 locals {
   regions = [
     "eastus2",
-    "westus2",
-    "eastus",
-    "westeurope",
-    "uksouth",
-    "northeurope",
-    "centralus",
-    "australiaeast",
-    "westus",
-    "southcentralus",
-    "francecentral",
-    "southafricanorth",
-    "swedencentral",
-    "centralindia",
-    "eastasia",
-    "canadacentral",
-    "germanywestcentral",
-    "italynorth",
-    "norwayeast",
-    "polandcentral",
-    "switzerlandnorth",
-    "uaenorth",
-    "brazilsouth",
-    "israelcentral",
-    "northcentralus",
-    "australiacentral",
-    "australiacentral2",
-    "australiasoutheast",
-    "southindia",
-    "canadaeast",
-    "francesouth",
-    "germanynorth",
-    "norwaywest",
-    "switzerlandwest",
-    "ukwest",
-    "uaecentral",
-    "brazilsoutheast",
-    "mexicocentral",
-    "spaincentral",
-    "japaneast",
-    "koreasouth",
-    "koreacentral",
-    "newzealandnorth",
-    "southeastasia",
-    "japanwest",
-    "westcentralus"
+    # "westus2",
+    # "eastus",
+    # "westeurope",
+    # "uksouth",
+    # "northeurope",
+    # "centralus",
+    # "australiaeast",
+    # "westus",
+    # "southcentralus",
+    # "francecentral",
+    # "southafricanorth",
+    # "swedencentral",
+    # "centralindia",
+    # "eastasia",
+    # "canadacentral",
+    # "germanywestcentral",
+    # "italynorth",
+    # "norwayeast",
+    # "polandcentral",
+    # "switzerlandnorth",
+    # "uaenorth",
+    # "brazilsouth",
+    # "israelcentral",
+    # "northcentralus",
+    # "australiacentral",
+    # "australiacentral2",
+    # "australiasoutheast",
+    # "southindia",
+    # "canadaeast",
+    # "francesouth",
+    # "germanynorth",
+    # "norwaywest",
+    # "switzerlandwest",
+    # "ukwest",
+    # "uaecentral",
+    # "brazilsoutheast",
+    # "mexicocentral",
+    # "spaincentral",
+    # "japaneast",
+    # "koreasouth",
+    # "koreacentral",
+    # "newzealandnorth",
+    # "southeastasia",
+    # "japanwest",
+    # "westcentralus"
   ]
 }
 
@@ -192,33 +192,15 @@ module "vnet" {
   name = module.naming.virtual_network.name
   subnets = {
     subnet1 = {
-      name = "subnet1"
-      ipam_pools = [
-        {
-          id            = azapi_resource.pool_v4.id
-          prefix_length = 25
-        },
-        {
-          id            = azapi_resource.pool_v6.id
-          prefix_length = 64
-        }
-      ]
+      name             = "subnet1"
+      address_prefixes = ["10.0.0.0/25"]
       network_security_group = {
         id = azurerm_network_security_group.this.id
       }
-    },
+    }
     subnet2 = {
-      name = "subnet2"
-      ipam_pools = [
-        {
-          id            = azapi_resource.pool_v4.id
-          prefix_length = 25
-        },
-        {
-          id            = azapi_resource.pool_v6.id
-          prefix_length = 64
-        }
-      ]
+      name             = "subnet2"
+      address_prefixes = ["10.0.0.128/25"]
       network_security_group = {
         id = azurerm_network_security_group.this.id
       }

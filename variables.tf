@@ -402,11 +402,7 @@ variable "subnets" {
   type = map(object({
     address_prefix   = optional(string)
     address_prefixes = optional(list(string))
-    ipam_pools = optional(list(object({
-      id            = string
-      prefix_length = number
-    })))
-    name = string
+    name             = string
     nat_gateway = optional(object({
       id = string
     }))
@@ -462,8 +458,8 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be specified.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -475,11 +471,6 @@ variable "subnets" {
  - `service_endpoints_with_location` - (Optional) Service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
    - `service` - (Required) The service name. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
    - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
-
- ---
-`ipam_pools` supports the following: Only one IPv4 and one IPv6 pool can be specified.
- - `id` - (Required) The ID of the IPAM pool.
- - `prefix_length` - (Required) The length of the /XX CIDR range to request. for example 24 for a /24.
 
  ---
  `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
@@ -531,8 +522,8 @@ variable "subnets" {
 DESCRIPTION
 
   validation {
-    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null || subnet.ipam_pools != null])
-    error_message = "One of `address_prefix`, `address_prefixes` or `ipam_pools` must be set."
+    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
+    error_message = "One of `address_prefix` or `address_prefixes` must be set."
   }
   validation {
     condition = alltrue([
