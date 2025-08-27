@@ -17,6 +17,19 @@ The module supports:
 - Associating a virtual network gateway with a subnet
 - Assigning delegations to subnets
 
+## IPAM Considerations
+
+This module does not support IPAM (IP Address Management) pools for subnet address allocation. Subnets must be created with explicit `address_prefix` or `address_prefixes` values.
+
+**Why IPAM pools are not supported for subnets:**
+- IPAM pool allocation can cause race conditions when multiple subnets are created concurrently
+- There's no mechanism to "pre-allocate" IP ranges in IPAM pools to prevent overlapping allocations
+- Manual subnet creation with explicit IP ranges provides deterministic and reliable deployments
+
+**Note:** Subnets created with explicit IP addresses will appear as "Unallocated" in Azure Virtual Network Manager (AVNM) IPAM. This is expected behavior and simply indicates the subnet was not allocated through IPAM pools. Azure Portal and other tools will still properly detect and avoid IP range conflicts with these manually allocated subnets.
+
+For VNet-level IPAM pool usage, use the main virtual network module.
+
 ## Usage
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables.
@@ -77,7 +90,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_address_prefix"></a> [address\_prefix](#input\_address\_prefix)
 
-Description: (Optional) The address prefix for the subnet. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
+Description: (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
 
 Type: `string`
 
@@ -85,7 +98,7 @@ Default: `null`
 
 ### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
 
-Description: (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
+Description: (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
 
 Type: `list(string)`
 
@@ -138,24 +151,6 @@ list(object({
     service_delegation = object({
       name = string
     })
-  }))
-```
-
-Default: `null`
-
-### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
-
-Description:   (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.  
-  One of `address_prefix`, `address_prefixes` or `ipam_pools` must be supplied.
-  - `id`: The ID of the IPAM pool.
-  - `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24.
-
-Type:
-
-```hcl
-list(object({
-    id            = string
-    prefix_length = number
   }))
 ```
 

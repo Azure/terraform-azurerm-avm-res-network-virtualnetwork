@@ -24,6 +24,21 @@ The module supports:
 - Associating a virtual network gateway with a subnet
 - Assigning delegations to subnets
 
+## IPAM Support
+
+This module supports IPAM (IP Address Management) pools for **virtual network address space allocation only**. IPAM pools are **not supported for individual subnets** due to technical limitations that can cause deployment failures.
+
+**VNet IPAM Support:**
+- Virtual networks can use IPAM pools for automatic address space allocation
+- Use the `ipam_pools` variable to specify pool allocation for the VNet address space
+
+**Subnet IPAM Limitations:**
+- Subnets must use explicit `address_prefix` or `address_prefixes` values
+- IPAM pool allocation for subnets can cause race conditions during concurrent deployments
+- No mechanism exists to pre-allocate IP ranges in IPAM pools to prevent conflicts
+
+**Important:** Subnets created with explicit IP addresses will appear as "Unallocated" in Azure Virtual Network Manager (AVNM) IPAM. This is expected behavior and indicates the subnet was not allocated through IPAM pools. Azure Portal and other Azure tools will still properly detect and prevent IP range conflicts.
+
 ## Usage
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables.
