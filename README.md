@@ -54,6 +54,40 @@ module "avm-res-network-virtualnetwork" {
   }
 }
 ```
+### Advanced Example - Virtual Network with Peering and NSG
+
+This example creates a virtual network with two subnets, a peering connection to another VNet, and applies a Network Security Group.
+
+```hcl
+module "avm-res-network-virtualnetwork" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm"
+
+  address_space       = ["10.0.0.0/16"]
+  location            = "East US"
+  name                = "myAdvancedVNet"
+  resource_group_name = "myResourceGroup"
+
+  subnets = {
+    "subnet1" = {
+      name             = "subnet1"
+      address_prefixes = ["10.0.0.0/24"]
+      network_security_group = {
+        id = "/subscriptions/<subscription-id>/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkSecurityGroups/myNSG"
+      }
+    }
+    "subnet2" = {
+      name             = "subnet2"
+      address_prefixes = ["10.0.1.0/24"]
+    }
+  }
+
+  peerings = {
+    "peerVNet" = {
+      name                               = "peerVNet"
+      remote_virtual_network_resource_id = "/subscriptions/<subscription-id>/resourceGroups/peerRG/providers/Microsoft.Network/virtualNetworks/peerVNet"
+    }
+  }
+}
 
 ### Example - Create a subnets on a pre-existing Virtual Network
 
