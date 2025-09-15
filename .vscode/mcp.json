@@ -1,17 +1,23 @@
 {
   "servers": {
     "terraform-mcp-eva": {
-      "command": "docker",
       "type": "stdio",
+      "command": "docker",
       "args": [
         "run",
-        "--rm",
         "-i",
+        "--rm",
+        "-v",
+        "${workspaceFolder}:/workspace",
+        "-w",
+        "/workspace",
         "-e",
         "TRANSPORT_MODE=stdio",
+        "-e",
+        "GITHUB_TOKEN",
         "--pull=always",
-        "ghcr.io/matt-ffffff/terraform-mcp-eva"
-      ],
+        "ghcr.io/lonegunmanb/terraform-mcp-eva"
+      ]
     }
   }
 }
