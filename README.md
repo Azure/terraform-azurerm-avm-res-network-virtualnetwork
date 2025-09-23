@@ -106,6 +106,12 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_name"></a> [location](#input\_name)
+
+Description: (Optional) The name of the virtual network. Changing this forces a new resource to be created.
+
+Type: `string`
+
 ### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
 
 Description: (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
