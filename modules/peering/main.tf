@@ -4,7 +4,7 @@ resource "azapi_resource" "this" {
 
   name      = var.name
   parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -36,7 +36,7 @@ resource "azapi_resource" "reverse" {
 
   name      = var.reverse_name
   parent_id = var.remote_virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -70,7 +70,7 @@ resource "azapi_resource" "address_space_peering" {
 
   name      = var.name
   parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -108,7 +108,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
 
   name      = var.reverse_name
   parent_id = var.remote_virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -150,7 +150,7 @@ resource "azapi_resource" "subnet_peering" {
 
   name      = var.name
   parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -184,7 +184,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
 
   name      = var.reverse_name
   parent_id = var.remote_virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
