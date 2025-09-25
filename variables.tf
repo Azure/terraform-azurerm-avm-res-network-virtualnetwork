@@ -17,13 +17,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = <<DESCRIPTION
-(DEPRECATED - use parent_id instead) The name of the resource group where the resources will be deployed.
-DESCRIPTION
-}
-
 variable "bgp_community" {
   type        = string
   default     = null
@@ -314,6 +307,14 @@ variable "peerings" {
 
 DESCRIPTION
   nullable    = false
+}
+
+variable "resource_group_name" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(DEPRECATED - use parent_id instead) The name of the resource group where the resources will be deployed.
+DESCRIPTION
 }
 
 variable "retry" {

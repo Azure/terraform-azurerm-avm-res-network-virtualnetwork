@@ -117,12 +117,6 @@ Description: (Optional) The location/region where the virtual network is created
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: (DEPRECATED - use parent\_id instead) The name of the resource group where the resources will be deployed.
-
-Type: `string`
-
 ## Optional Inputs
 
 The following input variables are optional (have default values):
@@ -408,6 +402,14 @@ map(object({
 ```
 
 Default: `{}`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: (DEPRECATED - use parent\_id instead) The name of the resource group where the resources will be deployed.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_retry"></a> [retry](#input\_retry)
 

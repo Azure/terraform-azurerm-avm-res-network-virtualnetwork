@@ -85,11 +85,11 @@ locals {
 module "vnet" {
   source = "../../"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = module.naming.virtual_network.name
-  subnets             = local.subnets
+  address_space = ["10.0.0.0/16"]
+  location      = azurerm_resource_group.this.location
+  name          = module.naming.virtual_network.name
+  parent_id     = azurerm_resource_group.this.id
+  subnets       = local.subnets
 }
 
 ```
