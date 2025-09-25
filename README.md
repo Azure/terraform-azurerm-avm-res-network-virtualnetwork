@@ -38,10 +38,10 @@ This example shows the most basic usage of the module. It creates a new virtual 
 module "avm-res-network-virtualnetwork" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = "East US"
-  name                = "myVNet"
-  resource_group_name = "myResourceGroup"
+  address_space = ["10.0.0.0/16"]
+  location      = "eastus2"
+  name          = "vnet-demo-eastus2-001"
+  parent_id     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-demo-eastus2-001"
   subnets = {
     "subnet1" = {
       name             = "subnet1"
@@ -113,6 +113,12 @@ Type: `set(string)`
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: (Optional) The location/region where the virtual network is created. Changing this forces a new resource to be created.
+
+Type: `string`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: (Optional) The ID of the resource group where the virtual network will be deployed.
 
 Type: `string`
 
@@ -279,14 +285,6 @@ Default: `null`
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: (Optional) The name of the virtual network to create.  If null, existing\_virtual\_network must be supplied.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: (Optional) The ID of the resource group where the resources will be deployed. If this is set, resource\_group\_name will be ignored.
 
 Type: `string`
 
@@ -471,10 +469,6 @@ Description: (Optional) A map of subnets to create
    - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
 
  ---
- `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
- - `name` - (Required) A name for this delegation.
-  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
-
 `delegations` supports the following:
  - `name` - (Required) A name for this delegation.
   - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
@@ -545,12 +539,6 @@ map(object({
     })))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
-    delegation = optional(list(object({
-      name = string
-      service_delegation = object({
-        name = string
-      })
-    })))
     delegations = optional(list(object({
       name = string
       service_delegation = object({

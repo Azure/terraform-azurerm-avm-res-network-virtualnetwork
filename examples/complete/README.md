@@ -145,6 +145,7 @@ module "vnet1" {
 
   address_space = ["192.168.0.0/16"]
   location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
   ddos_protection_plan = {
     id = azurerm_network_ddos_protection_plan.this.id
     # due to resource cost
@@ -168,7 +169,6 @@ module "vnet1" {
   }
   flow_timeout_in_minutes = 30
   name                    = module.naming.virtual_network.name_unique
-  parent_id               = azurerm_resource_group.this.id
   role_assignments = {
     role1 = {
       principal_id               = azurerm_user_assigned_identity.this.principal_id
@@ -222,12 +222,12 @@ module "vnet2" {
 
   address_space = ["10.0.0.0/27"]
   location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
   encryption = {
     enabled     = true
     enforcement = "AllowUnencrypted"
   }
-  name      = "${module.naming.virtual_network.name_unique}2"
-  parent_id = azurerm_resource_group.this.id
+  name = "${module.naming.virtual_network.name_unique}2"
   peerings = {
     peertovnet1 = {
       name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"

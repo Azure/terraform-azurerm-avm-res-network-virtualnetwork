@@ -17,6 +17,18 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "parent_id" {
+  type        = string
+  description = <<DESCRIPTION
+(Optional) The ID of the resource group where the virtual network will be deployed.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+$", var.parent_id))
+    error_message = "parent_id must be a valid resource group ID."
+  }
+}
+
 variable "bgp_community" {
   type        = string
   default     = null
@@ -186,19 +198,6 @@ variable "name" {
   description = <<DESCRIPTION
 (Optional) The name of the virtual network to create.  If null, existing_virtual_network must be supplied.
 DESCRIPTION
-}
-
-variable "parent_id" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-(Optional) The ID of the resource group where the resources will be deployed. If this is set, resource_group_name will be ignored.
-DESCRIPTION
-
-  validation {
-    condition     = var.parent_id != null ? can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+$", var.parent_id)) : true
-    error_message = "If parent_id is set, it must be a valid resource group ID."
-  }
 }
 
 variable "peerings" {
@@ -376,12 +375,6 @@ variable "subnets" {
     })))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
-    delegation = optional(list(object({
-      name = string
-      service_delegation = object({
-        name = string
-      })
-    })))
     delegations = optional(list(object({
       name = string
       service_delegation = object({
@@ -431,10 +424,6 @@ variable "subnets" {
    - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
 
  ---
- `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
- - `name` - (Required) A name for this delegation.
-  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
-
 `delegations` supports the following:
  - `name` - (Required) A name for this delegation.
   - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.

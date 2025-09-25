@@ -82,8 +82,8 @@ module "virtualnetwork" {
 
   address_space = ["10.0.0.0/16"]
   location      = azurerm_resource_group.this.location
-  name          = "vnet-avm-service-endpoints-${random_string.this.result}"
   parent_id     = azurerm_resource_group.this.id
+  name          = "vnet-avm-service-endpoints-${random_string.this.result}"
   subnets = {
     # Subnet with service endpoints for all regions
     subnet_all_endpoints = {
