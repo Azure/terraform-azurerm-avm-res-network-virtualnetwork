@@ -20,7 +20,7 @@ DESCRIPTION
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
-(Required) The name of the resource group where the resources will be deployed.
+(DEPRECATED - use parent_id instead) The name of the resource group where the resources will be deployed.
 DESCRIPTION
 }
 
@@ -193,6 +193,19 @@ variable "name" {
   description = <<DESCRIPTION
 (Optional) The name of the virtual network to create.  If null, existing_virtual_network must be supplied.
 DESCRIPTION
+}
+
+variable "parent_id" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The ID of the resource group where the resources will be deployed. If this is set, resource_group_name will be ignored.
+DESCRIPTION
+
+  validation {
+    condition     = var.parent_id != null ? can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+$", var.parent_id)) : true
+    error_message = "If parent_id is set, it must be a valid resource group ID."
+  }
 }
 
 variable "peerings" {
@@ -489,7 +502,7 @@ DESCRIPTION
 variable "subscription_id" {
   type        = string
   default     = null
-  description = "(Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+  description = "(DEPRECATED - use parent_id instead) Subscription ID, used to target a different subscription for the default."
 }
 
 variable "tags" {

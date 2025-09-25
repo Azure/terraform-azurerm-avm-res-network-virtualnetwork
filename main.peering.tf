@@ -29,12 +29,10 @@ module "peering" {
   reverse_remote_peered_address_spaces  = each.value.reverse_remote_peered_address_spaces
   reverse_remote_peered_subnets         = each.value.reverse_remote_peered_subnets
   reverse_use_remote_gateways           = each.value.reverse_use_remote_gateways
-  subscription_id                       = local.subscription_id
   timeouts                              = each.value.timeouts
   use_remote_gateways                   = each.value.use_remote_gateways
 
   depends_on = [
-    azapi_resource.vnet,
     module.subnet # NOTE: This to support subnet peering subnet must exist before peering is created and peering must be destroyed before subnet
   ]
 }

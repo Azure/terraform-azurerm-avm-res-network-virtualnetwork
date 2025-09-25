@@ -226,14 +226,6 @@ variable "reverse_use_remote_gateways" {
   nullable    = false
 }
 
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-  (Optional) The subscription ID to use for the feature registration.
-DESCRIPTION
-}
-
 variable "timeouts" {
   type = object({
     create = optional(string, "30m")

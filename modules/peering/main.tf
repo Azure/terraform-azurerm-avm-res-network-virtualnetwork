@@ -101,11 +101,6 @@ resource "azapi_resource" "address_space_peering" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-
-  depends_on = [
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
-  ]
 }
 
 resource "azapi_resource" "reverse_address_space_peering" {
@@ -147,8 +142,6 @@ resource "azapi_resource" "reverse_address_space_peering" {
 
   depends_on = [
     azapi_resource.address_space_peering,
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
   ]
 }
 
@@ -184,11 +177,6 @@ resource "azapi_resource" "subnet_peering" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-
-  depends_on = [
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
-  ]
 }
 
 resource "azapi_resource" "reverse_subnet_peering" {
@@ -226,28 +214,5 @@ resource "azapi_resource" "reverse_subnet_peering" {
 
   depends_on = [
     azapi_resource.subnet_peering,
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
   ]
-}
-
-resource "azapi_update_resource" "allow_multiple_peering_links_between_vnets" {
-  count = local.is_address_space_peering || local.is_subnet_peering ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-}
-
-
-resource "azapi_update_resource" "remote_allow_multiple_peering_links_between_vnets" {
-  count = local.is_reverse_address_space_peering || local.is_reverse_subnet_peering ? 1 : 0
-
-  resource_id = "/subscriptions/${local.remote_subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
 }

@@ -1,8 +1,8 @@
 resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
-  parent_id = "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}"
-  type      = "Microsoft.Network/virtualNetworks@2023-11-01"
+  parent_id = local.parent_id
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
       addressSpace = {
@@ -45,18 +45,4 @@ resource "azapi_resource" "vnet" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-
-  depends_on = [azapi_update_resource.allow_drop_unencrypted_vnet]
-}
-
-resource "azapi_update_resource" "allow_drop_unencrypted_vnet" {
-  count = var.encryption != null ? (var.encryption.enforcement == "DropUnencrypted" ? 1 : 0) : 0
-
-  resource_id = "/subscriptions/${local.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDropUnecryptedVnet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }

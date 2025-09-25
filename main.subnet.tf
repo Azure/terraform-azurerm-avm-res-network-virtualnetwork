@@ -19,10 +19,5 @@ module "subnet" {
   service_endpoints                             = each.value.service_endpoints
   service_endpoints_with_location               = each.value.service_endpoints_with_location
   sharing_scope                                 = each.value.sharing_scope
-  subscription_id                               = local.subscription_id
   timeouts                                      = each.value.timeouts
-
-  depends_on = [
-    azapi_resource.vnet
-  ]
 }

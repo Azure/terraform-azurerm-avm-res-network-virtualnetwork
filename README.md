@@ -91,7 +91,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
@@ -120,7 +119,7 @@ Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: (Required) The name of the resource group where the resources will be deployed.
+Description: (DEPRECATED - use parent\_id instead) The name of the resource group where the resources will be deployed.
 
 Type: `string`
 
@@ -287,6 +286,14 @@ Default: `null`
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: (Optional) The name of the virtual network to create.  If null, existing\_virtual\_network must be supplied.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: (Optional) The ID of the resource group where the resources will be deployed. If this is set, resource\_group\_name will be ignored.
 
 Type: `string`
 
@@ -587,7 +594,7 @@ Default: `{}`
 
 ### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
 
-Description: (Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription.
+Description: (DEPRECATED - use parent\_id instead) Subscription ID, used to target a different subscription for the default.
 
 Type: `string`
 
