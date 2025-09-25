@@ -3,10 +3,6 @@ locals {
 }
 
 locals {
-  has_multiple_address_prefixes = var.address_prefixes != null ? length(var.address_prefixes) > 1 : false
-}
-
-locals {
   # Determine which service endpoints to use, preferring service_endpoints_with_location
   service_endpoints_to_use = var.service_endpoints_with_location != null ? [
     for endpoint in var.service_endpoints_with_location : {
