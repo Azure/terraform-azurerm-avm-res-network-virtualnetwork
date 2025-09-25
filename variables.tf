@@ -309,14 +309,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-(DEPRECATED - use parent_id instead) The name of the resource group where the resources will be deployed.
-DESCRIPTION
-}
-
 variable "retry" {
   type = object({
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
@@ -498,12 +490,6 @@ DESCRIPTION
     ])
     error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location` for the same subnet. Use only `service_endpoints_with_location` for the new format with location support."
   }
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = "(DEPRECATED - use parent_id instead) Subscription ID, used to target a different subscription for the default."
 }
 
 variable "tags" {
