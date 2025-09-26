@@ -34,7 +34,7 @@ resource "azapi_resource" "subnet" {
     }
   }
   ignore_null_property = true
-  locks                = [var.virtual_network.resource_id]
+  locks                = [var.parent_id]
   # We do not use outputs, so disabling them
   response_export_values    = []
   retry                     = var.retry
