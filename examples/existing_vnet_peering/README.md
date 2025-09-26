@@ -71,13 +71,9 @@ resource "azurerm_virtual_network" "remote" {
 module "peering" {
   source = "../../modules/peering"
 
-  name = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
-  remote_virtual_network = {
-    resource_id = azurerm_virtual_network.remote.id
-  }
-  virtual_network = {
-    resource_id = azurerm_virtual_network.local.id
-  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
+  parent_id                            = azurerm_virtual_network.local.id
+  remote_virtual_network_id            = azurerm_virtual_network.remote.id
   allow_forwarded_traffic              = true
   allow_gateway_transit                = true
   allow_virtual_network_access         = true

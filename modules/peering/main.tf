@@ -3,12 +3,12 @@ resource "azapi_resource" "this" {
   count = local.is_full_peering ? 1 : 0
 
   name      = var.name
-  parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  parent_id = var.parent_id
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.remote_virtual_network.resource_id
+        id = var.remote_virtual_network_id
       }
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
@@ -19,7 +19,7 @@ resource "azapi_resource" "this" {
       peerCompleteVnets         = var.peer_complete_vnets
     }
   }
-  locks                     = [var.virtual_network.resource_id]
+  locks                     = [var.parent_id]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -35,12 +35,12 @@ resource "azapi_resource" "reverse" {
   count = local.is_reverse_full_peering ? 1 : 0
 
   name      = var.reverse_name
-  parent_id = var.remote_virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  parent_id = var.remote_virtual_network_id
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.virtual_network.resource_id
+        id = var.parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic
@@ -51,7 +51,7 @@ resource "azapi_resource" "reverse" {
       peerCompleteVnets         = var.reverse_peer_complete_vnets
     }
   }
-  locks                     = [var.remote_virtual_network.resource_id]
+  locks                     = [var.remote_virtual_network_id]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -69,12 +69,12 @@ resource "azapi_resource" "address_space_peering" {
   count = local.is_address_space_peering ? 1 : 0
 
   name      = var.name
-  parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  parent_id = var.parent_id
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.remote_virtual_network.resource_id
+        id = var.remote_virtual_network_id
       }
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
@@ -91,7 +91,7 @@ resource "azapi_resource" "address_space_peering" {
       }
     }
   }
-  locks                     = [var.virtual_network.resource_id]
+  locks                     = [var.parent_id]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -101,23 +101,18 @@ resource "azapi_resource" "address_space_peering" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-
-  depends_on = [
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
-  ]
 }
 
 resource "azapi_resource" "reverse_address_space_peering" {
   count = local.is_reverse_address_space_peering ? 1 : 0
 
   name      = var.reverse_name
-  parent_id = var.remote_virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  parent_id = var.remote_virtual_network_id
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.virtual_network.resource_id
+        id = var.parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic
@@ -134,7 +129,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
       }
     }
   }
-  locks                     = [var.remote_virtual_network.resource_id]
+  locks                     = [var.remote_virtual_network_id]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -147,8 +142,6 @@ resource "azapi_resource" "reverse_address_space_peering" {
 
   depends_on = [
     azapi_resource.address_space_peering,
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
   ]
 }
 
@@ -156,12 +149,12 @@ resource "azapi_resource" "subnet_peering" {
   count = local.is_subnet_peering ? 1 : 0
 
   name      = var.name
-  parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  parent_id = var.parent_id
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.remote_virtual_network.resource_id
+        id = var.remote_virtual_network_id
       }
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
@@ -174,7 +167,7 @@ resource "azapi_resource" "subnet_peering" {
       remoteSubnetNames         = [for subnet in var.remote_peered_subnets : subnet.subnet_name]
     }
   }
-  locks                     = [var.virtual_network.resource_id]
+  locks                     = [var.parent_id]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -184,23 +177,18 @@ resource "azapi_resource" "subnet_peering" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-
-  depends_on = [
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
-  ]
 }
 
 resource "azapi_resource" "reverse_subnet_peering" {
   count = local.is_reverse_subnet_peering ? 1 : 0
 
   name      = var.reverse_name
-  parent_id = var.remote_virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2023-11-01"
+  parent_id = var.remote_virtual_network_id
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.virtual_network.resource_id
+        id = var.parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic
@@ -213,7 +201,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
       remoteSubnetNames         = [for subnet in var.reverse_remote_peered_subnets : subnet.subnet_name]
     }
   }
-  locks                     = [var.remote_virtual_network.resource_id]
+  locks                     = [var.remote_virtual_network_id]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -226,28 +214,5 @@ resource "azapi_resource" "reverse_subnet_peering" {
 
   depends_on = [
     azapi_resource.subnet_peering,
-    azapi_update_resource.allow_multiple_peering_links_between_vnets,
-    azapi_update_resource.remote_allow_multiple_peering_links_between_vnets
   ]
-}
-
-resource "azapi_update_resource" "allow_multiple_peering_links_between_vnets" {
-  count = local.is_address_space_peering || local.is_subnet_peering ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-}
-
-
-resource "azapi_update_resource" "remote_allow_multiple_peering_links_between_vnets" {
-  count = local.is_reverse_address_space_peering || local.is_reverse_subnet_peering ? 1 : 0
-
-  resource_id = "/subscriptions/${local.remote_subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultiplePeeringLinksBetweenVnets"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
 }

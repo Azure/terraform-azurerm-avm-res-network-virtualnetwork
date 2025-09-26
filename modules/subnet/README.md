@@ -52,9 +52,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azapi_update_resource.allow_multiple_address_prefixes_on_subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azapi_update_resource.enable_shared_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_role_assignment.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -68,19 +65,11 @@ Description: (Optional) The name of the subnet to create.
 
 Type: `string`
 
-### <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
 Description: (Required) The Virtual Network, into which the subnet will be created.
 
-- resource\_id - The ID of the Virtual Network.
-
-Type:
-
-```hcl
-object({
-    resource_id = string
-  })
-```
+Type: `string`
 
 ## Optional Inputs
 
@@ -306,14 +295,6 @@ Default: `null`
 ### <a name="input_sharing_scope"></a> [sharing\_scope](#input\_sharing\_scope)
 
 Description: (Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: (Optional) The subscription ID to use for the feature registration.
 
 Type: `string`
 

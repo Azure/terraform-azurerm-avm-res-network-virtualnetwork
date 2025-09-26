@@ -4,28 +4,30 @@ variable "name" {
   nullable    = false
 }
 
-variable "remote_virtual_network" {
-  type = object({
-    resource_id = string
-  })
-  description = <<DESCRIPTION
-  (Required) The Remote Virtual Network, which will be peered to and the optional reverse peering will be created in.
-
-  - resource_id - The ID of the Virtual Network.
-  DESCRIPTION
-  nullable    = false
-}
-
-variable "virtual_network" {
-  type = object({
-    resource_id = string
-  })
+variable "parent_id" {
+  type        = string
   description = <<DESCRIPTION
   (Required) The local Virtual Network, into which the peering will be created and that will be peered with the optional reverse peering.
-
-  - resource_id - The ID of the Virtual Network.
   DESCRIPTION
   nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.parent_id))
+    error_message = "The parent_id must be a valid Virtual Network resource ID"
+  }
+}
+
+variable "remote_virtual_network_id" {
+  type        = string
+  description = <<DESCRIPTION
+  (Required) The Remote Virtual Network, which will be peered to and the optional reverse peering will be created in.
+  DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.remote_virtual_network_id))
+    error_message = "The remote_virtual_network_id must be a valid Virtual Network resource ID"
+  }
 }
 
 variable "allow_forwarded_traffic" {
@@ -224,14 +226,6 @@ variable "reverse_use_remote_gateways" {
   default     = false
   description = "Use remote gateways for the reverse peering"
   nullable    = false
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-  (Optional) The subscription ID to use for the feature registration.
-DESCRIPTION
 }
 
 variable "timeouts" {

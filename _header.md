@@ -36,10 +36,10 @@ This example shows the most basic usage of the module. It creates a new virtual 
 module "avm-res-network-virtualnetwork" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = "East US"
-  name                = "myVNet"
-  resource_group_name = "myResourceGroup"
+  address_space = ["10.0.0.0/16"]
+  location      = "eastus2"
+  name          = "vnet-demo-eastus2-001"
+  parent_id     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-demo-eastus2-001"
   subnets = {
     "subnet1" = {
       name             = "subnet1"

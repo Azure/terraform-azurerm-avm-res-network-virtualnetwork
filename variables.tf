@@ -17,11 +17,16 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
   description = <<DESCRIPTION
-(Required) The name of the resource group where the resources will be deployed.
+(Optional) The ID of the resource group where the virtual network will be deployed.
 DESCRIPTION
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+$", var.parent_id))
+    error_message = "parent_id must be a valid resource group ID."
+  }
 }
 
 variable "bgp_community" {
@@ -370,12 +375,6 @@ variable "subnets" {
     })))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
-    delegation = optional(list(object({
-      name = string
-      service_delegation = object({
-        name = string
-      })
-    })))
     delegations = optional(list(object({
       name = string
       service_delegation = object({
@@ -425,10 +424,6 @@ variable "subnets" {
    - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
 
  ---
- `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
- - `name` - (Required) A name for this delegation.
-  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
-
 `delegations` supports the following:
  - `name` - (Required) A name for this delegation.
   - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
@@ -484,12 +479,6 @@ DESCRIPTION
     ])
     error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location` for the same subnet. Use only `service_endpoints_with_location` for the new format with location support."
   }
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = "(Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
 }
 
 variable "tags" {

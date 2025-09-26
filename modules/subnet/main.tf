@@ -1,7 +1,7 @@
 resource "azapi_resource" "subnet" {
   name      = var.name
-  parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/subnets@2023-11-01"
+  parent_id = var.parent_id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {
       addressPrefix         = var.address_prefix
@@ -34,7 +34,7 @@ resource "azapi_resource" "subnet" {
     }
   }
   ignore_null_property = true
-  locks                = [var.virtual_network.resource_id]
+  locks                = [var.parent_id]
   # We do not use outputs, so disabling them
   response_export_values    = []
   retry                     = var.retry
@@ -46,12 +46,6 @@ resource "azapi_resource" "subnet" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-
-  depends_on = [
-    azapi_update_resource.allow_multiple_address_prefixes_on_subnet,
-    azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet,
-    azapi_update_resource.enable_shared_vnet
-  ]
 }
 
 resource "azurerm_role_assignment" "subnet" {
@@ -65,34 +59,4 @@ resource "azurerm_role_assignment" "subnet" {
   role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
-}
-
-resource "azapi_update_resource" "allow_multiple_address_prefixes_on_subnet" {
-  count = local.has_multiple_address_prefixes ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultipleAddressPrefixesOnSubnet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-}
-
-resource "azapi_update_resource" "allow_deletion_of_ip_prefix_from_subnet" {
-  count = local.has_multiple_address_prefixes ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDeletionOfIpPrefixFromSubnet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-}
-
-resource "azapi_update_resource" "enable_shared_vnet" {
-  count = var.sharing_scope == "Tenant" ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/EnableSharedVNet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
 }
