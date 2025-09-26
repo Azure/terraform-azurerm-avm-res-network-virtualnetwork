@@ -1,6 +1,6 @@
 resource "azapi_resource" "subnet" {
   name      = var.name
-  parent_id = var.virtual_network.resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {

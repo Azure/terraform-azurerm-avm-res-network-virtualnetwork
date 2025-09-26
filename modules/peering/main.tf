@@ -3,12 +3,12 @@ resource "azapi_resource" "this" {
   count = local.is_full_peering ? 1 : 0
 
   name      = var.name
-  parent_id = var.virtual_network.resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.remote_virtual_network.resource_id
+        id = var.remote_virtual_network_id
       }
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
@@ -35,12 +35,12 @@ resource "azapi_resource" "reverse" {
   count = local.is_reverse_full_peering ? 1 : 0
 
   name      = var.reverse_name
-  parent_id = var.remote_virtual_network.resource_id
+  parent_id = var.remote_virtual_network_id
   type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.virtual_network.resource_id
+        id = var.parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic
@@ -69,12 +69,12 @@ resource "azapi_resource" "address_space_peering" {
   count = local.is_address_space_peering ? 1 : 0
 
   name      = var.name
-  parent_id = var.virtual_network.resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.remote_virtual_network.resource_id
+        id = var.remote_virtual_network_id
       }
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
@@ -107,12 +107,12 @@ resource "azapi_resource" "reverse_address_space_peering" {
   count = local.is_reverse_address_space_peering ? 1 : 0
 
   name      = var.reverse_name
-  parent_id = var.remote_virtual_network.resource_id
+  parent_id = var.remote_virtual_network_id
   type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.virtual_network.resource_id
+        id = var.parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic
@@ -149,12 +149,12 @@ resource "azapi_resource" "subnet_peering" {
   count = local.is_subnet_peering ? 1 : 0
 
   name      = var.name
-  parent_id = var.virtual_network.resource_id
+  parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.remote_virtual_network.resource_id
+        id = var.remote_virtual_network_id
       }
       allowVirtualNetworkAccess = var.allow_virtual_network_access
       allowForwardedTraffic     = var.allow_forwarded_traffic
@@ -183,12 +183,12 @@ resource "azapi_resource" "reverse_subnet_peering" {
   count = local.is_reverse_subnet_peering ? 1 : 0
 
   name      = var.reverse_name
-  parent_id = var.remote_virtual_network.resource_id
+  parent_id = var.remote_virtual_network_id
   type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
-        id = var.virtual_network.resource_id
+        id = var.parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
       allowForwardedTraffic     = var.reverse_allow_forwarded_traffic

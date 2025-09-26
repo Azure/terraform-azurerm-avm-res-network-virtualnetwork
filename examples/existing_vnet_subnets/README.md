@@ -76,10 +76,8 @@ module "subnets" {
   source   = "../../modules/subnet"
   for_each = local.subnets
 
-  name = each.value.name
-  virtual_network = {
-    resource_id = azurerm_virtual_network.this.id
-  }
+  name             = each.value.name
+  parent_id        = azurerm_virtual_network.this.id
   address_prefixes = each.value.address_prefixes
 }
 ```

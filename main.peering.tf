@@ -3,8 +3,6 @@ module "peering" {
   for_each = var.peerings
 
   name                                  = each.value.name
-  remote_virtual_network                = { resource_id = each.value.remote_virtual_network_resource_id }
-  virtual_network                       = { resource_id = azapi_resource.vnet.id }
   allow_forwarded_traffic               = each.value.allow_forwarded_traffic
   allow_gateway_transit                 = each.value.allow_gateway_transit
   allow_virtual_network_access          = each.value.allow_virtual_network_access
@@ -16,6 +14,7 @@ module "peering" {
   peer_complete_vnets                   = each.value.peer_complete_vnets
   remote_peered_address_spaces          = each.value.remote_peered_address_spaces
   remote_peered_subnets                 = each.value.remote_peered_subnets
+  remote_virtual_network                = { resource_id = each.value.remote_virtual_network_resource_id }
   retry                                 = each.value.retry
   reverse_allow_forwarded_traffic       = each.value.reverse_allow_forwarded_traffic
   reverse_allow_gateway_transit         = each.value.reverse_allow_gateway_transit
@@ -31,6 +30,7 @@ module "peering" {
   reverse_use_remote_gateways           = each.value.reverse_use_remote_gateways
   timeouts                              = each.value.timeouts
   use_remote_gateways                   = each.value.use_remote_gateways
+  virtual_network                       = { resource_id = azapi_resource.vnet.id }
 
   depends_on = [
     module.subnet # NOTE: This to support subnet peering subnet must exist before peering is created and peering must be destroyed before subnet

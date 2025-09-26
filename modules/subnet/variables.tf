@@ -6,16 +6,17 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "virtual_network" {
-  type = object({
-    resource_id = string
-  })
+variable "parent_id" {
+  type        = string
   description = <<DESCRIPTION
 (Required) The Virtual Network, into which the subnet will be created.
-
-- resource_id - The ID of the Virtual Network.
 DESCRIPTION
   nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.parent_id))
+    error_message = "The parent_id must be a valid Virtual Network resource ID"
+  }
 }
 
 variable "address_prefix" {

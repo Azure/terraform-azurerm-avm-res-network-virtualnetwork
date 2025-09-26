@@ -65,19 +65,11 @@ Description: (Optional) The name of the subnet to create.
 
 Type: `string`
 
-### <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
 Description: (Required) The Virtual Network, into which the subnet will be created.
 
-- resource\_id - The ID of the Virtual Network.
-
-Type:
-
-```hcl
-object({
-    resource_id = string
-  })
-```
+Type: `string`
 
 ## Optional Inputs
 
