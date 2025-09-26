@@ -3,6 +3,7 @@ module "subnet" {
   for_each = var.subnets
 
   name                                          = each.value.name
+  parent_id                                     = azapi_resource.vnet.id
   address_prefix                                = each.value.address_prefix
   address_prefixes                              = each.value.address_prefixes
   default_outbound_access_enabled               = each.value.default_outbound_access_enabled
@@ -19,5 +20,4 @@ module "subnet" {
   service_endpoints_with_location               = each.value.service_endpoints_with_location
   sharing_scope                                 = each.value.sharing_scope
   timeouts                                      = each.value.timeouts
-  virtual_network                               = { resource_id = azapi_resource.vnet.id }
 }
