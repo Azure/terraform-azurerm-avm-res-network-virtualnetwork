@@ -105,9 +105,9 @@ resource "azurerm_network_security_group" "this" {
 module "vnet_ipam_subnets" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = true
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = true
   # Configure VNet to use IPAM for address space
   ipam_pools = [{
     id            = azapi_resource.ipam_pool.id

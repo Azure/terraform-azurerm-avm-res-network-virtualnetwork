@@ -182,8 +182,8 @@ resource "azurerm_route_table" "this" {
 module "vnet_ipam_full" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  location  = azurerm_resource_group.this.location
+  parent_id = azurerm_resource_group.this.id
   # DNS servers configuration
   # DNS servers configuration
   dns_servers = {

@@ -309,7 +309,7 @@ resource "azurerm_network_security_group" "management" {
     name                       = "AllowRDP"
     priority                   = 1001
     protocol                   = "Tcp"
-    source_address_prefix      = "10.100.28.0/24" # Management subnet range
+    source_address_prefix      = "10.100.12.0/24" # Management subnet range
     source_port_range          = "*"
   }
 }
@@ -416,8 +416,8 @@ resource "azurerm_network_security_group" "bastion" {
 module "vnet_mixed" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  location  = azurerm_resource_group.this.location
+  parent_id = azurerm_resource_group.this.id
   # DNS servers configuration
   dns_servers = {
     dns_servers = toset(["1.1.1.1", "8.8.8.8"])
@@ -434,7 +434,7 @@ module "vnet_mixed" {
     # Static management subnets (use higher address ranges to avoid IPAM conflicts)
     management = {
       name             = "subnet-management"
-      address_prefixes = ["10.100.28.0/24"] # Within IPAM VNet range 16.0/20
+      address_prefixes = ["10.100.12.0/24"] # Within IPAM VNet range 0.0/20
       network_security_group = {
         id = azurerm_network_security_group.management.id
       }
@@ -453,7 +453,7 @@ module "vnet_mixed" {
 
     bastion = {
       name             = "AzureBastionSubnet" # Special Azure Bastion subnet name
-      address_prefixes = ["10.100.29.0/26"]   # Within IPAM VNet range 16.0/20
+      address_prefixes = ["10.100.13.0/26"]   # Within IPAM VNet range 0.0/20
       network_security_group = {
         id = azurerm_network_security_group.bastion.id
       }
@@ -470,8 +470,8 @@ module "vnet_mixed" {
     }
 
     gateway = {
-      name             = "GatewaySubnet"    # Special Gateway subnet name
-      address_prefixes = ["10.100.30.0/27"] # Within IPAM VNet range 16.0/20
+      name             = "GatewaySubnet"     # Special Gateway subnet name
+      address_prefixes = ["10.100.13.64/27"] # Within IPAM VNet range 0.0/20
       # Enhanced retry configuration for Azure operation conflicts
       retry = {
         error_message_regex = [
@@ -554,7 +554,7 @@ module "vnet_mixed" {
     # Static shared services subnet
     shared_services = {
       name             = "subnet-shared-services"
-      address_prefixes = ["10.100.31.0/24"] # Within IPAM VNet range 16.0/20
+      address_prefixes = ["10.100.14.0/24"] # Within IPAM VNet range 0.0/20
       network_security_group = {
         id = azurerm_network_security_group.management.id
       }
@@ -582,9 +582,9 @@ module "vnet_mixed" {
 module "vnet_ipam_workloads" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = true
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = true
   # Pure IPAM VNet for scalable workloads
   ipam_pools = [{
     id            = azapi_resource.ipam_pool_workloads.id
@@ -669,13 +669,9 @@ module "vnet_ipam_workloads" {
 module "vnet_peering" {
   source = "../../modules/peering"
 
-  name = "mixed-to-ipam"
-  remote_virtual_network = {
-    resource_id = module.vnet_ipam_workloads.resource_id
-  }
-  virtual_network = {
-    resource_id = module.vnet_mixed.resource_id
-  }
+  name                         = "mixed-to-ipam"
+  parent_id                    = module.vnet_mixed.resource_id
+  remote_virtual_network_id    = module.vnet_ipam_workloads.resource_id
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   allow_virtual_network_access = true

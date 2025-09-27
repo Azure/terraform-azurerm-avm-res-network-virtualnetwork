@@ -270,8 +270,8 @@ resource "azurerm_network_security_group" "app" {
 module "vnet_ipam_traditional_subnets" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  location  = azurerm_resource_group.this.location
+  parent_id = azurerm_resource_group.this.id
   # DNS servers configuration
   dns_servers = {
     dns_servers = toset(["1.1.1.1", "8.8.8.8"])
@@ -338,18 +338,14 @@ module "vnet_ipam_traditional_subnets" {
 module "additional_subnet" {
   source = "../../modules/subnet"
 
-  name = "subnet-additional"
-  virtual_network = {
-    resource_id = module.vnet_ipam_traditional_subnets.resource_id
-  }
-  # Calculate from existing IPAM VNet address space
-  calculate_from_vnet = true
+  name      = "subnet-additional"
+  parent_id = module.vnet_ipam_traditional_subnets.resource_id
+  # Use a specific address prefix within the IPAM-allocated VNet space
+  address_prefixes = ["172.16.2.128/27"] # /27 in the expected IPAM range
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
-  prefix_length     = 27
   service_endpoints = ["Microsoft.KeyVault"]
-  subnet_index      = 20 # /27 in remaining space (172.16.2.128/27)
 
   depends_on = [module.vnet_ipam_traditional_subnets]
 }

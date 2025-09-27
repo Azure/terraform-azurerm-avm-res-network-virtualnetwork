@@ -59,10 +59,10 @@ module "vnet" {
   source = "../../"
 
   location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
   address_space       = ["10.0.0.0/16"]
   enable_telemetry    = true
   name                = module.naming.virtual_network.name
+  resource_group_name = azurerm_resource_group.this.name
 }
 ```
 

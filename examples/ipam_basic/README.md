@@ -218,9 +218,9 @@ resource "azurerm_network_security_group" "this" {
 module "vnet" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = true
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = true
   # VNet gets dual-stack address space from IPAM pools
   ipam_pools = [
     {
