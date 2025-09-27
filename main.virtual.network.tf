@@ -54,8 +54,8 @@ resource "azapi_resource" "vnet" {
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  # We do not use outputs, so disabling them
-  response_export_values = []
+  # Enable response export for IPAM VNets to read allocated address space
+  response_export_values = var.ipam_pools != null ? ["*"] : []
   retry                  = var.retry
   tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

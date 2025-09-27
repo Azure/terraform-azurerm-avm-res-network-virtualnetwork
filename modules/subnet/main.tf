@@ -1,8 +1,8 @@
 locals {
-  # Define address options for the subnet
+  # Define address options for the subnet - use calculated or provided addresses
   address_options = {
     addressPrefixes = {
-      addressPrefixes = var.address_prefixes
+      addressPrefixes = local.final_address_prefixes
     }
   }
 }
@@ -15,7 +15,7 @@ resource "azapi_resource" "subnet" {
     properties = merge(
       local.address_options["addressPrefixes"],
       {
-        addressPrefix         = var.address_prefix
+        addressPrefix         = local.final_address_prefix
         delegations           = local.delegations
         defaultOutboundAccess = var.default_outbound_access_enabled
         natGateway = var.nat_gateway != null ? {
