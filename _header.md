@@ -1,6 +1,6 @@
 # Azure Virtual Network Module
 
-This module is used to manage Azure Virtual Networks, Subnets and Peerings.
+This module is used to manage Azure Virtual Networks, Subnets and Peerings, with optional IPAM (IP Address Management) support.
 
 This module is composite and includes sub modules that can be used independently for pre-existing virtual networks. These sub modules are:
 
@@ -23,29 +23,48 @@ The module supports:
 - Associating a service endpoint with a subnet
 - Associating a virtual network gateway with a subnet
 - Assigning delegations to subnets
+- **IPAM pool allocation for virtual network address space**
+- **IPAM pool allocation for individual subnets with conflict prevention**
+- **Time-delayed sequential subnet creation for IPAM scenarios**
+- **Mixed IPAM and traditional addressing within the same virtual network**
 
 ## IPAM Support
 
-This module supports IPAM (IP Address Management) pools for **virtual network address space allocation only**. IPAM pools are **not supported for individual subnets** due to technical limitations that can cause deployment failures.
+This module provides comprehensive support for Azure IPAM (IP Address Management) through Network Manager IPAM pools.
 
-**VNet IPAM Support:**
-- Virtual networks can use IPAM pools for automatic address space allocation
-- Use the `ipam_pools` variable to specify pool allocation for the VNet address space
+### Virtual Network IPAM
+- ✅ **Automatic address space allocation** from IPAM pools
+- ✅ **Multiple pool support** (IPv4 and IPv6)
+- ✅ **Flexible prefix length specification**
 
-**Subnet IPAM Limitations:**
-- Subnets must use explicit `address_prefix` or `address_prefixes` values
-- IPAM pool allocation for subnets can cause race conditions during concurrent deployments
-- No mechanism exists to pre-allocate IP ranges in IPAM pools to prevent conflicts
+### Subnet IPAM
+- ✅ **Individual subnet allocation** from IPAM pools
+- ✅ **Time-delayed sequential creation** to prevent allocation conflicts (default: 30s delay)
+- ✅ **Mixed addressing** - IPAM and traditional subnets in the same VNet
+- ✅ **Configurable delay timing** between IPAM subnet allocations
 
-**Important:** Subnets created with explicit IP addresses will appear as "Unallocated" in Azure Virtual Network Manager (AVNM) IPAM. This is expected behavior and indicates the subnet was not allocated through IPAM pools. Azure Portal and other Azure tools will still properly detect and prevent IP range conflicts.
+### Key Benefits
+- **Conflict Prevention**: Automatic time delays between IPAM subnet allocations prevent overlapping IP ranges
+- **Centralized Management**: Leverage Azure Network Manager for IP address governance
+- **Flexible Deployment**: Mix IPAM-allocated and statically-addressed subnets as needed
+- **Production Ready**: Tested patterns for large-scale deployments
+
+### IPAM Examples
+- **[ipam_basic](examples/ipam_basic/)** - Getting started with basic VNet IPAM
+- **[ipam_full](examples/ipam_full/)** - Complete IPAM deployment with all features
+- **[ipam_vnet_only](examples/ipam_vnet_only/)** - IPAM for VNet address space with traditional subnets
+- **[ipam_mixed](examples/ipam_mixed/)** - Combination of IPAM and traditional addressing patterns
+- **[ipam_subnets](examples/ipam_subnets/)** - Time-delayed IPAM subnet creation
+
+**Important:** The module automatically handles IPAM allocation conflicts through time-delayed sequential creation. Subnets using IPAM pools are created with configurable delays (default 30 seconds) to ensure reliable deployments.
 
 ## Usage
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables.
 
-### Example - Virtual Network with Subnets
+### Example - Basic Virtual Network with Subnets
 
-This example shows the most basic usage of the module. It creates a new virtual network with subnets.
+This example shows the most basic usage of the module. It creates a new virtual network with subnets using traditional static addressing.
 
 ```terraform
 module "avm-res-network-virtualnetwork" {
@@ -68,7 +87,81 @@ module "avm-res-network-virtualnetwork" {
 }
 ```
 
-### Example - Create a subnets on a pre-existing Virtual Network
+### Example - IPAM Virtual Network with Subnets
+
+This example demonstrates IPAM usage with both VNet and subnet allocation from IPAM pools.
+
+```terraform
+module "avm-res-network-virtualnetwork" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm"
+
+  location            = "East US"
+  name                = "myIPAMVNet"
+  resource_group_name = "myResourceGroup"
+
+  # VNet address space from IPAM pool
+  ipam_pools = [{
+    id            = azapi_resource.ipam_pool.id
+    prefix_length = 24
+  }]
+
+  # Subnets allocated from IPAM pool with automatic conflict prevention
+  subnets = {
+    "web_subnet" = {
+      name = "subnet-web"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 26
+      }]
+    }
+    "app_subnet" = {
+      name = "subnet-app"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 26
+      }]
+    }
+  }
+}
+```
+
+### Example - Mixed IPAM and Traditional Addressing
+
+This example shows how to combine IPAM allocation with traditional static addressing in the same VNet.
+
+```terraform
+module "avm-res-network-virtualnetwork" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm"
+
+  location            = "East US"
+  name                = "myMixedVNet"
+  resource_group_name = "myResourceGroup"
+
+  # VNet from IPAM pool
+  ipam_pools = [{
+    id            = azapi_resource.ipam_pool.id
+    prefix_length = 24
+  }]
+
+  subnets = {
+    # IPAM-allocated subnet
+    "dynamic_subnet" = {
+      name = "subnet-dynamic"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 26
+      }]
+    }
+    # Statically addressed subnet
+    "management_subnet" = {
+      name             = "subnet-management"
+      address_prefixes = ["10.0.0.192/26"]
+    }
+  }
+}
+```
+
+### Example - Create a subnet on a pre-existing Virtual Network
 
 This example shows how to create a subnet for a pre-existing virtual network using the subnet module.
 
