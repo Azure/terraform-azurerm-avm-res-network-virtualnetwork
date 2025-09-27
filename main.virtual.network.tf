@@ -24,7 +24,7 @@ locals {
 resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
-  parent_id = "/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}"
+  parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
