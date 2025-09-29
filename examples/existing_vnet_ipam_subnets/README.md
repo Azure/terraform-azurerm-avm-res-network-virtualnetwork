@@ -370,7 +370,7 @@ This example validates:
 
 After deployment, verify in the Azure Portal:
 - **Network Manager IPAM**: Shows the IPAM subnet allocation
-- **Virtual Network**: Displays both subnets with their respective configurations  
+- **Virtual Network**: Displays both subnets with their respective configurations
 - **Subnet details**: Confirm IP ranges and associated resources are correct
 
 <!-- markdownlint-disable-next-line MD041 -->
