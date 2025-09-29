@@ -144,6 +144,7 @@ module "vnet1" {
   source = "../../"
 
   location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
   address_space = ["192.168.0.0/16"]
   ddos_protection_plan = {
     id = azurerm_network_ddos_protection_plan.this.id
@@ -168,7 +169,6 @@ module "vnet1" {
   }
   flow_timeout_in_minutes = 30
   name                    = module.naming.virtual_network.name_unique
-  resource_group_name     = azurerm_resource_group.this.name
   role_assignments = {
     role1 = {
       principal_id               = azurerm_user_assigned_identity.this.principal_id
@@ -221,6 +221,7 @@ module "vnet2" {
   source = "../../"
 
   location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
   address_space = ["10.0.0.0/27"]
   encryption = {
     enabled     = true
@@ -247,7 +248,6 @@ module "vnet2" {
       reverse_use_remote_gateways           = false
     }
   }
-  resource_group_name = azurerm_resource_group.this.name
 }
 ```
 
