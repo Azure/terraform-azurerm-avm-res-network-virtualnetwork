@@ -30,7 +30,7 @@ The module supports:
 
 ## IPAM Support
 
-This module provides comprehensive support for Azure IPAM (IP Address Management) through Network Manager IPAM pools.
+This module provides comprehensive support for Azure IPAM (IP Address Management) through Azure Virtual Network Manager IPAM pools.
 
 ### Virtual Network IPAM
 - ✅ **Automatic address space allocation** from IPAM pools

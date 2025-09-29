@@ -132,7 +132,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -333,7 +333,7 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: 0.4.2
 
 ### <a name="module_traditional_subnet"></a> [traditional\_subnet](#module\_traditional\_subnet)
 

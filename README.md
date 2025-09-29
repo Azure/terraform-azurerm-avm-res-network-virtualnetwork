@@ -32,7 +32,7 @@ The module supports:
 
 ## IPAM Support
 
-This module provides comprehensive support for Azure IPAM (IP Address Management) through Network Manager IPAM pools.
+This module provides comprehensive support for Azure IPAM (IP Address Management) through Azure Virtual Network Manager IPAM pools.
 
 ### Virtual Network IPAM
 - ✅ **Automatic address space allocation** from IPAM pools
@@ -193,6 +193,8 @@ The following requirements are needed by this module:
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.13)
 
 ## Resources
 

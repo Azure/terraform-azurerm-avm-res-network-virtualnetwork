@@ -270,7 +270,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -486,7 +486,7 @@ The following Modules are called:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: 0.4.2
 
 ### <a name="module_vnet_ipam_subnets"></a> [vnet\_ipam\_subnets](#module\_vnet\_ipam\_subnets)
 
