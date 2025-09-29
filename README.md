@@ -478,7 +478,6 @@ Description: (Optional) A map of virtual network peering configurations. Each en
   - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
   - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
   - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
-  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
 
 Type:
 
