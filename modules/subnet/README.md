@@ -294,8 +294,6 @@ object({
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
-    multiplier           = optional(number, 1.5)
-    randomization_factor = optional(number, 0.5)
   })
 ```
 

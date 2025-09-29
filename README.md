@@ -536,8 +536,6 @@ map(object({
       error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
       interval_seconds     = optional(number, 10)
       max_interval_seconds = optional(number, 180)
-      multiplier           = optional(number, 1.5)
-      randomization_factor = optional(number, 0.5)
     }), {})
   }))
 ```
@@ -555,8 +553,6 @@ object({
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
-    multiplier           = optional(number, 1.5)
-    randomization_factor = optional(number, 0.5)
   })
 ```
 
@@ -652,8 +648,6 @@ Description: (Optional) A map of subnets to create
   - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
   - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
   - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
-  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
-  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
 
  ---
  `role_assignments` supports the following:
@@ -718,8 +712,6 @@ map(object({
       error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
       interval_seconds     = optional(number, 10)
       max_interval_seconds = optional(number, 180)
-      multiplier           = optional(number, 1.5)
-      randomization_factor = optional(number, 0.5)
     }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
