@@ -28,16 +28,6 @@ Information about the subnets created in the module.
 
 Please refer to the subnet module documentation for details of the outputs
 DESCRIPTION
-  value = merge(
-    # IPAM subnets created directly as azapi_resource
-    {
-      for key, subnet in azapi_resource.ipam_subnet : key => {
-        resource    = subnet
-        resource_id = subnet.id
-        name        = subnet.name
-      }
-    },
-    # Non-IPAM subnets created via subnet module
-    module.subnet
-  )
+  # All subnets now use the subnet module for consistent interface
+  value = module.subnet
 }

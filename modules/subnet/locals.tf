@@ -3,6 +3,12 @@ locals {
 }
 
 locals {
+  # Define address options for the subnet - use calculated or provided addresses
+  address_options = {
+    addressPrefixes = {
+      addressPrefixes = local.final_address_prefixes
+    }
+  }
   # Calculate the final address prefix - prioritizing address_prefix over address_prefixes
   final_address_prefix   = var.address_prefix
   final_address_prefixes = var.address_prefixes
