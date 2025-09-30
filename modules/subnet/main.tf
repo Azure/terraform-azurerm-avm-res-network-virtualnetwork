@@ -48,20 +48,10 @@ resource "azapi_resource" "ipam_subnet" {
       }
     )
   }
-  ignore_null_property   = false
-  locks                  = [var.parent_id]
-  response_export_values = ["properties.addressPrefixes"]
-  retry = {
-    error_message_regex = [
-      "AnotherOperationInProgress",
-      "ReferencedResourceNotProvisioned",
-      "OperationNotAllowed"
-    ]
-    interval_seconds     = 30
-    max_interval_seconds = 300
-    multiplier           = 1.5
-    randomization_factor = 0.5
-  }
+  ignore_null_property      = false
+  locks                     = [var.parent_id]
+  response_export_values    = ["properties.addressPrefixes"]
+  retry                     = var.retry
   schema_validation_enabled = false
 
   timeouts {
