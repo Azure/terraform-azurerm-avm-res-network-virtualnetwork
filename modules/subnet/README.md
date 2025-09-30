@@ -68,6 +68,13 @@ If the parent Virtual Network was not created with IPAM pools for its address sp
 
 For comprehensive multi-subnet IPAM scenarios with time-delayed sequential creation, use the main virtual network module with multiple IPAM subnets.
 
+## Prerequisites
+
+### For IPAM Subnets
+- **IPAM-enabled Virtual Network**: Parent VNet must be created with IPAM pools (not traditional VNet)
+- **Azure Virtual Network Manager**: Required with IPAM pools configured
+- **azapi provider**: Version ~> 2.5 required for IPAM subnet operations
+
 ## Usage
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables.
@@ -95,20 +102,22 @@ module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
   name      = "subnet-app"
-  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
+  parent_id = azurerm_virtual_network.ipam_vnet.id  # Must be IPAM-enabled VNet
 
   # Dynamic allocation from IPAM pool
   ipam_pools = [{
-    pool_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/networkManagers/myNetworkManager/ipamPools/myPool"
-    prefix_length = 26  # Allocate a /26 subnet (64 IP addresses)
+    pool_id       = azapi_resource.ipam_pool.id
+    prefix_length = 24  # /24 subnet (256 IP addresses)
   }]
-
-  # Standard subnet features work with IPAM
-  network_security_group = {
-    id = azurerm_network_security_group.app.id
-  }
-  service_endpoints = ["Microsoft.Storage"]
 }
+```
+
+## Common Issues
+
+- **"Cannot create IPAM subnet"**: Ensure parent VNet was created with IPAM pools, not traditional addressing
+- **"Pool not found"**: Verify IPAM pool exists in the same region as the target VNet
+- **"Prefix length invalid"**: Use values between 16-30 for IPv4 subnets
+```
 ```
 
 <!-- markdownlint-disable MD033 -->

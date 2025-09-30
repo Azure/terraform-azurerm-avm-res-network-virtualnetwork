@@ -51,6 +51,13 @@ This module provides comprehensive support for Azure IPAM (IP Address Management
 - **Flexible Deployment**: Mix IPAM-allocated and statically-addressed subnets as needed
 - **Production Ready**: Tested patterns for large-scale deployments
 
+### IPAM Regional Support
+
+**⚠️ IPAM NOT supported in these regions:**
+`austriaeast`, `chilecentral`, `chinaeast`, `chinanorth`, `indonesiacentral`, `malaysiawest`, `mexicocentral`, `newzealandnorth`, `spaincentral`
+
+For the most up-to-date regional availability, consult the [Azure products by region](https://azure.microsoft.com/explore/global-infrastructure/products-by-region/) page.
+
 ### IPAM Examples
 - **[ipam\_basic](examples/ipam\_basic/)** - Getting started with basic VNet IPAM
 - **[ipam\_full](examples/ipam\_full/)** - Complete IPAM deployment with all features
@@ -59,6 +66,14 @@ This module provides comprehensive support for Azure IPAM (IP Address Management
 - **[existing\_vnet\_ipam\_subnets](examples/existing\_vnet\_ipam\_subnets/)** - Adding IPAM subnets to existing VNets managed by Azure Virtual Network Manager
 
 **Important:** The module automatically handles IPAM allocation conflicts through time-delayed sequential creation. Subnets using IPAM pools are created with configurable delays (default 30 seconds) to ensure reliable deployments.
+
+## Prerequisites
+
+### For IPAM Features
+- **Azure Virtual Network Manager**: Required for all IPAM functionality
+- **Supported Azure region**: IPAM must be available in your target region (see [Regional Support](#ipam-regional-support))
+- **azapi provider**: Version ~> 2.4 required for IPAM resource management
+- **Proper permissions**: Network Manager and IPAM pool management permissions
 
 ## Usage
 
@@ -127,42 +142,6 @@ module "avm-res-network-virtualnetwork" {
 }
 ```
 
-### Example - Mixed IPAM and Traditional Addressing
-
-This example shows how to combine IPAM allocation with traditional static addressing in the same VNet.
-
-```terraform
-module "avm-res-network-virtualnetwork" {
-  source = "Azure/avm-res-network-virtualnetwork/azurerm"
-
-  location  = "East US"
-  name      = "myMixedVNet"
-  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup"
-
-  # VNet from IPAM pool
-  ipam_pools = [{
-    id            = azapi_resource.ipam_pool.id
-    prefix_length = 24
-  }]
-
-  subnets = {
-    # IPAM-allocated subnet
-    "dynamic_subnet" = {
-      name = "subnet-dynamic"
-      ipam_pools = [{
-        pool_id       = azapi_resource.ipam_pool.id
-        prefix_length = 26
-      }]
-    }
-    # Statically addressed subnet
-    "management_subnet" = {
-      name             = "subnet-management"
-      address_prefixes = ["10.0.0.192/26"]
-    }
-  }
-}
-```
-
 ### Example - Create a subnet on a pre-existing Virtual Network
 
 This example shows how to create a subnet for a pre-existing virtual network using the subnet module.
@@ -175,6 +154,18 @@ module "avm-res-network-subnet" {
   name             = "subnet1"
   address_prefixes = ["10.0.0.0/24"]
 }
+```
+
+## Troubleshooting
+
+### Common IPAM Issues
+
+- **"IPAM subnet creation failed"**: Ensure parent VNet was created with IPAM pools for its address space
+- **"Region not supported"**: Check the [IPAM Regional Support](#ipam-regional-support) section above
+- **"Subnet overlap errors"**: Module automatically prevents this with time delays between IPAM subnet creation
+- **"Network Manager not found"**: Ensure Azure Virtual Network Manager exists before creating IPAM pools
+- **"Deployment timeout"**: For many IPAM subnets, consider increasing `ipam_subnet_allocation_delay` parameter
+```
 ```
 
 <!-- markdownlint-disable MD033 -->
