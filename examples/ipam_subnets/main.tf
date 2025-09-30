@@ -29,8 +29,86 @@ provider "azurerm" {
   }
 }
 
+## Section to provide a random Azure region for the resource group
+# This allows us to randomize the region for the resource group.
+# IPAM is not yet supported in all regions, therfore commenting out module "regions"
+# IPAM NOT supported in these regions:
+# "austriaeast",      # Austria East
+# "chilecentral",     # Chile Central
+# "chinaeast",        # China East
+# "chinanorth",       # China North
+# "indonesiacentral", # Indonesia Central
+# "malaysiawest",     # Malaysia West
+# "mexicocentral",    # Mexico Central
+# "newzealandnorth",  # New Zealand North
+# "spaincentral"      # Spain Central
+
+# module "regions" {
+#   source  = "Azure/regions/azurerm"
+#   version = "~> 0.3"
+# }
+
 locals {
-  regions = ["eastus2"] # IPAM available regions
+  regions = [
+    "eastus2",
+    "westus2",
+    "eastus",
+    "westeurope",
+    "uksouth",
+    "northeurope",
+    "centralus",
+    "australiaeast",
+    "westus",
+    "southcentralus",
+    "francecentral",
+    "southafricanorth",
+    "swedencentral",
+    "centralindia",
+    "eastasia",
+    "canadacentral",
+    "germanywestcentral",
+    "italynorth",
+    "norwayeast",
+    "polandcentral",
+    "switzerlandnorth",
+    "uaenorth",
+    "brazilsouth",
+    "israelcentral",
+    "northcentralus",
+    "australiacentral",
+    "australiacentral2",
+    "australiasoutheast",
+    "southindia",
+    "canadaeast",
+    "francesouth",
+    "germanynorth",
+    "norwaywest",
+    "switzerlandwest",
+    "ukwest",
+    "uaecentral",
+    "brazilsoutheast",
+    "japaneast",
+    "koreasouth",
+    "koreacentral",
+    "southeastasia",
+    "japanwest",
+    "westcentralus",
+    "belgiumcentral",
+    "qatarcentral",
+    "southafricawest",
+    "westindia",
+    "westus3"
+    # IPAM NOT supported in these regions:
+    # "austriaeast",      # Austria East
+    # "chilecentral",     # Chile Central
+    # "chinaeast",        # China East
+    # "chinanorth",       # China North
+    # "indonesiacentral", # Indonesia Central
+    # "malaysiawest",     # Malaysia West
+    # "mexicocentral",    # Mexico Central
+    # "newzealandnorth",  # New Zealand North
+    # "spaincentral"      # Spain Central
+  ]
 }
 
 resource "random_integer" "region_index" {
@@ -64,6 +142,11 @@ resource "azapi_resource" "network_manager" {
       }
     }
   }
+  retry = {
+    interval_seconds     = 10
+    max_interval_seconds = 180
+    error_message_regex  = ["CannotDeleteResource", "Cannot delete resource while nested resources exist"]
+  }
   schema_validation_enabled = false
 }
 
@@ -84,6 +167,11 @@ resource "azapi_resource" "ipam_pool" {
       description     = "IPAM Pool for testing time-delayed subnet allocation"
       displayName     = "IPAM Pool - Subnet Test"
     }
+  }
+  retry = {
+    interval_seconds     = 10
+    max_interval_seconds = 180
+    error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
   }
   schema_validation_enabled = false
 
@@ -135,8 +223,8 @@ module "vnet_ipam_subnets" {
           "ReferencedResourceNotProvisioned",
           "OperationNotAllowed"
         ]
-        interval_seconds     = 30
-        max_interval_seconds = 300
+        interval_seconds     = 10
+        max_interval_seconds = 180
       }
     }
 
@@ -157,8 +245,8 @@ module "vnet_ipam_subnets" {
           "ReferencedResourceNotProvisioned",
           "OperationNotAllowed"
         ]
-        interval_seconds     = 30
-        max_interval_seconds = 300
+        interval_seconds     = 10
+        max_interval_seconds = 180
       }
     }
 
@@ -179,8 +267,8 @@ module "vnet_ipam_subnets" {
           "ReferencedResourceNotProvisioned",
           "OperationNotAllowed"
         ]
-        interval_seconds     = 30
-        max_interval_seconds = 300
+        interval_seconds     = 10
+        max_interval_seconds = 180
       }
     }
 
@@ -200,8 +288,8 @@ module "vnet_ipam_subnets" {
           "ReferencedResourceNotProvisioned",
           "OperationNotAllowed"
         ]
-        interval_seconds     = 30
-        max_interval_seconds = 300
+        interval_seconds     = 10
+        max_interval_seconds = 180
       }
     }
   }
