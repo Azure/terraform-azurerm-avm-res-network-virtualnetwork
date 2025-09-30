@@ -128,7 +128,6 @@ locals {
     "switzerlandwest",
     "ukwest",
     "uaecentral",
-    "brazilsoutheast",
     "japaneast",
     "koreasouth",
     "koreacentral",
