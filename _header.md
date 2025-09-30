@@ -53,8 +53,8 @@ This module provides comprehensive support for Azure IPAM (IP Address Management
 - **[ipam_basic](examples/ipam_basic/)** - Getting started with basic VNet IPAM
 - **[ipam_full](examples/ipam_full/)** - Complete IPAM deployment with all features
 - **[ipam_vnet_only](examples/ipam_vnet_only/)** - IPAM for VNet address space with traditional subnets
-
 - **[ipam_subnets](examples/ipam_subnets/)** - Time-delayed IPAM subnet creation
+- **[existing_vnet_ipam_subnets](examples/existing_vnet_ipam_subnets/)** - Adding IPAM subnets to existing VNets
 
 **Important:** The module automatically handles IPAM allocation conflicts through time-delayed sequential creation. Subnets using IPAM pools are created with configurable delays (default 30 seconds) to ensure reliable deployments.
 
@@ -95,9 +95,9 @@ This example demonstrates IPAM usage with both VNet and subnet allocation from I
 module "avm-res-network-virtualnetwork" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm"
 
-  location            = "East US"
-  name                = "myIPAMVNet"
-  resource_group_name = "myResourceGroup"
+  location  = "East US"
+  name      = "myIPAMVNet"
+  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup"
 
   # VNet address space from IPAM pool
   ipam_pools = [{
@@ -133,9 +133,9 @@ This example shows how to combine IPAM allocation with traditional static addres
 module "avm-res-network-virtualnetwork" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm"
 
-  location            = "East US"
-  name                = "myMixedVNet"
-  resource_group_name = "myResourceGroup"
+  location  = "East US"
+  name      = "myMixedVNet"
+  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup"
 
   # VNet from IPAM pool
   ipam_pools = [{
@@ -169,9 +169,7 @@ This example shows how to create a subnet for a pre-existing virtual network usi
 module "avm-res-network-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  virtual_network = {
-    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
-  }
+  parent_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
   name             = "subnet1"
   address_prefixes = ["10.0.0.0/24"]
 }
