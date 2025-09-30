@@ -48,11 +48,11 @@ resource "azapi_resource" "ipam_subnet" {
       }
     )
   }
-  ignore_null_property      = false
+  ignore_null_property      = true
   locks                     = [var.parent_id]
   response_export_values    = ["properties.addressPrefixes"]
   retry                     = var.retry
-  schema_validation_enabled = false
+  schema_validation_enabled = true
 
   timeouts {
     create = var.timeouts.create
