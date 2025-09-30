@@ -53,7 +53,7 @@ This module provides comprehensive support for Azure IPAM (IP Address Management
 - **[ipam_basic](examples/ipam_basic/)** - Getting started with basic VNet IPAM
 - **[ipam_full](examples/ipam_full/)** - Complete IPAM deployment with all features
 - **[ipam_vnet_only](examples/ipam_vnet_only/)** - IPAM for VNet address space with traditional subnets
-- **[ipam_mixed](examples/ipam_mixed/)** - Combination of IPAM and traditional addressing patterns
+
 - **[ipam_subnets](examples/ipam_subnets/)** - Time-delayed IPAM subnet creation
 
 **Important:** The module automatically handles IPAM allocation conflicts through time-delayed sequential creation. Subnets using IPAM pools are created with configurable delays (default 30 seconds) to ensure reliable deployments.
