@@ -80,33 +80,34 @@ locals {
     "australiasoutheast",
     "southindia",
     "canadaeast",
-    "francesouth",
     "germanynorth",
     "norwaywest",
     "switzerlandwest",
     "ukwest",
     "uaecentral",
+    "brazilsoutheast",
+    "mexicocentral",
+    "spaincentral",
     "japaneast",
     "koreasouth",
     "koreacentral",
+    "newzealandnorth",
     "southeastasia",
     "japanwest",
-    "westcentralus",
-    "belgiumcentral",
-    "qatarcentral",
-    "southafricawest",
-    "westindia",
-    "westus3"
+    "westcentralus"
     # IPAM NOT supported in these regions:
     # "austriaeast",      # Austria East
+    # "belgiumcentral",   # Belgium Central
     # "chilecentral",     # Chile Central
     # "chinaeast",        # China East
     # "chinanorth",       # China North
+    # "francesouth",      # France South (use francecentral)
     # "indonesiacentral", # Indonesia Central
     # "malaysiawest",     # Malaysia West
-    # "mexicocentral",    # Mexico Central
-    # "newzealandnorth",  # New Zealand North
-    # "spaincentral"      # Spain Central
+    # "qatarcentral",     # Qatar Central
+    # "southafricawest",  # South Africa West (use southafricanorth)
+    # "westindia",        # West India
+    # "westus3"           # West US 3 (Network Manager supported, IPAM pools not)
   ]
 }
 
