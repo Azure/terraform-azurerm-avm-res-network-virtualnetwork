@@ -26,7 +26,8 @@ output "subnets" {
   description = <<DESCRIPTION
 Information about the subnets created in the module.
 
-Please refer to the subnet module documentation for details of the outputs.
+Please refer to the subnet module documentation for details of the outputs
 DESCRIPTION
-  value       = module.subnet
+  # All subnets now use the subnet module for consistent interface
+  value = module.subnet
 }
