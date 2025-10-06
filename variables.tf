@@ -244,6 +244,7 @@ variable "peerings" {
       subnet_name = string
     })))
     reverse_use_remote_gateways = optional(bool, false)
+    sync_remote_address_space   = optional(bool, true)
     timeouts = optional(object({
       create = optional(string, "30m")
       read   = optional(string, "5m")
@@ -286,6 +287,7 @@ variable "peerings" {
 - `reverse_local_peered_subnets`: (Optional) If you have selected `create_reverse_peering`, the subnets to peer with the remote virtual network. Only used when `reverse_peer_complete_vnets` is set to true.
 - `reverse_remote_peered_subnets`: (Optional) If you have selected `create_reverse_peering`, the subnets to peer from the remote virtual network. Only used when `reverse_peer_complete_vnets` is set to true.
 - `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
+- `sync_remote_address_space`: (Optional) If the peering sync status changes a plan will be created to sync the peering address space with an azapi update resource. Defaults to true.
 
  ---
  `timeouts` (Optional) supports the following:

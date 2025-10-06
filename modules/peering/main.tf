@@ -20,6 +20,7 @@ resource "azapi_resource" "this" {
     }
   }
   locks                     = [var.parent_id]
+  response_export_values    = ["properties.peeringSyncLevel"]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -52,6 +53,7 @@ resource "azapi_resource" "reverse" {
     }
   }
   locks                     = [var.remote_virtual_network_id]
+  response_export_values    = ["properties.peeringSyncLevel"]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -92,6 +94,7 @@ resource "azapi_resource" "address_space_peering" {
     }
   }
   locks                     = [var.parent_id]
+  response_export_values    = ["properties.peeringSyncLevel"]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -130,6 +133,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
     }
   }
   locks                     = [var.remote_virtual_network_id]
+  response_export_values    = ["properties.peeringSyncLevel"]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -168,6 +172,7 @@ resource "azapi_resource" "subnet_peering" {
     }
   }
   locks                     = [var.parent_id]
+  response_export_values    = ["properties.peeringSyncLevel"]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -202,6 +207,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
     }
   }
   locks                     = [var.remote_virtual_network_id]
+  response_export_values    = ["properties.peeringSyncLevel"]
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -215,4 +221,118 @@ resource "azapi_resource" "reverse_subnet_peering" {
   depends_on = [
     azapi_resource.subnet_peering,
   ]
+}
+
+resource "terraform_data" "this" {
+  triggers_replace = azapi_resource.this[0].output.properties.peeringSyncLevel
+  count            = var.sync_remote_address_space && local.is_full_peering ? 1 : 0
+}
+
+resource "azapi_update_resource" "this" {
+  count = var.sync_remote_address_space && local.is_full_peering ? 1 : 0
+
+  resource_id             = azapi_resource.this[0].id
+  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  update_query_parameters = local.sync_remote_address_space_query_parameter
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.this
+    ]
+  }
+}
+
+resource "terraform_data" "reverse" {
+  triggers_replace = azapi_resource.reverse[0].output.properties.peeringSyncLevel
+  count            = var.sync_remote_address_space && local.is_reverse_full_peering ? 1 : 0
+}
+
+resource "azapi_update_resource" "reverse" {
+  count = var.sync_remote_address_space && local.is_reverse_full_peering ? 1 : 0
+
+  resource_id             = azapi_resource.reverse[0].id
+  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  update_query_parameters = local.sync_remote_address_space_query_parameter
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.reverse
+    ]
+  }
+}
+
+resource "terraform_data" "address_space_peering" {
+  triggers_replace = azapi_resource.address_space_peering[0].output.properties.peeringSyncLevel
+  count            = var.sync_remote_address_space && local.is_address_space_peering ? 1 : 0
+}
+
+resource "azapi_update_resource" "address_space_peering" {
+  count = var.sync_remote_address_space && local.is_address_space_peering ? 1 : 0
+
+  resource_id             = azapi_resource.address_space_peering[0].id
+  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  update_query_parameters = local.sync_remote_address_space_query_parameter
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.address_space_peering
+    ]
+  }
+}
+
+resource "terraform_data" "reverse_address_space_peering" {
+  triggers_replace = azapi_resource.reverse_address_space_peering[0].output.properties.peeringSyncLevel
+  count            = var.sync_remote_address_space && local.is_reverse_address_space_peering ? 1 : 0
+}
+
+resource "azapi_update_resource" "reverse_address_space_peering" {
+  count = var.sync_remote_address_space && local.is_reverse_address_space_peering ? 1 : 0
+
+  resource_id             = azapi_resource.reverse_address_space_peering[0].id
+  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  update_query_parameters = local.sync_remote_address_space_query_parameter
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.reverse_address_space_peering
+    ]
+  }
+}
+
+resource "terraform_data" "subnet_peering" {
+  triggers_replace = azapi_resource.subnet_peering[0].output.properties.peeringSyncLevel
+  count            = var.sync_remote_address_space && local.is_subnet_peering ? 1 : 0
+}
+
+resource "azapi_update_resource" "subnet_peering" {
+  count = var.sync_remote_address_space && local.is_subnet_peering ? 1 : 0
+
+  resource_id             = azapi_resource.subnet_peering[0].id
+  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  update_query_parameters = local.sync_remote_address_space_query_parameter
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.subnet_peering
+    ]
+  }
+}
+
+resource "terraform_data" "reverse_subnet_peering" {
+  triggers_replace = azapi_resource.reverse_subnet_peering[0].output.properties.peeringSyncLevel
+  count            = var.sync_remote_address_space && local.is_reverse_subnet_peering ? 1 : 0
+}
+
+resource "azapi_update_resource" "reverse_subnet_peering" {
+  count = var.sync_remote_address_space && local.is_reverse_subnet_peering ? 1 : 0
+
+  resource_id             = azapi_resource.reverse_subnet_peering[0].id
+  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  update_query_parameters = local.sync_remote_address_space_query_parameter
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.reverse_subnet_peering
+    ]
+  }
 }

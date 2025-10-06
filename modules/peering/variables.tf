@@ -226,6 +226,13 @@ variable "reverse_use_remote_gateways" {
   nullable    = false
 }
 
+variable "sync_remote_address_space" {
+  type        = bool
+  default     = true
+  description = "Synchronize the address space of the remote virtual network with the local virtual network peering if the remote address space is updated. Defaults to `true`"
+  nullable    = false
+}
+
 variable "timeouts" {
   type = object({
     create = optional(string, "30m")

@@ -64,6 +64,18 @@ The following resources are used by this module:
 - [azapi_resource.reverse_subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.address_space_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.reverse](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.reverse_address_space_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.reverse_subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [terraform_data.address_space_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.reverse](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.reverse_address_space_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.reverse_subnet_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.subnet_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.this](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -340,6 +352,14 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_sync_remote_address_space"></a> [sync\_remote\_address\_space](#input\_sync\_remote\_address\_space)
+
+Description: Synchronize the address space of the remote virtual network with the local virtual network peering if the remote address space is updated. Defaults to `true`
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
 Description: Timeouts for the resource operations
@@ -373,6 +393,10 @@ The following outputs are exported:
 
 Description: The name of the peering resource
 
+### <a name="output_peering_sync_status"></a> [peering\_sync\_status](#output\_peering\_sync\_status)
+
+Description: The peering sync status of the peering resource.
+
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: The resource ID of the peering resource.
@@ -380,6 +404,10 @@ Description: The resource ID of the peering resource.
 ### <a name="output_reverse_name"></a> [reverse\_name](#output\_reverse\_name)
 
 Description: The name of the reverse peering resource
+
+### <a name="output_reverse_peering_sync_status"></a> [reverse\_peering\_sync\_status](#output\_reverse\_peering\_sync\_status)
+
+Description: The peering sync status of the reverse peering resource.
 
 ### <a name="output_reverse_resource_id"></a> [reverse\_resource\_id](#output\_reverse\_resource\_id)
 
