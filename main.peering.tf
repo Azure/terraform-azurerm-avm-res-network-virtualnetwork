@@ -29,6 +29,8 @@ module "peering" {
   reverse_remote_peered_address_spaces  = each.value.reverse_remote_peered_address_spaces
   reverse_remote_peered_subnets         = each.value.reverse_remote_peered_subnets
   reverse_use_remote_gateways           = each.value.reverse_use_remote_gateways
+  sync_remote_address_space_enabled     = each.value.sync_remote_address_space_enabled
+  sync_remote_address_space_triggers    = each.value.sync_remote_address_space_triggers
   timeouts                              = each.value.timeouts
   use_remote_gateways                   = each.value.use_remote_gateways
 

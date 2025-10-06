@@ -132,13 +132,15 @@ resource "azurerm_log_analytics_workspace" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source = "../../"
 
   location      = azurerm_resource_group.this.location
   parent_id     = azurerm_resource_group.this.id
-  address_space = ["192.168.0.0/16"]
+  address_space = var.address_space_vnet1
   ddos_protection_plan = {
     id = azurerm_network_ddos_protection_plan.this.id
     # due to resource cost
@@ -154,7 +156,12 @@ module "vnet1" {
   dns_servers = {
     dns_servers = ["8.8.8.8"]
   }
-  enable_vm_protection    = true
+  enable_vm_protection = true
+  encryption = {
+    enabled = true
+    #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
+    enforcement = "AllowUnencrypted"
+  }
   flow_timeout_in_minutes = 30
   name                    = module.naming.virtual_network.name_unique
   role_assignments = {
@@ -211,7 +218,11 @@ module "vnet2" {
   location      = azurerm_resource_group.this.location
   parent_id     = azurerm_resource_group.this.id
   address_space = ["10.0.0.0/27"]
-  name          = "${module.naming.virtual_network.name_unique}2"
+  encryption = {
+    enabled     = true
+    enforcement = "AllowUnencrypted"
+  }
+  name = "${module.naming.virtual_network.name_unique}2"
   peerings = {
     peertovnet1 = {
       name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
@@ -230,6 +241,11 @@ module "vnet2" {
       reverse_do_not_verify_remote_gateways = false
       reverse_enable_only_ipv6_peering      = false
       reverse_use_remote_gateways           = false
+      sync_remote_address_space_enabled     = true
+      sync_remote_address_space_triggers = [
+        var.address_space_vnet1,
+        var.address_space_vnet2
+      ]
     }
   }
 }
