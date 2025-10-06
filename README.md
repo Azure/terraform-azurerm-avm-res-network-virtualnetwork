@@ -48,9 +48,9 @@ This module provides comprehensive IPAM (IP Address Management) support through 
 ### IPAM Regional Support
 
 **⚠️ IPAM NOT supported in these regions:**
-`austriaeast`, `chilecentral`, `chinaeast`, `chinanorth`, `indonesiacentral`, `malaysiawest`, `mexicocentral`, `newzealandnorth`, `spaincentral`
+`chilecentral`, `jioindiawest`, `malaysiawest`, `qatarcentral`, `southafricawest`, `westindia`, `westus3`
 
-For the most up-to-date regional availability, consult the [Azure products by region](https://azure.microsoft.com/explore/global-infrastructure/products-by-region/) page.
+**Note:** IPAM is available in all other regions where Azure Virtual Network Manager is supported. For the most up-to-date regional availability, consult the [Azure products by region](https://azure.microsoft.com/explore/global-infrastructure/products-by-region/) page.
 
 ### IPAM Examples
 - **[ipam\_basic](examples/ipam\_basic/)** - Complete IPAM usage with VNet and multiple subnets

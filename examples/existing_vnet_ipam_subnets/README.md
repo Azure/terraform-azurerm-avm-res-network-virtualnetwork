@@ -137,8 +137,9 @@ provider "azurerm" {
 # }
 
 locals {
-  # Regions that support both Resource Groups AND IPAM
-  # Based on Azure resource group availability and IPAM regional support
+  # Regions where IPAM is officially supported
+  # Source: Microsoft Learn documentation for Azure Virtual Network Manager IPAM
+  # Excludes regions officially listed as unsupported by Microsoft
   regions = [
     "eastus2",
     "westus2",
@@ -160,33 +161,35 @@ locals {
     "italynorth",
     "norwayeast",
     "polandcentral",
-    "switzerlandnorth", # Note: switzerlandwest not supported for resource groups
+    "switzerlandnorth",
     "uaenorth",
     "brazilsouth",
     "israelcentral",
     "northcentralus",
     "australiacentral",
+    "australiacentral2",
     "australiasoutheast",
     "southindia",
     "canadaeast",
+    "germanynorth",
+    "norwaywest",
+    "switzerlandwest",
     "ukwest",
+    "uaecentral",
+    "brazilsoutheast",
+    "mexicocentral",
+    "spaincentral",
     "japaneast",
     "koreasouth",
     "koreacentral",
+    "newzealandnorth",
     "southeastasia",
     "japanwest",
     "westcentralus",
-    "westus3",
-    "qatarcentral",
-    "westindia"
-    # REGIONS NOT INCLUDED:
-    # - "austriaeast", "chilecentral", "chinaeast", "chinanorth" - IPAM not supported
-    # - "indonesiacentral", "malaysiawest", "mexicocentral" - IPAM not supported  
-    # - "newzealandnorth", "spaincentral" - IPAM not supported
-    # - "switzerlandwest" - Not available for resource group creation
-    # - "australiacentral2", "germanynorth", "norwaywest" - Limited resource group availability
-    # - "uaecentral", "brazilsoutheast", "francesouth" - Limited resource group availability
-    # - "belgiumcentral", "southafricawest" - Limited resource group availability
+    "austriaeast"
+    # EXCLUDED per Microsoft documentation (IPAM not supported):
+    # - "chilecentral", "jioindiawest", "malaysiawest"
+    # - "qatarcentral", "southafricawest", "westindia", "westus3"
   ]
 }
 
