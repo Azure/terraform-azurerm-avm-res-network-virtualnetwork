@@ -10,3 +10,9 @@ locals {
   output_reverse_resource_id       = var.create_reverse_peering ? (var.reverse_peer_complete_vnets ? azapi_resource.reverse[0].id : (local.is_reverse_address_space_peering ? azapi_resource.reverse_address_space_peering[0].id : azapi_resource.reverse_subnet_peering[0].id)) : null
   output_reverse_resource_name     = var.create_reverse_peering ? (var.reverse_peer_complete_vnets ? azapi_resource.reverse[0].name : (local.is_reverse_address_space_peering ? azapi_resource.reverse_address_space_peering[0].name : azapi_resource.reverse_subnet_peering[0].name)) : null
 }
+
+locals {
+  sync_remote_address_space_query_parameter = {
+    syncRemoteAddressSpace = ["true"]
+  }
+}

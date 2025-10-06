@@ -64,6 +64,13 @@ The following resources are used by this module:
 - [azapi_resource.reverse_subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.address_space_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.reverse](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.reverse_address_space_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.reverse_subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [terraform_data.sync_remote_address_space_triggers](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -339,6 +346,22 @@ Description: Use remote gateways for the reverse peering
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_sync_remote_address_space_enabled"></a> [sync\_remote\_address\_space\_enabled](#input\_sync\_remote\_address\_space\_enabled)
+
+Description: Synchronize the address space of the remote virtual network with the local virtual network peering if the remote address space is updated. Defaults to `false`
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_sync_remote_address_space_triggers"></a> [sync\_remote\_address\_space\_triggers](#input\_sync\_remote\_address\_space\_triggers)
+
+Description: A value, when changed, will trigger the remote address space to be synced again. This can be used to force a re-sync of the remote address space if needed.
+
+Type: `any`
+
+Default: `null`
 
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 

@@ -139,11 +139,13 @@ resource "azurerm_log_analytics_workspace" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source = "../../"
 
-  address_space = ["192.168.0.0/16"]
+  address_space = var.address_space_vnet1
   location      = azurerm_resource_group.this.location
   parent_id     = azurerm_resource_group.this.id
   ddos_protection_plan = {
@@ -246,6 +248,11 @@ module "vnet2" {
       reverse_do_not_verify_remote_gateways = false
       reverse_enable_only_ipv6_peering      = false
       reverse_use_remote_gateways           = false
+      sync_remote_address_space_enabled     = true
+      sync_remote_address_space_triggers = [
+        var.address_space_vnet1,
+        var.address_space_vnet2
+      ]
     }
   }
 }
@@ -287,7 +294,35 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_address_space_vnet1"></a> [address\_space\_vnet1](#input\_address\_space\_vnet1)
+
+Description: n/a
+
+Type: `list(string)`
+
+Default:
+
+```json
+[
+  "192.168.0.0/16"
+]
+```
+
+### <a name="input_address_space_vnet2"></a> [address\_space\_vnet2](#input\_address\_space\_vnet2)
+
+Description: n/a
+
+Type: `list(string)`
+
+Default:
+
+```json
+[
+  "10.0.0.0/27"
+]
+```
 
 ## Outputs
 
