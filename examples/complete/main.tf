@@ -154,12 +154,7 @@ module "vnet1" {
   dns_servers = {
     dns_servers = ["8.8.8.8"]
   }
-  enable_vm_protection = true
-  encryption = {
-    enabled = true
-    #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
-    enforcement = "AllowUnencrypted"
-  }
+  enable_vm_protection    = true
   flow_timeout_in_minutes = 30
   name                    = module.naming.virtual_network.name_unique
   role_assignments = {
@@ -216,11 +211,7 @@ module "vnet2" {
   location      = azurerm_resource_group.this.location
   parent_id     = azurerm_resource_group.this.id
   address_space = ["10.0.0.0/27"]
-  encryption = {
-    enabled     = true
-    enforcement = "AllowUnencrypted"
-  }
-  name = "${module.naming.virtual_network.name_unique}2"
+  name          = "${module.naming.virtual_network.name_unique}2"
   peerings = {
     peertovnet1 = {
       name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"

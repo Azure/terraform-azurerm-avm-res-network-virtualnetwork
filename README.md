@@ -26,30 +26,24 @@ The module supports:
 - Associating a virtual network gateway with a subnet
 - Assigning delegations to subnets
 - **IPAM pool allocation for virtual network address space**
-- **IPAM pool allocation for individual subnets with conflict prevention**
-- **Time-delayed sequential subnet creation for IPAM scenarios**
+- **IPAM pool allocation for individual subnets**
 - **Mixed IPAM and traditional addressing within the same virtual network**
 
 ## IPAM Support
 
-This module provides comprehensive support for Azure IPAM (IP Address Management) through Azure Virtual Network Manager IPAM pools.
+This module provides comprehensive IPAM (IP Address Management) support through Azure Virtual Network Manager IPAM pools.
 
-### Virtual Network IPAM
-- ✅ **Automatic address space allocation** from IPAM pools
-- ✅ **Multiple pool support** (IPv4 and IPv6)
-- ✅ **Flexible prefix length specification**
+### What IPAM Provides
+- **VNet address space allocation** from centralized IPAM pools
+- **Subnet address allocation** from IPAM pools
+- **Multiple pool support** for IPv4 and IPv6 addressing
+- **Mixed addressing** - combine IPAM and traditional subnets in the same VNet
+- **All standard subnet features** work with IPAM subnets (NSGs, service endpoints, delegations, etc.)
 
-### Subnet IPAM
-- ✅ **Individual subnet allocation** from IPAM pools
-- ✅ **Time-delayed sequential creation** to prevent allocation conflicts (default: 30s delay)
-- ✅ **Mixed addressing** - IPAM and traditional subnets in the same VNet
-- ✅ **Configurable delay timing** between IPAM subnet allocations
-
-### Key Benefits
-- **Conflict Prevention**: Automatic time delays between IPAM subnet allocations prevent overlapping IP ranges
-- **Centralized Management**: Leverage Azure Network Manager for IP address governance
-- **Flexible Deployment**: Mix IPAM-allocated and statically-addressed subnets as needed
-- **Production Ready**: Tested patterns for large-scale deployments
+### Benefits
+- **Centralized IP governance** through Azure Network Manager
+- **Automatic conflict prevention** during address allocation
+- **Simplified address management** across multiple deployments
 
 ### IPAM Regional Support
 
@@ -59,13 +53,9 @@ This module provides comprehensive support for Azure IPAM (IP Address Management
 For the most up-to-date regional availability, consult the [Azure products by region](https://azure.microsoft.com/explore/global-infrastructure/products-by-region/) page.
 
 ### IPAM Examples
-- **[ipam\_basic](examples/ipam\_basic/)** - Getting started with basic VNet IPAM
-- **[ipam\_full](examples/ipam\_full/)** - Complete IPAM deployment with all features
-- **[ipam\_vnet\_only](examples/ipam\_vnet\_only/)** - IPAM for VNet address space with traditional subnets
-- **[ipam\_subnets](examples/ipam\_subnets/)** - Time-delayed IPAM subnet creation
-- **[existing\_vnet\_ipam\_subnets](examples/existing\_vnet\_ipam\_subnets/)** - Adding IPAM subnets to existing VNets managed by Azure Virtual Network Manager
-
-**Important:** The module automatically handles IPAM allocation conflicts through time-delayed sequential creation. Subnets using IPAM pools are created with configurable delays (default 30 seconds) to ensure reliable deployments.
+- **[ipam\_basic](examples/ipam\_basic/)** - Complete IPAM usage with VNet and multiple subnets
+- **[existing\_vnet\_ipam\_subnets](examples/existing\_vnet\_ipam\_subnets/)** - Adding IPAM subnets to existing VNet managed by IPAM
+- **[ipam\_vnet\_only](examples/ipam\_vnet\_only/)** - IPAM VNet creation without subnets
 
 ## Prerequisites
 
@@ -104,9 +94,9 @@ module "avm-res-network-virtualnetwork" {
 }
 ```
 
-### Example - IPAM Virtual Network with Subnets
+### Example - IPAM Virtual Network with Multiple Subnets
 
-This example demonstrates IPAM usage with both VNet and subnet allocation from IPAM pools.
+This example demonstrates IPAM usage with both VNet and subnet address allocation from IPAM pools.
 
 ```terraform
 module "avm-res-network-virtualnetwork" {
@@ -122,7 +112,7 @@ module "avm-res-network-virtualnetwork" {
     prefix_length = 24
   }]
 
-  # Subnets allocated from IPAM pool with automatic conflict prevention
+  # Multiple subnets allocated from IPAM pool
   subnets = {
     "web_subnet" = {
       name = "subnet-web"
@@ -136,6 +126,13 @@ module "avm-res-network-virtualnetwork" {
       ipam_pools = [{
         pool_id       = azapi_resource.ipam_pool.id
         prefix_length = 26
+      }]
+    }
+    "data_subnet" = {
+      name = "subnet-data"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 27
       }]
     }
   }
@@ -162,9 +159,9 @@ module "avm-res-network-subnet" {
 
 - **"IPAM subnet creation failed"**: Ensure parent VNet was created with IPAM pools for its address space
 - **"Region not supported"**: Check the [IPAM Regional Support](#ipam-regional-support) section above
-- **"Subnet overlap errors"**: Module automatically prevents this with time delays between IPAM subnet creation
 - **"Network Manager not found"**: Ensure Azure Virtual Network Manager exists before creating IPAM pools
-- **"Deployment timeout"**: For many IPAM subnets, consider increasing `ipam_subnet_allocation_delay` parameter
+- **"Subnet overlap errors"**: Module uses retry logic to handle allocation conflicts automatically
+- **"Pool exhausted"**: Check that your IPAM pool has sufficient available address space for the requested subnets
 ```
 ```
 
@@ -183,20 +180,16 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
-- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.13)
-
 ## Resources
 
 The following resources are used by this module:
 
 - [azapi_resource.vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.vnet_level](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
-- [time_sleep.ipam_subnet_delay](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
@@ -225,11 +218,11 @@ The following input variables are optional (have default values):
 ### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
 
 Description:   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.  
-  Leave this as an empty set if you want to use IPAM for address allocation.
+  Either address\_space or ipam\_pools must be specified, but not both.
 
 Type: `set(string)`
 
-Default: `[]`
+Default: `null`
 
 ### <a name="input_bgp_community"></a> [bgp\_community](#input\_bgp\_community)
 
@@ -330,7 +323,9 @@ Default: `false`
 Description: (Optional) Specifies the encryption settings for the virtual network.
 
 - `enabled`: Specifies whether encryption is enabled for the virtual network.
-- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `Enabled` and `Disabled`.
+- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `AllowUnencrypted` and `DropUnencrypted`.
+
+Note: When using `DropUnencrypted` enforcement, the `AllowDropUnecryptedVnet` subscription feature must be registered first. See the `vnet-encryption-setup` example for details.
 
 Type:
 
@@ -386,16 +381,6 @@ list(object({
 ```
 
 Default: `null`
-
-### <a name="input_ipam_subnet_allocation_delay"></a> [ipam\_subnet\_allocation\_delay](#input\_ipam\_subnet\_allocation\_delay)
-
-Description: (Optional) Delay in seconds between IPAM subnet allocations to prevent conflicts.  
-When multiple subnets use IPAM pools, they are created sequentially with this delay to avoid allocation overlaps.  
-Set to 0 to disable delays (not recommended for IPAM subnets).
-
-Type: `number`
-
-Default: `30`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
@@ -582,11 +567,8 @@ Default: `{}`
 
 Description: (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes`, `prefix_length` (with `calculate_from_vnet`), or `ipam_pools` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes`, `prefix_length` (with `calculate_from_vnet`), or `ipam_pools` must be specified.
- - `prefix_length` - (Optional) The CIDR prefix length (e.g., 24 for /24, 25 for /25). Used for calculated addressing - see module documentation for usage patterns.
- - `calculate_from_vnet` - (Optional) When true, calculate subnet address from the parent VNet's address space using `prefix_length`. Defaults to false.
- - `subnet_index` - (Optional) Index for subnet calculation when `calculate_from_vnet` is true. Used to ensure non-overlapping subnet allocations from the same VNet address space. Defaults to 0.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
  - `ipam_pools` - (Optional) IPAM pools to allocate address space from. When specified, the subnet will request address space from these pools. Each pool configuration supports:
    - `pool_id`: Resource ID of the IPAM pool to allocate from
    - `prefix_length`: The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
@@ -652,12 +634,9 @@ Type:
 
 ```hcl
 map(object({
-    address_prefix      = optional(string)
-    address_prefixes    = optional(list(string))
-    name                = string
-    prefix_length       = optional(number)
-    calculate_from_vnet = optional(bool, false)
-    subnet_index        = optional(number, 0)
+    address_prefix   = optional(string)
+    address_prefixes = optional(list(string))
+    name             = string
     ipam_pools = optional(list(object({
       pool_id         = string
       prefix_length   = optional(number)
@@ -744,6 +723,10 @@ Default: `{}`
 ## Outputs
 
 The following outputs are exported:
+
+### <a name="output_address_spaces"></a> [address\_spaces](#output\_address\_spaces)
+
+Description: The address spaces of the virtual network.
 
 ### <a name="output_name"></a> [name](#output\_name)
 

@@ -24,30 +24,24 @@ The module supports:
 - Associating a virtual network gateway with a subnet
 - Assigning delegations to subnets
 - **IPAM pool allocation for virtual network address space**
-- **IPAM pool allocation for individual subnets with conflict prevention**
-- **Time-delayed sequential subnet creation for IPAM scenarios**
+- **IPAM pool allocation for individual subnets**
 - **Mixed IPAM and traditional addressing within the same virtual network**
 
 ## IPAM Support
 
-This module provides comprehensive support for Azure IPAM (IP Address Management) through Azure Virtual Network Manager IPAM pools.
+This module provides comprehensive IPAM (IP Address Management) support through Azure Virtual Network Manager IPAM pools.
 
-### Virtual Network IPAM
-- ✅ **Automatic address space allocation** from IPAM pools
-- ✅ **Multiple pool support** (IPv4 and IPv6)
-- ✅ **Flexible prefix length specification**
+### What IPAM Provides
+- **VNet address space allocation** from centralized IPAM pools
+- **Subnet address allocation** from IPAM pools
+- **Multiple pool support** for IPv4 and IPv6 addressing
+- **Mixed addressing** - combine IPAM and traditional subnets in the same VNet
+- **All standard subnet features** work with IPAM subnets (NSGs, service endpoints, delegations, etc.)
 
-### Subnet IPAM
-- ✅ **Individual subnet allocation** from IPAM pools
-- ✅ **Time-delayed sequential creation** to prevent allocation conflicts (default: 30s delay)
-- ✅ **Mixed addressing** - IPAM and traditional subnets in the same VNet
-- ✅ **Configurable delay timing** between IPAM subnet allocations
-
-### Key Benefits
-- **Conflict Prevention**: Automatic time delays between IPAM subnet allocations prevent overlapping IP ranges
-- **Centralized Management**: Leverage Azure Network Manager for IP address governance
-- **Flexible Deployment**: Mix IPAM-allocated and statically-addressed subnets as needed
-- **Production Ready**: Tested patterns for large-scale deployments
+### Benefits
+- **Centralized IP governance** through Azure Network Manager
+- **Automatic conflict prevention** during address allocation
+- **Simplified address management** across multiple deployments
 
 ### IPAM Regional Support
 
@@ -57,13 +51,9 @@ This module provides comprehensive support for Azure IPAM (IP Address Management
 For the most up-to-date regional availability, consult the [Azure products by region](https://azure.microsoft.com/explore/global-infrastructure/products-by-region/) page.
 
 ### IPAM Examples
-- **[ipam_basic](examples/ipam_basic/)** - Getting started with basic VNet IPAM
-- **[ipam_full](examples/ipam_full/)** - Complete IPAM deployment with all features
-- **[ipam_vnet_only](examples/ipam_vnet_only/)** - IPAM for VNet address space with traditional subnets
-- **[ipam_subnets](examples/ipam_subnets/)** - Time-delayed IPAM subnet creation
-- **[existing_vnet_ipam_subnets](examples/existing_vnet_ipam_subnets/)** - Adding IPAM subnets to existing VNets managed by Azure Virtual Network Manager
-
-**Important:** The module automatically handles IPAM allocation conflicts through time-delayed sequential creation. Subnets using IPAM pools are created with configurable delays (default 30 seconds) to ensure reliable deployments.
+- **[ipam_basic](examples/ipam_basic/)** - Complete IPAM usage with VNet and multiple subnets
+- **[existing_vnet_ipam_subnets](examples/existing_vnet_ipam_subnets/)** - Adding IPAM subnets to existing VNet managed by IPAM
+- **[ipam_vnet_only](examples/ipam_vnet_only/)** - IPAM VNet creation without subnets
 
 ## Prerequisites
 
@@ -102,9 +92,9 @@ module "avm-res-network-virtualnetwork" {
 }
 ```
 
-### Example - IPAM Virtual Network with Subnets
+### Example - IPAM Virtual Network with Multiple Subnets
 
-This example demonstrates IPAM usage with both VNet and subnet allocation from IPAM pools.
+This example demonstrates IPAM usage with both VNet and subnet address allocation from IPAM pools.
 
 ```terraform
 module "avm-res-network-virtualnetwork" {
@@ -120,7 +110,7 @@ module "avm-res-network-virtualnetwork" {
     prefix_length = 24
   }]
 
-  # Subnets allocated from IPAM pool with automatic conflict prevention
+  # Multiple subnets allocated from IPAM pool
   subnets = {
     "web_subnet" = {
       name = "subnet-web"
@@ -134,6 +124,13 @@ module "avm-res-network-virtualnetwork" {
       ipam_pools = [{
         pool_id       = azapi_resource.ipam_pool.id
         prefix_length = 26
+      }]
+    }
+    "data_subnet" = {
+      name = "subnet-data"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 27
       }]
     }
   }
@@ -160,7 +157,7 @@ module "avm-res-network-subnet" {
 
 - **"IPAM subnet creation failed"**: Ensure parent VNet was created with IPAM pools for its address space
 - **"Region not supported"**: Check the [IPAM Regional Support](#ipam-regional-support) section above
-- **"Subnet overlap errors"**: Module automatically prevents this with time delays between IPAM subnet creation
 - **"Network Manager not found"**: Ensure Azure Virtual Network Manager exists before creating IPAM pools
-- **"Deployment timeout"**: For many IPAM subnets, consider increasing `ipam_subnet_allocation_delay` parameter
+- **"Subnet overlap errors"**: Module uses retry logic to handle allocation conflicts automatically
+- **"Pool exhausted"**: Check that your IPAM pool has sufficient available address space for the requested subnets
 ```
