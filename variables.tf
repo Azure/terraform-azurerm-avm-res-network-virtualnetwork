@@ -20,16 +20,15 @@ DESCRIPTION
 
 variable "address_space" {
   type        = set(string)
-  default     = []
+  default     = null
   description = <<DESCRIPTION
   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
-  Leave this as an empty set if you want to use IPAM for address allocation.
+  Either address_space or ipam_pools must be specified, but not both.
   DESCRIPTION
-  nullable    = false
 
   validation {
-    condition     = var.ipam_pools == null ? length(var.address_space) > 0 : length(var.address_space) == 0
-    error_message = "Address space must contain at least one element if ipam_pools is not set."
+    condition     = (var.address_space != null && var.ipam_pools == null) || (var.address_space == null && var.ipam_pools != null)
+    error_message = "Either address_space or ipam_pools must be specified, but not both."
   }
 }
 
@@ -141,7 +140,9 @@ variable "encryption" {
 (Optional) Specifies the encryption settings for the virtual network.
 
 - `enabled`: Specifies whether encryption is enabled for the virtual network.
-- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `Enabled` and `Disabled`.
+- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `AllowUnencrypted` and `DropUnencrypted`.
+
+Note: When using `DropUnencrypted` enforcement, the `AllowDropUnecryptedVnet` subscription feature must be registered first. See the `vnet-encryption-setup` example for details.
 DESCRIPTION
 
   validation {
@@ -219,22 +220,6 @@ DESCRIPTION
       for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
     ]) <= 1 || var.ipam_pools == null
     error_message = "Only one IPv4 pool can be specified."
-  }
-}
-
-variable "ipam_subnet_allocation_delay" {
-  type        = number
-  default     = 30
-  description = <<DESCRIPTION
-(Optional) Delay in seconds between IPAM subnet allocations to prevent conflicts.
-When multiple subnets use IPAM pools, they are created sequentially with this delay to avoid allocation overlaps.
-Set to 0 to disable delays (not recommended for IPAM subnets).
-DESCRIPTION
-  nullable    = false
-
-  validation {
-    condition     = var.ipam_subnet_allocation_delay >= 0 && var.ipam_subnet_allocation_delay <= 300
-    error_message = "ipam_subnet_allocation_delay must be between 0 and 300 seconds."
   }
 }
 
@@ -411,12 +396,9 @@ variable "role_assignments" {
 
 variable "subnets" {
   type = map(object({
-    address_prefix      = optional(string)
-    address_prefixes    = optional(list(string))
-    name                = string
-    prefix_length       = optional(number)
-    calculate_from_vnet = optional(bool, false)
-    subnet_index        = optional(number, 0)
+    address_prefix   = optional(string)
+    address_prefixes = optional(list(string))
+    name             = string
     ipam_pools = optional(list(object({
       pool_id         = string
       prefix_length   = optional(number)
@@ -475,11 +457,8 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes`, `prefix_length` (with `calculate_from_vnet`), or `ipam_pools` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes`, `prefix_length` (with `calculate_from_vnet`), or `ipam_pools` must be specified.
- - `prefix_length` - (Optional) The CIDR prefix length (e.g., 24 for /24, 25 for /25). Used for calculated addressing - see module documentation for usage patterns.
- - `calculate_from_vnet` - (Optional) When true, calculate subnet address from the parent VNet's address space using `prefix_length`. Defaults to false.
- - `subnet_index` - (Optional) Index for subnet calculation when `calculate_from_vnet` is true. Used to ensure non-overlapping subnet allocations from the same VNet address space. Defaults to 0.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
  - `ipam_pools` - (Optional) IPAM pools to allocate address space from. When specified, the subnet will request address space from these pools. Each pool configuration supports:
    - `pool_id`: Resource ID of the IPAM pool to allocate from
    - `prefix_length`: The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
@@ -549,33 +528,23 @@ DESCRIPTION
       # IPAM subnets need ipam_pools configured
       subnet.ipam_pools != null ||
       # Non-IPAM subnets need one of these address configurations
-      subnet.address_prefix != null || subnet.address_prefixes != null || subnet.prefix_length != null
+      subnet.address_prefix != null || subnet.address_prefixes != null
     ])
-    error_message = "Each subnet must specify one of: ipam_pools (for IPAM allocation), address_prefix, address_prefixes, or prefix_length (for calculated addressing)."
-  }
-  validation {
-    condition = alltrue([
-      for _, subnet in var.subnets :
-      subnet.prefix_length == null ||
-      (subnet.prefix_length >= 8 && subnet.prefix_length <= 30)
-    ])
-    error_message = "prefix_length must be between 8 and 30 for IPv4 subnets."
+    error_message = "Each subnet must specify one of: ipam_pools (for IPAM allocation), address_prefix, or address_prefixes."
   }
   validation {
     condition = alltrue([
       for _, subnet in var.subnets :
       # For IPAM subnets, only ipam_pools should be specified (not static addresses)
       subnet.ipam_pools != null ? (
-        subnet.address_prefix == null && subnet.address_prefixes == null && subnet.prefix_length == null
+        subnet.address_prefix == null && subnet.address_prefixes == null
         ) : (
         # For non-IPAM subnets, exactly one address method should be specified
-        length([
-          for method in [subnet.address_prefix, subnet.address_prefixes, subnet.prefix_length] :
-          method if method != null
-        ]) == 1
+        (subnet.address_prefix != null && subnet.address_prefixes == null) ||
+        (subnet.address_prefix == null && subnet.address_prefixes != null)
       )
     ])
-    error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix, address_prefixes, or prefix_length."
+    error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix or address_prefixes."
   }
   validation {
     condition = alltrue([

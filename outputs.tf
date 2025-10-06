@@ -1,3 +1,8 @@
+output "address_spaces" {
+  description = "The address spaces of the virtual network."
+  value       = var.ipam_pools != null ? azapi_resource.vnet.output.properties.addressSpace.addressPrefixes : var.address_space
+}
+
 output "name" {
   description = "The resource name of the virtual network."
   value       = azapi_resource.vnet.name
