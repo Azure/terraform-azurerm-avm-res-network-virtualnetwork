@@ -195,6 +195,8 @@ provider "azurerm" {
 # }
 
 locals {
+  # Regions that support both Resource Groups AND IPAM
+  # Based on Azure resource group availability and IPAM regional support
   regions = [
     "eastus2",
     "westus2",
@@ -216,44 +218,32 @@ locals {
     "italynorth",
     "norwayeast",
     "polandcentral",
-    "switzerlandnorth",
+    "switzerlandnorth", # Note: switzerlandwest not supported for resource groups
     "uaenorth",
     "brazilsouth",
     "israelcentral",
     "northcentralus",
     "australiacentral",
-    "australiacentral2",
     "australiasoutheast",
     "southindia",
     "canadaeast",
-    "germanynorth",
-    "norwaywest",
-    "switzerlandwest",
     "ukwest",
-    "uaecentral",
-    "brazilsoutheast",
-    "mexicocentral",
-    "spaincentral",
     "japaneast",
     "koreasouth",
     "koreacentral",
-    "newzealandnorth",
     "southeastasia",
     "japanwest",
-    "westcentralus"
-    # IPAM NOT supported in these regions:
-    # "austriaeast",      # Austria East
-    # "belgiumcentral",   # Belgium Central
-    # "chilecentral",     # Chile Central
-    # "chinaeast",        # China East
-    # "chinanorth",       # China North
-    # "francesouth",      # France South (use francecentral)
-    # "indonesiacentral", # Indonesia Central
-    # "malaysiawest",     # Malaysia West
-    # "qatarcentral",     # Qatar Central
-    # "southafricawest",  # South Africa West (use southafricanorth)
-    # "westindia",        # West India
-    # "westus3"           # West US 3 (Network Manager supported, IPAM pools not)
+    "westcentralus",
+    "westus3",
+    "qatarcentral",
+    "westindia"
+    # REGIONS NOT INCLUDED:
+    # - "austriaeast", "chilecentral", "chinaeast", "chinanorth" - IPAM not supported
+    # - "indonesiacentral", "malaysiawest", "mexicocentral" - IPAM not supported  
+    # - "newzealandnorth", "spaincentral" - IPAM not supported
+    # - "switzerlandwest" - Not available for resource group creation
+    # - "australiacentral2", "germanynorth", "norwaywest" - Limited resource group availability
+    # - "uaecentral", "brazilsoutheast" - Limited resource group availability
   ]
 }
 

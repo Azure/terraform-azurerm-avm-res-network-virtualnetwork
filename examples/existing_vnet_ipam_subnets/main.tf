@@ -45,6 +45,8 @@ provider "azurerm" {
 # }
 
 locals {
+  # Regions that support both Resource Groups AND IPAM
+  # Based on Azure resource group availability and IPAM regional support
   regions = [
     "eastus2",
     "westus2",
@@ -66,44 +68,33 @@ locals {
     "italynorth",
     "norwayeast",
     "polandcentral",
-    "switzerlandnorth",
+    "switzerlandnorth", # Note: switzerlandwest not supported for resource groups
     "uaenorth",
     "brazilsouth",
     "israelcentral",
     "northcentralus",
     "australiacentral",
-    "australiacentral2",
     "australiasoutheast",
     "southindia",
     "canadaeast",
-    "francesouth",
-    "germanynorth",
-    "norwaywest",
-    "switzerlandwest",
     "ukwest",
-    "uaecentral",
-    "brazilsoutheast",
     "japaneast",
     "koreasouth",
     "koreacentral",
     "southeastasia",
     "japanwest",
     "westcentralus",
-    "belgiumcentral",
+    "westus3",
     "qatarcentral",
-    "southafricawest",
-    "westindia",
-    "westus3"
-    # IPAM NOT supported in these regions:
-    # "austriaeast",      # Austria East
-    # "chilecentral",     # Chile Central
-    # "chinaeast",        # China East
-    # "chinanorth",       # China North
-    # "indonesiacentral", # Indonesia Central
-    # "malaysiawest",     # Malaysia West
-    # "mexicocentral",    # Mexico Central
-    # "newzealandnorth",  # New Zealand North
-    # "spaincentral"      # Spain Central
+    "westindia"
+    # REGIONS NOT INCLUDED:
+    # - "austriaeast", "chilecentral", "chinaeast", "chinanorth" - IPAM not supported
+    # - "indonesiacentral", "malaysiawest", "mexicocentral" - IPAM not supported  
+    # - "newzealandnorth", "spaincentral" - IPAM not supported
+    # - "switzerlandwest" - Not available for resource group creation
+    # - "australiacentral2", "germanynorth", "norwaywest" - Limited resource group availability
+    # - "uaecentral", "brazilsoutheast", "francesouth" - Limited resource group availability
+    # - "belgiumcentral", "southafricawest" - Limited resource group availability
   ]
 }
 
