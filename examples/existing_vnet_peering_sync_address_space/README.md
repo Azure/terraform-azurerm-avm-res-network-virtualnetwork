@@ -57,7 +57,7 @@ resource "azurerm_virtual_network" "local" {
   location            = azurerm_resource_group.this.location
   name                = "${module.naming.virtual_network.name_unique}-1"
   resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"] # Original single address space
+  address_space       = ["10.0.0.0/16", "10.2.0.0/16"] # Update to ["10.0.0.0/26", "10.2.0.0/16"] to test the resyncing of the remote address space
 }
 
 resource "azurerm_virtual_network" "remote" {
@@ -82,8 +82,11 @@ module "peering" {
   reverse_allow_virtual_network_access = true
   reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-remote-to-local"
   reverse_use_remote_gateways          = false
-  sync_remote_address_space            = true
-  use_remote_gateways                  = false
+  sync_remote_address_space_enabled    = true
+  sync_remote_address_space_triggers = [
+    azurerm_virtual_network.local.address_space
+  ]
+  use_remote_gateways = false
 }
 
 ```

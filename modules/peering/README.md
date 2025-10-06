@@ -70,12 +70,7 @@ The following resources are used by this module:
 - [azapi_update_resource.reverse_subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azapi_update_resource.subnet_peering](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azapi_update_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
-- [terraform_data.address_space_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.reverse](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.reverse_address_space_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.reverse_subnet_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.subnet_peering](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
-- [terraform_data.this](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [terraform_data.sync_remote_address_space_triggers](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -352,13 +347,21 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_sync_remote_address_space"></a> [sync\_remote\_address\_space](#input\_sync\_remote\_address\_space)
+### <a name="input_sync_remote_address_space_enabled"></a> [sync\_remote\_address\_space\_enabled](#input\_sync\_remote\_address\_space\_enabled)
 
-Description: Synchronize the address space of the remote virtual network with the local virtual network peering if the remote address space is updated. Defaults to `true`
+Description: Synchronize the address space of the remote virtual network with the local virtual network peering if the remote address space is updated. Defaults to `false`
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
+
+### <a name="input_sync_remote_address_space_triggers"></a> [sync\_remote\_address\_space\_triggers](#input\_sync\_remote\_address\_space\_triggers)
+
+Description: A value, when changed, will trigger the remote address space to be synced again. This can be used to force a re-sync of the remote address space if needed.
+
+Type: `any`
+
+Default: `null`
 
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
@@ -393,10 +396,6 @@ The following outputs are exported:
 
 Description: The name of the peering resource
 
-### <a name="output_peering_sync_status"></a> [peering\_sync\_status](#output\_peering\_sync\_status)
-
-Description: The peering sync status of the peering resource.
-
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: The resource ID of the peering resource.
@@ -404,10 +403,6 @@ Description: The resource ID of the peering resource.
 ### <a name="output_reverse_name"></a> [reverse\_name](#output\_reverse\_name)
 
 Description: The name of the reverse peering resource
-
-### <a name="output_reverse_peering_sync_status"></a> [reverse\_peering\_sync\_status](#output\_reverse\_peering\_sync\_status)
-
-Description: The peering sync status of the reverse peering resource.
 
 ### <a name="output_reverse_resource_id"></a> [reverse\_resource\_id](#output\_reverse\_resource\_id)
 
