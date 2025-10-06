@@ -2,17 +2,7 @@ locals {
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }
 
-locals {
-  # Define address options for the subnet - use calculated or provided addresses
-  address_options = {
-    addressPrefixes = {
-      addressPrefixes = local.final_address_prefixes
-    }
-  }
-  # Calculate the final address prefix - prioritizing address_prefix over address_prefixes
-  final_address_prefix   = var.address_prefix
-  final_address_prefixes = var.address_prefixes
-}
+
 
 locals {
   # Determine which service endpoints to use, preferring service_endpoints_with_location

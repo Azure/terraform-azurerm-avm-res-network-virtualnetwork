@@ -150,12 +150,20 @@ DESCRIPTION
 
 variable "retry" {
   type = object({
-    error_message_regex  = optional(list(string), ["AnotherOperationInProgress", "ReferencedResourceNotProvisioned", "OperationNotAllowed"])
-    interval_seconds     = optional(number, 10)
-    max_interval_seconds = optional(number, 180)
+    error_message_regex = optional(list(string), [
+      "AnotherOperationInProgress",
+      "ReferencedResourceNotProvisioned",
+      "OperationNotAllowed",
+      "NetcfgSubnetRangesOverlap",
+      "BadRequest.*overlap",
+      "Conflict.*subnet.*range",
+      "subnet.*address.*conflict"
+    ])
+    interval_seconds     = optional(number, 15)
+    max_interval_seconds = optional(number, 300)
   })
   default     = {}
-  description = "Retry configuration for the resource operations"
+  description = "Retry configuration for the resource operations, includes IPAM-specific error patterns"
 }
 
 variable "role_assignments" {

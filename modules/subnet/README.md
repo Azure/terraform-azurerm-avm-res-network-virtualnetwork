@@ -135,7 +135,6 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_resource.ipam_subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_role_assignment.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 
@@ -294,15 +293,23 @@ Default: `true`
 
 ### <a name="input_retry"></a> [retry](#input\_retry)
 
-Description: Retry configuration for the resource operations
+Description: Retry configuration for the resource operations, includes IPAM-specific error patterns
 
 Type:
 
 ```hcl
 object({
-    error_message_regex  = optional(list(string), ["AnotherOperationInProgress", "ReferencedResourceNotProvisioned", "OperationNotAllowed"])
-    interval_seconds     = optional(number, 10)
-    max_interval_seconds = optional(number, 180)
+    error_message_regex = optional(list(string), [
+      "AnotherOperationInProgress",
+      "ReferencedResourceNotProvisioned",
+      "OperationNotAllowed",
+      "NetcfgSubnetRangesOverlap",
+      "BadRequest.*overlap",
+      "Conflict.*subnet.*range",
+      "subnet.*address.*conflict"
+    ])
+    interval_seconds     = optional(number, 15)
+    max_interval_seconds = optional(number, 300)
   })
 ```
 
