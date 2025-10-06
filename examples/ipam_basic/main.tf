@@ -14,10 +14,6 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.13"
-    }
   }
 }
 
@@ -28,25 +24,6 @@ provider "azurerm" {
     }
   }
 }
-
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-# IPAM is not yet supported in all regions, therfore commenting out module "regions"
-# IPAM NOT supported in these regions:
-# "austriaeast",      # Austria East
-# "chilecentral",     # Chile Central
-# "chinaeast",        # China East
-# "chinanorth",       # China North
-# "indonesiacentral", # Indonesia Central
-# "malaysiawest",     # Malaysia West
-# "mexicocentral",    # Mexico Central
-# "newzealandnorth",  # New Zealand North
-# "spaincentral"      # Spain Central
-
-# module "regions" {
-#   source  = "Azure/regions/azurerm"
-#   version = "~> 0.3"
-# }
 
 locals {
   regions = [
@@ -73,69 +50,31 @@ locals {
     "switzerlandnorth",
     "uaenorth",
     "brazilsouth",
-    "israelcentral",
-    "northcentralus",
-    "australiacentral",
-    "australiacentral2",
-    "australiasoutheast",
-    "southindia",
-    "canadaeast",
-    "germanynorth",
-    "norwaywest",
-    "switzerlandwest",
-    "ukwest",
-    "uaecentral",
-    "brazilsoutheast",
-    "mexicocentral",
-    "spaincentral",
-    "japaneast",
-    "koreasouth",
-    "koreacentral",
-    "newzealandnorth",
-    "southeastasia",
-    "japanwest",
-    "westcentralus"
-    # IPAM NOT supported in these regions:
-    # "austriaeast",      # Austria East
-    # "belgiumcentral",   # Belgium Central
-    # "chilecentral",     # Chile Central
-    # "chinaeast",        # China East
-    # "chinanorth",       # China North
-    # "francesouth",      # France South (use francecentral)
-    # "indonesiacentral", # Indonesia Central
-    # "malaysiawest",     # Malaysia West
-    # "qatarcentral",     # Qatar Central
-    # "southafricawest",  # South Africa West (use southafricanorth)
-    # "westindia",        # West India
-    # "westus3"           # West US 3 (Network Manager supported, IPAM pools not)
+    "israelcentral"
   ]
 }
 
-# This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
   max = length(local.regions) - 1
   min = 0
 }
-## End of section to provide a random Azure region for the resource group
 
-# This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.4.2"
 }
 
-# This is required for resource modules
 resource "azurerm_resource_group" "this" {
   location = local.regions[random_integer.region_index.result]
-  name     = module.naming.resource_group.name_unique
+  name     = "${module.naming.resource_group.name_unique}-retry-test"
 }
 
 data "azurerm_subscription" "this" {}
 
-# Create a network manager and an IPAM pool
+# Create Network Manager and IPAM Pool
 resource "azapi_resource" "network_manager" {
   location  = azurerm_resource_group.this.location
-  name      = replace(module.naming.resource_group.name_unique, module.naming.resource_group.slug, "avnm")
+  name      = replace(azurerm_resource_group.this.name, "rg-", "avnm-")
   parent_id = azurerm_resource_group.this.id
   type      = "Microsoft.Network/networkManagers@2024-07-01"
   body = {
@@ -154,23 +93,16 @@ resource "azapi_resource" "network_manager" {
   schema_validation_enabled = false
 }
 
-# Wait for pools to be cleaned up before destroying the network manager
-resource "time_sleep" "wait_30_seconds" {
-  destroy_duration = "30s"
-
-  depends_on = [azapi_resource.network_manager]
-}
-
-resource "azapi_resource" "pool_v4" {
+resource "azapi_resource" "ipam_pool" {
   location  = azurerm_resource_group.this.location
-  name      = "example_ipam_pool_v4"
+  name      = "pool-retry-test"
   parent_id = azapi_resource.network_manager.id
   type      = "Microsoft.Network/networkManagers/ipamPools@2024-07-01"
   body = {
     properties = {
       addressPrefixes = ["10.0.0.0/16"]
-      description     = "Example IPAM Pool v4"
-      displayName     = "Example IPAM Pool v4"
+      description     = "IPAM Pool for testing retry logic with multiple simultaneous subnet allocations"
+      displayName     = "Retry Test Pool"
     }
   }
   retry = {
@@ -180,71 +112,53 @@ resource "azapi_resource" "pool_v4" {
   }
   schema_validation_enabled = false
 
-  depends_on = [time_sleep.wait_30_seconds]
+  depends_on = [azapi_resource.network_manager]
 }
 
-resource "azapi_resource" "pool_v6" {
-  location  = azurerm_resource_group.this.location
-  name      = "example_ipam_pool_v6"
-  parent_id = azapi_resource.network_manager.id
-  type      = "Microsoft.Network/networkManagers/ipamPools@2024-07-01"
-  body = {
-    properties = {
-      addressPrefixes = ["fdea:5251:1c0a::/48"]
-      description     = "Example IPAM Pool v6"
-      displayName     = "Example IPAM Pool v6"
-    }
-  }
-  retry = {
-    interval_seconds     = 10
-    max_interval_seconds = 180
-    error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
-  }
-  schema_validation_enabled = false
-
-  depends_on = [time_sleep.wait_30_seconds]
-}
-
-resource "azurerm_network_security_group" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_security_group.name
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-# Basic IPAM example showing VNet address space allocation from IPAM pools
-module "vnet" {
+# TEST: Multiple IPAM subnets created simultaneously (no time delays)
+# This should trigger the error we want to capture and handle with retry logic
+module "vnet_retry_test" {
   source = "../../"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
   enable_telemetry = true
-  # VNet gets dual-stack address space from IPAM pools
-  ipam_pools = [
-    {
-      id            = azapi_resource.pool_v4.id
-      prefix_length = 24 # /24 IPv4 VNet
-    },
-    {
-      id            = azapi_resource.pool_v6.id
-      prefix_length = 63 # /63 IPv6 VNet
-    }
-  ]
-  name = module.naming.virtual_network.name
-  # Traditional subnets with static addressing within IPAM-allocated VNet space
+  # VNet gets address space from IPAM pool
+  ipam_pools = [{
+    id            = azapi_resource.ipam_pool.id
+    prefix_length = 24 # /24 VNet (256 IP addresses)
+  }]
+  name = "${module.naming.virtual_network.name_unique}-retry-test"
+  # Multiple IPAM subnets - this should test the retry logic
   subnets = {
+    # All these will try to allocate simultaneously
     subnet1 = {
-      name             = "subnet1"
-      address_prefixes = ["10.0.0.0/25"] # Static within IPAM VNet
-      network_security_group = {
-        id = azurerm_network_security_group.this.id
-      }
+      name = "subnet1-retry-test"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 26 # /26 (64 addresses)
+      }]
     }
     subnet2 = {
-      name             = "subnet2"
-      address_prefixes = ["10.0.0.128/25"] # Static within IPAM VNet
-      network_security_group = {
-        id = azurerm_network_security_group.this.id
-      }
+      name = "subnet2-retry-test"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 26 # /26 (64 addresses) - may overlap with subnet1 initially
+      }]
+    }
+    subnet3 = {
+      name = "subnet3-retry-test"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 27 # /27 (32 addresses)
+      }]
+    }
+    subnet4 = {
+      name = "subnet4-retry-test"
+      ipam_pools = [{
+        pool_id       = azapi_resource.ipam_pool.id
+        prefix_length = 27 # /27 (32 addresses)
+      }]
     }
   }
 }

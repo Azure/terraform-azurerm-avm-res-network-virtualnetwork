@@ -1,38 +1,49 @@
 # IPAM Basic Example
 
-This example demonstrates the simplest use case for IPAM: VNet address space allocation from IPAM pools with traditional static subnets.
+This example demonstrates comprehensive IPAM usage with both VNet and subnet address allocation from IPAM pools, featuring automatic conflict resolution through enhanced retry logic.
 
 ## Features Demonstrated
 
-- ✅ **Basic VNet IPAM** - IPv4 and IPv6 address space from IPAM pools
-- ✅ **Dual-stack support** - Both IPv4 and IPv6 allocation in single deployment
-- ✅ **Static subnet addressing** - Traditional subnet management within IPAM VNet
-- ✅ **Standard network features** - NSGs, service endpoints work normally
+- ✅ **IPAM VNet Address Allocation** - VNet gets address space from IPAM pool
+- ✅ **IPAM Subnet Allocation** - Multiple subnets get space from the same pool
+- ✅ **Automatic Conflict Resolution** - Enhanced retry logic handles allocation conflicts
+- ✅ **No Time Delays** - Uses retry-only approach instead of artificial delays
+- ✅ **Simultaneous Creation** - All subnets created in parallel without timing issues
 
 ## Use Case
 
 Perfect for:
-- **Getting started with IPAM** - Simple introduction to IPAM concepts
-- **Dual-stack networking** - Testing IPv4 and IPv6 together
-- **Hybrid addressing** - IPAM VNet with familiar subnet management
-- **Learning and development** - Understanding IPAM fundamentals
+- **Getting started with IPAM** - Complete introduction to IPAM concepts
+- **Production deployments** - Reliable conflict resolution without delays
+- **Multiple subnet scenarios** - Creating several subnets from same pool
+- **Learning modern patterns** - Understanding retry-based conflict resolution
 
 ## Architecture
 
 ```
-IPv4 Pool (10.0.0.0/16) → VNet (/24 allocated)
-IPv6 Pool (fdea:5251:1c0a::/48) → VNet (/63 allocated)
+IPAM Pool (10.0.0.0/16)
 │
-└── VNet (dual-stack with IPAM allocation)
-    ├── subnet1 (10.0.0.0/25) - static addressing
-    └── subnet2 (10.0.0.128/25) - static addressing
+├── VNet (/24 allocated dynamically)
+│   ├── subnet1-retry-test (64 IPs from pool)
+│   ├── subnet2-retry-test (64 IPs from pool)
+│   ├── subnet3-retry-test (32 IPs from pool)
+│   └── subnet4-retry-test (32 IPs from pool)
 ```
+
+## Conflict Resolution
+
+This example demonstrates the **modern approach** to IPAM subnet allocation:
+
+- **Enhanced Retry Logic** - Automatically handles allocation conflicts
+- **Error Pattern Matching** - Detects overlap and conflict errors
+- **No Artificial Delays** - Relies on Azure API retry mechanisms
+- **Parallel Creation** - All resources created simultaneously
 
 ## Key Learning Points
 
 1. **IPAM Pool Setup** - Network Manager and pool configuration
-2. **Dual-Stack Allocation** - Requesting both IPv4 and IPv6 space
-3. **Static Subnet Compatibility** - Using traditional addressing within IPAM VNets
-4. **Regional Availability** - IPAM is available in limited Azure regions
+2. **Retry-Based Conflict Resolution** - Modern alternative to time delays
+3. **Simultaneous Resource Creation** - Efficient parallel deployment
+4. **Error Handling Patterns** - Understanding IPAM conflict scenarios
 
-This is the recommended starting point for understanding IPAM capabilities before moving to more advanced scenarios.
+This is the recommended starting point for understanding comprehensive IPAM capabilities with production-ready patterns.

@@ -8,7 +8,7 @@ This pattern is ideal when you want:
 - **Centralized VNet address management** through IPAM pools
 - **Predictable subnet addressing** using traditional methods
 - **Integration with existing subnet management practices**
-- **Avoiding IPAM subnet allocation timing complexities**
+- **Simplified deployment patterns** with reliable addressing
 
 ## Features Demonstrated
 
@@ -26,7 +26,7 @@ This pattern is ideal when you want:
 ### Mixed Deployment Patterns
 - ✅ **Main module subnets** - Subnets created with VNet
 - ✅ **Subnet module extension** - Additional subnets added independently
-- ✅ **No timing constraints** - All subnets created in parallel (no delays needed)
+- ✅ **Direct dependencies** - Clean resource relationships without artificial delays
 
 ## Architecture
 

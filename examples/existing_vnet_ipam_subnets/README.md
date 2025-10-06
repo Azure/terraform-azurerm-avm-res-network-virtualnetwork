@@ -106,10 +106,6 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.13"
-    }
   }
 }
 
@@ -242,11 +238,7 @@ resource "azapi_resource" "network_manager" {
   schema_validation_enabled = false
 }
 
-resource "time_sleep" "wait_30_seconds" {
-  create_duration = "30s"
 
-  depends_on = [azapi_resource.network_manager]
-}
 
 resource "azapi_resource" "ipam_pool" {
   location  = azurerm_resource_group.this.location
@@ -265,9 +257,7 @@ resource "azapi_resource" "ipam_pool" {
     max_interval_seconds = 180
     error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
   }
-  schema_validation_enabled = false
-
-  depends_on = [time_sleep.wait_30_seconds]
+  schema_validation_enabled = true
 }
 
 # Create VNet with IPAM addressing (REQUIRED for IPAM subnets)
@@ -354,8 +344,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
-- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.13)
-
 ## Resources
 
 The following resources are used by this module:
@@ -365,7 +353,6 @@ The following resources are used by this module:
 - [azurerm_network_security_group.app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [time_sleep.wait_30_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azurerm_subscription.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
 
 <!-- markdownlint-disable MD013 -->

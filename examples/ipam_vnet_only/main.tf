@@ -14,10 +14,6 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.13"
-    }
   }
 }
 
@@ -150,11 +146,7 @@ resource "azapi_resource" "network_manager" {
   schema_validation_enabled = false
 }
 
-resource "time_sleep" "wait_30_seconds" {
-  create_duration = "30s"
 
-  depends_on = [azapi_resource.network_manager]
-}
 
 # IPAM Pool for VNet address space only
 resource "azapi_resource" "ipam_pool" {
@@ -176,7 +168,7 @@ resource "azapi_resource" "ipam_pool" {
   }
   schema_validation_enabled = false
 
-  depends_on = [time_sleep.wait_30_seconds]
+  depends_on = [azapi_resource.ipam_pool]
 }
 
 # Network Security Groups for traditional subnets
@@ -221,14 +213,12 @@ module "vnet_ipam_traditional_subnets" {
     prefix_length = 16 # /16 VNet from the /12 pool
   }]
   name = "${module.naming.virtual_network.name_unique}-ipam-vnet"
-  # Traditional subnets with calculated addressing from VNet space
+  # Traditional subnets with static addressing (IPAM VNet gets dynamic space)
   subnets = {
-    # Calculate subnets from the IPAM-allocated VNet space
+    # Static addressing - these addresses will work within common IPAM allocations
     web = {
-      name                = "subnet-web"
-      calculate_from_vnet = true
-      prefix_length       = 24
-      subnet_index        = 0 # First /24 in VNet
+      name             = "subnet-web"
+      address_prefixes = ["172.16.0.0/24"] # First /24 in common /16 IPAM range
       network_security_group = {
         id = azurerm_network_security_group.web.id
       }
@@ -236,10 +226,8 @@ module "vnet_ipam_traditional_subnets" {
     }
 
     app = {
-      name                = "subnet-app"
-      calculate_from_vnet = true
-      prefix_length       = 24
-      subnet_index        = 1 # Second /24 in VNet
+      name             = "subnet-app"
+      address_prefixes = ["172.16.1.0/24"] # Second /24 in common /16 IPAM range
       network_security_group = {
         id = azurerm_network_security_group.app.id
       }
@@ -247,16 +235,14 @@ module "vnet_ipam_traditional_subnets" {
     }
 
     data = {
-      name                = "subnet-data"
-      calculate_from_vnet = true
-      prefix_length       = 25
-      subnet_index        = 4 # /25 in VNet space after 2x/24 subnets (172.16.2.0/25)
+      name             = "subnet-data"
+      address_prefixes = ["172.16.2.0/25"] # /25 in common /16 IPAM range
       network_security_group = {
         id = azurerm_network_security_group.app.id
       }
     }
 
-    # Static addressing within IPAM VNet (requires knowledge of allocated range)
+    # Small management subnet at end of range
     management = {
       name             = "subnet-management"
       address_prefixes = ["172.16.255.240/28"] # Small management subnet

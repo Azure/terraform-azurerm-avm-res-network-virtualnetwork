@@ -14,10 +14,6 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.13"
-    }
   }
 }
 
@@ -150,11 +146,7 @@ resource "azapi_resource" "network_manager" {
   schema_validation_enabled = false
 }
 
-resource "time_sleep" "wait_30_seconds" {
-  create_duration = "30s"
 
-  depends_on = [azapi_resource.network_manager]
-}
 
 resource "azapi_resource" "ipam_pool" {
   location  = azurerm_resource_group.this.location
@@ -173,9 +165,7 @@ resource "azapi_resource" "ipam_pool" {
     max_interval_seconds = 180
     error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
   }
-  schema_validation_enabled = false
-
-  depends_on = [time_sleep.wait_30_seconds]
+  schema_validation_enabled = true
 }
 
 # Create VNet with IPAM addressing (REQUIRED for IPAM subnets)
