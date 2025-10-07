@@ -2,6 +2,8 @@ locals {
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }
 
+
+
 locals {
   # Determine which service endpoints to use, preferring service_endpoints_with_location
   service_endpoints_to_use = var.service_endpoints_with_location != null ? [

@@ -1,3 +1,5 @@
+
+
 resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
@@ -5,9 +7,21 @@ resource "azapi_resource" "vnet" {
   type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
-      addressSpace = {
-        addressPrefixes = var.address_space
-      }
+      addressSpace = merge(
+        var.ipam_pools != null ? {
+          ipamPoolPrefixAllocations = [
+            for ipam_pool in var.ipam_pools : {
+              numberOfIpAddresses = tostring(pow(2, (ipam_pool.prefix_length >= 48 ? 128 : 32) - ipam_pool.prefix_length))
+              pool = {
+                id = ipam_pool.id
+              }
+            }
+          ]
+        } : {},
+        var.ipam_pools == null ? {
+          addressPrefixes = var.address_space != null ? var.address_space : []
+        } : {}
+      )
       bgpCommunities = var.bgp_community != null ? {
         virtualNetworkCommunity = var.bgp_community
       } : null
@@ -33,11 +47,13 @@ resource "azapi_resource" "vnet" {
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  # We do not use outputs, so disabling them
-  response_export_values = []
-  retry                  = var.retry
-  tags                   = var.tags
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  # Export specific properties needed for IPAM VNets based on actual API response structure
+  response_export_values = var.ipam_pools != null ? [
+    "properties.addressSpace.addressPrefixes"
+  ] : []
+  retry          = var.retry
+  tags           = var.tags
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = var.timeouts.create
@@ -46,3 +62,5 @@ resource "azapi_resource" "vnet" {
     update = var.timeouts.update
   }
 }
+
+

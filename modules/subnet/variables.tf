@@ -23,7 +23,7 @@ variable "address_prefix" {
   type        = string
   default     = null
   description = <<DESCRIPTION
-(Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+(Optional) The address prefix for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 DESCRIPTION
 }
 
@@ -31,13 +31,8 @@ variable "address_prefixes" {
   type        = list(string)
   default     = null
   description = <<DESCRIPTION
-(Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+(Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 DESCRIPTION
-
-  validation {
-    condition     = var.address_prefixes != null ? length(var.address_prefixes) > 0 : var.address_prefix != null
-    error_message = "One of `address_prefix` or `address_prefixes` must be supplied."
-  }
 }
 
 variable "default_outbound_access_enabled" {
@@ -85,6 +80,31 @@ variable "delegations" {
 DESCRIPTION
 }
 
+variable "ipam_pools" {
+  type = list(object({
+    pool_id       = string
+    prefix_length = number
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A list of IPAM pools to allocate subnet address space from. Each pool supports the following:
+
+- `pool_id` - (Required) The ID of the IPAM pool to allocate from.
+- `prefix_length` - (Required) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet).
+
+Note: Only one IPAM pool allocation per subnet is currently supported. When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
+DESCRIPTION
+
+  validation {
+    condition     = var.ipam_pools == null ? true : length(var.ipam_pools) == 1
+    error_message = "Only one IPAM pool allocation per subnet is supported."
+  }
+  validation {
+    condition     = var.ipam_pools == null ? true : alltrue([for pool in var.ipam_pools : pool.prefix_length >= 16 && pool.prefix_length <= 30])
+    error_message = "IPAM pool prefix_length must be between 16 and 30 for IPv4 subnets."
+  }
+}
+
 variable "nat_gateway" {
   type = object({
     id = string
@@ -130,12 +150,20 @@ DESCRIPTION
 
 variable "retry" {
   type = object({
-    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
-    interval_seconds     = optional(number, 10)
-    max_interval_seconds = optional(number, 180)
+    error_message_regex = optional(list(string), [
+      "AnotherOperationInProgress",
+      "ReferencedResourceNotProvisioned",
+      "OperationNotAllowed",
+      "NetcfgSubnetRangesOverlap",
+      "BadRequest.*overlap",
+      "Conflict.*subnet.*range",
+      "subnet.*address.*conflict"
+    ])
+    interval_seconds     = optional(number, 15)
+    max_interval_seconds = optional(number, 300)
   })
   default     = {}
-  description = "Retry configuration for the resource operations"
+  description = "Retry configuration for the resource operations, includes IPAM-specific error patterns"
 }
 
 variable "role_assignments" {

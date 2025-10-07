@@ -6,16 +6,74 @@ This module is used to manage Azure Virtual Network Subnets.
 
 ## Features
 
-This module supports managing virtual networks subnets.
+This module supports managing virtual networks subnets with both traditional explicit addressing and IPAM (IP Address Management) dynamic allocation.
 
 The module supports:
 
-- Creating a new subnet
+- Creating a new subnet with explicit IP addressing
+- **Creating a new subnet with IPAM pool allocation**
 - Associating a network security group with a subnet
 - Associating a route table with a subnet
 - Associating a service endpoint with a subnet
 - Associating a virtual network gateway with a subnet
 - Assigning delegations to subnets
+- **Dynamic IP allocation from Azure Network Manager IPAM pools**
+
+## IPAM Support
+
+This subnet module now provides comprehensive IPAM (IP Address Management) support for dynamic subnet allocation alongside traditional explicit addressing.
+
+### ⚠️ **CRITICAL REQUIREMENT: IPAM-Enabled Virtual Networks**
+
+**IPAM subnets can ONLY be created within IPAM-enabled Virtual Networks.**
+
+- ✅ **IPAM VNet + IPAM Subnet** = ✅ **SUPPORTED**
+- ✅ **IPAM VNet + Traditional Subnet** = ✅ **SUPPORTED** (mixed architecture)
+- ❌ **Traditional VNet + IPAM Subnet** = ❌ **NOT POSSIBLE**
+
+If the parent Virtual Network was not created with IPAM pools for its address space, you cannot create IPAM subnets within it. The VNet must be IPAM-enabled first.
+
+### **IPAM Features:**
+- **Dynamic subnet allocation** from IPAM pools with automatic conflict prevention
+- **Automatic IP address assignment** with specified prefix lengths
+- **Consistent interface** with main VNet module IPAM capabilities
+- **Comprehensive retry logic** for reliable Azure API interactions
+- **All standard subnet features** work with IPAM (NSGs, route tables, service endpoints, delegations)
+
+### **Usage Patterns:**
+- **Traditional addressing**: Specify `address_prefix` or `address_prefixes`
+- **IPAM allocation**: Specify `ipam_pools` with pool ID and prefix length
+- **Cannot mix**: Use either traditional OR IPAM addressing per subnet (not both)
+- **Mixed VNets**: Within an IPAM-enabled VNet, you can have both IPAM and traditional subnets
+
+### **Key Benefits:**
+- **Individual subnet management**: Add IPAM subnets to existing IPAM VNets independently
+- **Flexible deployment**: Choose addressing method per subnet as needed within IPAM VNets
+- **Production ready**: Same robust retry logic as main module IPAM implementation
+- **Consistent experience**: IPAM works the same way across main and subnet modules
+- **Automatic conflict prevention** - no overlapping IP assignments
+- **Dynamic allocation** - specify size requirements, get IP ranges automatically
+- **Consistent with main module** - same IPAM capabilities as the VNet module
+
+**Important Notes:**
+- **Choose one addressing method**: Cannot mix IPAM and traditional addressing in same subnet
+- **Pool requirement**: IPAM pools must be created through Azure Network Manager first
+- **Single pool limit**: Each subnet can allocate from only one IPAM pool currently
+- **Prefix length**: Specify the desired subnet size (e.g., 24 for /24, 26 for /26)
+
+**IPAM vs Traditional:**
+- **IPAM subnets**: Show allocated ranges in Azure Network Manager IPAM dashboard
+- **Traditional subnets**: Appear as "Unallocated" in IPAM (expected behavior)
+- **Both types**: Fully supported by Azure networking and portal tools
+
+For comprehensive multi-subnet IPAM scenarios with time-delayed sequential creation, use the main virtual network module with multiple IPAM subnets.
+
+## Prerequisites
+
+### For IPAM Subnets
+- **IPAM-enabled Virtual Network**: Parent VNet must be created with IPAM pools (not traditional VNet)
+- **Azure Virtual Network Manager**: Required with IPAM pools configured
+- **azapi provider**: Version ~> 2.4 required for IPAM subnet operations
 
 ## Usage
 
@@ -23,17 +81,43 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 ### Example - Basic Subnet
 
-This example shows the most basic usage of the module. It creates a new subnet.
+This example shows the most basic usage of the module. It creates a new subnet with explicit addressing.
 
 ```terraform
 module "avm-res-network-virtualnetwork-subnet" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
 
-  virtual_network = {
-    resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
-  }
+  name             = "subnet-web"
+  parent_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVNet"
   address_prefixes = ["10.0.0.0/24"]
 }
+```
+
+### Example - IPAM Subnet
+
+This example demonstrates IPAM usage for dynamic subnet allocation.
+
+```terraform
+module "avm-res-network-virtualnetwork-subnet" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
+
+  name      = "subnet-app"
+  parent_id = azurerm_virtual_network.ipam_vnet.id  # Must be IPAM-enabled VNet
+
+  # Dynamic allocation from IPAM pool
+  ipam_pools = [{
+    pool_id       = azapi_resource.ipam_pool.id
+    prefix_length = 24  # /24 subnet (256 IP addresses)
+  }]
+}
+```
+
+## Common Issues
+
+- **"Cannot create IPAM subnet"**: Ensure parent VNet was created with IPAM pools, not traditional addressing
+- **"Pool not found"**: Verify IPAM pool exists in the same region as the target VNet
+- **"Prefix length invalid"**: Use values between 16-30 for IPv4 subnets
+```
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -77,7 +161,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_address_prefix"></a> [address\_prefix](#input\_address\_prefix)
 
-Description: (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+Description: (Optional) The address prefix for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 
 Type: `string`
 
@@ -85,7 +169,7 @@ Default: `null`
 
 ### <a name="input_address_prefixes"></a> [address\_prefixes](#input\_address\_prefixes)
 
-Description: (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
+Description: (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 
 Type: `list(string)`
 
@@ -143,6 +227,26 @@ list(object({
 
 Default: `null`
 
+### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
+
+Description: (Optional) A list of IPAM pools to allocate subnet address space from. Each pool supports the following:
+
+- `pool_id` - (Required) The ID of the IPAM pool to allocate from.
+- `prefix_length` - (Required) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet).
+
+Note: Only one IPAM pool allocation per subnet is currently supported. When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
+
+Type:
+
+```hcl
+list(object({
+    pool_id       = string
+    prefix_length = number
+  }))
+```
+
+Default: `null`
+
 ### <a name="input_nat_gateway"></a> [nat\_gateway](#input\_nat\_gateway)
 
 Description: (Optional) The ID of the NAT Gateway to associate with the subnet. Changing this forces a new resource to be created.
@@ -189,15 +293,23 @@ Default: `true`
 
 ### <a name="input_retry"></a> [retry](#input\_retry)
 
-Description: Retry configuration for the resource operations
+Description: Retry configuration for the resource operations, includes IPAM-specific error patterns
 
 Type:
 
 ```hcl
 object({
-    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
-    interval_seconds     = optional(number, 10)
-    max_interval_seconds = optional(number, 180)
+    error_message_regex = optional(list(string), [
+      "AnotherOperationInProgress",
+      "ReferencedResourceNotProvisioned",
+      "OperationNotAllowed",
+      "NetcfgSubnetRangesOverlap",
+      "BadRequest.*overlap",
+      "Conflict.*subnet.*range",
+      "subnet.*address.*conflict"
+    ])
+    interval_seconds     = optional(number, 15)
+    max_interval_seconds = optional(number, 300)
   })
 ```
 
@@ -318,6 +430,10 @@ Default: `{}`
 ## Outputs
 
 The following outputs are exported:
+
+### <a name="output_address_prefixes"></a> [address\_prefixes](#output\_address\_prefixes)
+
+Description: The address prefixes of the subnet. For IPAM subnets, this shows the dynamically allocated ranges.
 
 ### <a name="output_application_gateway_ip_configuration_resource_id"></a> [application\_gateway\_ip\_configuration\_resource\_id](#output\_application\_gateway\_ip\_configuration\_resource\_id)
 

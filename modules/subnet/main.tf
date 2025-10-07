@@ -1,11 +1,27 @@
+# Create subnet with conditional IPAM or traditional addressing
 resource "azapi_resource" "subnet" {
   name      = var.name
   parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {
-      addressPrefix         = var.address_prefix
-      addressPrefixes       = var.address_prefixes
+      # Conditional addressing: IPAM pools OR traditional prefix/prefixes
+      ipamPoolPrefixAllocations = var.ipam_pools != null ? [
+        for pool in var.ipam_pools : {
+          pool = {
+            id = pool.pool_id
+          }
+          numberOfIpAddresses = tostring(
+            pool.prefix_length <= 32
+            ? pow(2, 32 - pool.prefix_length) # IPv4 calculation
+            : 0                               # IPv6 - Azure uses 0 for IPv6 pools
+          )
+        }
+      ] : null
+      addressPrefix   = var.ipam_pools == null ? var.address_prefix : null
+      addressPrefixes = var.ipam_pools == null ? var.address_prefixes : null
+
+      # Common subnet properties
       delegations           = local.delegations
       defaultOutboundAccess = var.default_outbound_access_enabled
       natGateway = var.nat_gateway != null ? {
@@ -33,10 +49,9 @@ resource "azapi_resource" "subnet" {
       sharingScope = var.sharing_scope
     }
   }
-  ignore_null_property = true
-  locks                = [var.parent_id]
-  # We do not use outputs, so disabling them
-  response_export_values    = []
+  ignore_null_property      = true
+  locks                     = [var.parent_id]
+  response_export_values    = var.ipam_pools != null ? ["properties.addressPrefixes"] : []
   retry                     = var.retry
   schema_validation_enabled = true
 
