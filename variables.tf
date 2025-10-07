@@ -101,7 +101,7 @@ variable "diagnostic_settings" {
 
 variable "dns_servers" {
   type = object({
-    dns_servers = set(string)
+    dns_servers = list(string)
   })
   default     = null
   description = <<DESCRIPTION
