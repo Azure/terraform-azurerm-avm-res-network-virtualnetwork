@@ -101,13 +101,13 @@ variable "diagnostic_settings" {
 
 variable "dns_servers" {
   type = object({
-    dns_servers = set(string)
+    dns_servers = list(string)
   })
   default     = null
   description = <<DESCRIPTION
 (Optional) Specifies a list of IP addresses representing DNS servers.
 
-- `dns_servers`: Set of IP addresses of DNS servers.
+- `dns_servers`: List of IP addresses of DNS servers.
 DESCRIPTION
 }
 

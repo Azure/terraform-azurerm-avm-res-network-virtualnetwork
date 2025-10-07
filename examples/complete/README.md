@@ -161,7 +161,7 @@ module "vnet1" {
     }
   }
   dns_servers = {
-    dns_servers = ["8.8.8.8"]
+    dns_servers = ["8.8.8.8", "1.1.1.1", "1.0.0.1"]
   }
   enable_vm_protection = true
   encryption = {
