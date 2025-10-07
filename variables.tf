@@ -107,7 +107,7 @@ variable "dns_servers" {
   description = <<DESCRIPTION
 (Optional) Specifies a list of IP addresses representing DNS servers.
 
-- `dns_servers`: Set of IP addresses of DNS servers.
+- `dns_servers`: List of IP addresses of DNS servers.
 DESCRIPTION
 }
 
