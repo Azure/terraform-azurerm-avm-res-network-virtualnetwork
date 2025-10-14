@@ -28,8 +28,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -42,7 +42,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # This is required for resource modules
@@ -65,7 +65,7 @@ resource "azurerm_network_ddos_protection_plan" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-#Creating a NAT Gateway in the specified location.
+# Creating a NAT Gateway in the specified location.
 resource "azurerm_nat_gateway" "this" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.nat_gateway.name_unique
@@ -132,13 +132,15 @@ resource "azurerm_log_analytics_workspace" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+
+
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source = "../../"
 
-  address_space       = ["192.168.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
+  address_space = var.address_space_vnet1
   ddos_protection_plan = {
     id = azurerm_network_ddos_protection_plan.this.id
     # due to resource cost
@@ -152,7 +154,7 @@ module "vnet1" {
     }
   }
   dns_servers = {
-    dns_servers = ["8.8.8.8"]
+    dns_servers = ["8.8.8.8", "1.1.1.1", "1.0.0.1"]
   }
   enable_vm_protection = true
   encryption = {
@@ -179,7 +181,7 @@ module "vnet1" {
       name                            = "${module.naming.subnet.name_unique}1"
       address_prefixes                = ["192.168.1.0/24"]
       default_outbound_access_enabled = false
-      delegation = [{
+      delegations = [{
         name = "Microsoft.Web.serverFarms"
         service_delegation = {
           name = "Microsoft.Web/serverFarms"
@@ -213,9 +215,9 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  address_space       = ["10.0.0.0/27"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
+  address_space = ["10.0.0.0/27"]
   encryption = {
     enabled     = true
     enforcement = "AllowUnencrypted"
@@ -239,6 +241,11 @@ module "vnet2" {
       reverse_do_not_verify_remote_gateways = false
       reverse_enable_only_ipv6_peering      = false
       reverse_use_remote_gateways           = false
+      sync_remote_address_space_enabled     = true
+      sync_remote_address_space_triggers = [
+        var.address_space_vnet1,
+        var.address_space_vnet2
+      ]
     }
   }
 }

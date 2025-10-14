@@ -28,8 +28,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -42,7 +42,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # This is required for resource modules
@@ -88,11 +88,11 @@ locals {
 module "vnet" {
   source = "../../"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = module.naming.virtual_network.name_unique
-  subnets             = local.subnets
+  location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
+  address_space = ["10.0.0.0/16"]
+  name          = module.naming.virtual_network.name_unique
+  subnets       = local.subnets
 }
 
 # Fetching the public IP address of the Terraform executor.

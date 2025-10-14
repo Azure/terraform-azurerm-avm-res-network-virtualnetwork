@@ -6,23 +6,24 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "virtual_network" {
-  type = object({
-    resource_id = string
-  })
+variable "parent_id" {
+  type        = string
   description = <<DESCRIPTION
-  (Required) The Virtual Network, into which the subnet will be created.
-
-  - resource_id - The ID of the Virtual Network.
-  DESCRIPTION
+(Required) The Virtual Network, into which the subnet will be created.
+DESCRIPTION
   nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.parent_id))
+    error_message = "The parent_id must be a valid Virtual Network resource ID"
+  }
 }
 
 variable "address_prefix" {
   type        = string
   default     = null
   description = <<DESCRIPTION
-  (Optional) The address prefix for the subnet. One of `address_prefix` or `address_prefixes` must be supplied.
+(Optional) The address prefix for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 DESCRIPTION
 }
 
@@ -30,13 +31,8 @@ variable "address_prefixes" {
   type        = list(string)
   default     = null
   description = <<DESCRIPTION
-  (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix` or `address_prefixes` must be supplied.
-  DESCRIPTION
-
-  validation {
-    condition     = var.address_prefixes != null ? length(var.address_prefixes) > 0 : var.address_prefix != null
-    error_message = "One of `address_prefix` or `address_prefixes` must be supplied."
-  }
+(Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
+DESCRIPTION
 }
 
 variable "default_outbound_access_enabled" {
@@ -59,12 +55,54 @@ variable "delegation" {
   }))
   default     = null
   description = <<DESCRIPTION
+(Optional) (This variable is deprecated, use `delegations` instead). A list of delegations to apply to the subnet. Each delegation supports the following:
+
+- `name` - (Required) A name for this delegation.
+- `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+  - `name` - (Required) The name of the service to delegate to.
+DESCRIPTION
+}
+
+variable "delegations" {
+  type = list(object({
+    name = string
+    service_delegation = object({
+      name = string
+    })
+  }))
+  default     = null
+  description = <<DESCRIPTION
 (Optional) A list of delegations to apply to the subnet. Each delegation supports the following:
 
-    - `name` - (Required) A name for this delegation.
-    - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
-      - `name` - (Required) The name of the service to delegate to.
+- `name` - (Required) A name for this delegation.
+- `service_delegation` - (Required) A block defining the service to delegate to. It supports the
+  - `name` - (Required) The name of the service to delegate to.
 DESCRIPTION
+}
+
+variable "ipam_pools" {
+  type = list(object({
+    pool_id       = string
+    prefix_length = number
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A list of IPAM pools to allocate subnet address space from. Each pool supports the following:
+
+- `pool_id` - (Required) The ID of the IPAM pool to allocate from.
+- `prefix_length` - (Required) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet).
+
+Note: Only one IPAM pool allocation per subnet is currently supported. When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
+DESCRIPTION
+
+  validation {
+    condition     = var.ipam_pools == null ? true : length(var.ipam_pools) == 1
+    error_message = "Only one IPAM pool allocation per subnet is supported."
+  }
+  validation {
+    condition     = var.ipam_pools == null ? true : alltrue([for pool in var.ipam_pools : pool.prefix_length >= 16 && pool.prefix_length <= 30])
+    error_message = "IPAM pool prefix_length must be between 16 and 30 for IPv4 subnets."
+  }
 }
 
 variable "nat_gateway" {
@@ -112,14 +150,20 @@ DESCRIPTION
 
 variable "retry" {
   type = object({
-    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
-    interval_seconds     = optional(number, 10)
-    max_interval_seconds = optional(number, 180)
-    multiplier           = optional(number, 1.5)
-    randomization_factor = optional(number, 0.5)
+    error_message_regex = optional(list(string), [
+      "AnotherOperationInProgress",
+      "ReferencedResourceNotProvisioned",
+      "OperationNotAllowed",
+      "NetcfgSubnetRangesOverlap",
+      "BadRequest.*overlap",
+      "Conflict.*subnet.*range",
+      "subnet.*address.*conflict"
+    ])
+    interval_seconds     = optional(number, 15)
+    max_interval_seconds = optional(number, 300)
   })
   default     = {}
-  description = "Retry configuration for the resource operations"
+  description = "Retry configuration for the resource operations, includes IPAM-specific error patterns"
 }
 
 variable "role_assignments" {
@@ -135,19 +179,19 @@ variable "role_assignments" {
   }))
   default     = {}
   description = <<DESCRIPTION
-  (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+(Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-  - `principal_id` - The ID of the principal to assign the role to.
-  - `description` - (Optional) The description of the role assignment.
-  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
-  - `condition` - (Optional) The condition which will be used to scope the role assignment.
-  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
-  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
-  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+- `principal_id` - The ID of the principal to assign the role to.
+- `description` - (Optional) The description of the role assignment.
+- `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+- `condition` - (Optional) The condition which will be used to scope the role assignment.
+- `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+- `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+- `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
 
-  > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
-  DESCRIPTION
+> Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+DESCRIPTION
   nullable    = false
 }
 
@@ -168,15 +212,48 @@ variable "service_endpoint_policies" {
   default     = null
   description = <<DESCRIPTION
 (Optional) A set of service endpoint policy IDs to associate with the subnet.
-  DESCRIPTION
+DESCRIPTION
 }
 
 variable "service_endpoints" {
-  type        = set(string)
+  type        = list(string)
   default     = null
   description = <<DESCRIPTION
-(Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
-  DESCRIPTION
+DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
+
+Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
+DESCRIPTION
+
+  validation {
+    error_message = "Service endpoints must be unique."
+    condition     = var.service_endpoints != null ? length(var.service_endpoints) == length(toset(var.service_endpoints)) : true
+  }
+}
+
+variable "service_endpoints_with_location" {
+  type = list(object({
+    service   = string
+    locations = optional(list(string), ["*"])
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+- `service` - (Required) The service name. Changing this forces a new resource to be created.
+- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
+DESCRIPTION
+
+  validation {
+    condition     = !(var.service_endpoints != null && var.service_endpoints_with_location != null)
+    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location`. Use only `service_endpoints_with_location` for location support."
+  }
+  validation {
+    error_message = "Locations values must be unique"
+    condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(toset(endpoint.locations)) == length(endpoint.locations)]) : true
+  }
+  validation {
+    error_message = "Service names must be unique"
+    condition     = var.service_endpoints_with_location != null ? length([for endpoint in var.service_endpoints_with_location : endpoint.service]) == length(toset([for endpoint in var.service_endpoints_with_location : endpoint.service])) : true
+  }
 }
 
 variable "sharing_scope" {
@@ -190,14 +267,6 @@ DESCRIPTION
     condition     = var.sharing_scope != null ? can(regex("^(DelegatedServices|Tenant)$", var.sharing_scope)) : true
     error_message = "sharing_scope must be one of DelegatedServices or Tenant."
   }
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = <<DESCRIPTION
-  (Optional) The subscription ID to use for the feature registration.
-DESCRIPTION
 }
 
 variable "timeouts" {

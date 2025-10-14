@@ -24,8 +24,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -38,7 +38,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # This is required for resource modules
@@ -69,9 +69,7 @@ module "subnets" {
   source   = "../../modules/subnet"
   for_each = local.subnets
 
-  name = each.value.name
-  virtual_network = {
-    resource_id = azurerm_virtual_network.this.id
-  }
+  name             = each.value.name
+  parent_id        = azurerm_virtual_network.this.id
   address_prefixes = each.value.address_prefixes
 }

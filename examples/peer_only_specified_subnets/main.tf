@@ -24,8 +24,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -38,7 +38,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # This is required for resource modules
@@ -51,10 +51,10 @@ resource "azurerm_resource_group" "this" {
 module "vnet1" {
   source = "../../"
 
-  address_space       = ["10.0.0.0/16", "10.1.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = "${module.naming.virtual_network.name_unique}-1"
+  location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
+  address_space = ["10.0.0.0/16", "10.1.0.0/16"]
+  name          = "${module.naming.virtual_network.name_unique}-1"
   subnets = {
     subnet1 = {
       name             = "${module.naming.subnet.name_unique}-1-1"
@@ -74,10 +74,10 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  address_space       = ["10.2.0.0/16", "10.3.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = "${module.naming.virtual_network.name_unique}-2"
+  location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
+  address_space = ["10.2.0.0/16", "10.3.0.0/16"]
+  name          = "${module.naming.virtual_network.name_unique}-2"
   peerings = {
     peertovnet1 = {
       name                               = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"

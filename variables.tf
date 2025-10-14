@@ -1,14 +1,3 @@
-variable "address_space" {
-  type        = set(string)
-  description = "(Optional) The address spaces applied to the virtual network. You can supply more than one address space."
-  nullable    = false
-
-  validation {
-    condition     = length(var.address_space) > 0
-    error_message = "Address space must contain at least one element."
-  }
-}
-
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -17,11 +6,30 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
   description = <<DESCRIPTION
-(Required) The name of the resource group where the resources will be deployed.
+(Optional) The ID of the resource group where the virtual network will be deployed.
 DESCRIPTION
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+$", var.parent_id))
+    error_message = "parent_id must be a valid resource group ID."
+  }
+}
+
+variable "address_space" {
+  type        = set(string)
+  default     = null
+  description = <<DESCRIPTION
+  (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
+  Either address_space or ipam_pools must be specified, but not both.
+  DESCRIPTION
+
+  validation {
+    condition     = (var.address_space != null && var.ipam_pools == null) || (var.address_space == null && var.ipam_pools != null)
+    error_message = "Either address_space or ipam_pools must be specified, but not both."
+  }
 }
 
 variable "bgp_community" {
@@ -93,13 +101,13 @@ variable "diagnostic_settings" {
 
 variable "dns_servers" {
   type = object({
-    dns_servers = set(string)
+    dns_servers = list(string)
   })
   default     = null
   description = <<DESCRIPTION
 (Optional) Specifies a list of IP addresses representing DNS servers.
 
-- `dns_servers`: Set of IP addresses of DNS servers.
+- `dns_servers`: List of IP addresses of DNS servers.
 DESCRIPTION
 }
 
@@ -108,9 +116,10 @@ variable "enable_telemetry" {
   default     = true
   description = <<DESCRIPTION
 This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetry.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "enable_vm_protection" {
@@ -131,7 +140,9 @@ variable "encryption" {
 (Optional) Specifies the encryption settings for the virtual network.
 
 - `enabled`: Specifies whether encryption is enabled for the virtual network.
-- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `Enabled` and `Disabled`.
+- `enforcement`: Specifies the enforcement mode for the virtual network. Possible values are `AllowUnencrypted` and `DropUnencrypted`.
+
+Note: When using `DropUnencrypted` enforcement, the `AllowDropUnecryptedVnet` subscription feature must be registered first. See the `vnet-encryption-setup` example for details.
 DESCRIPTION
 
   validation {
@@ -165,6 +176,51 @@ variable "flow_timeout_in_minutes" {
   description = <<DESCRIPTION
 (Optional) The flow timeout in minutes for the virtual network. Defaults to 4.
 DESCRIPTION
+}
+
+variable "ipam_pools" {
+  type = list(object({
+    id            = string
+    prefix_length = number
+  }))
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies the IPAM settings for requesting an address_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+
+- `id`: The ID of the IPAM pool.
+- `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.
+DESCRIPTION
+
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : can(regex("^\\/subscriptions\\/[\\w-]+\\/resourceGroups\\/[\\w-]+\\/providers\\/Microsoft\\.Network\\/networkManagers\\/[\\w-]+\\/ipamPools\\/[\\w-]+$", ipam_pool.id))
+    ]) || var.ipam_pools == null
+    error_message = "IPAM pool ID must be a valid ipamPools resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : (ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29) || (ipam_pool.prefix_length >= 48 && ipam_pool.prefix_length <= 64)
+    ]) || var.ipam_pools == null
+    error_message = "Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6."
+  }
+  validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : length(ipam_pool) >= 1 && length(ipam_pool) <= 2
+    ]) || var.ipam_pools == null
+    error_message = "Only one or two IPAM pools can be specified."
+  }
+  validation {
+    condition = length([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length == 64
+    ]) <= 1 || var.ipam_pools == null
+    error_message = "Only one IPv6 pool can be specified."
+  }
+  validation {
+    condition = length([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
+    ]) <= 1 || var.ipam_pools == null
+    error_message = "Only one IPv4 pool can be specified."
+  }
 }
 
 variable "lock" {
@@ -237,7 +293,9 @@ variable "peerings" {
     reverse_remote_peered_subnets = optional(list(object({
       subnet_name = string
     })))
-    reverse_use_remote_gateways = optional(bool, false)
+    reverse_use_remote_gateways        = optional(bool, false)
+    sync_remote_address_space_enabled  = optional(bool, false)
+    sync_remote_address_space_triggers = optional(any, null)
     timeouts = optional(object({
       create = optional(string, "30m")
       read   = optional(string, "5m")
@@ -248,8 +306,6 @@ variable "peerings" {
       error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
       interval_seconds     = optional(number, 10)
       max_interval_seconds = optional(number, 180)
-      multiplier           = optional(number, 1.5)
-      randomization_factor = optional(number, 0.5)
     }), {})
   }))
   default     = {}
@@ -282,6 +338,8 @@ variable "peerings" {
 - `reverse_local_peered_subnets`: (Optional) If you have selected `create_reverse_peering`, the subnets to peer with the remote virtual network. Only used when `reverse_peer_complete_vnets` is set to true.
 - `reverse_remote_peered_subnets`: (Optional) If you have selected `create_reverse_peering`, the subnets to peer from the remote virtual network. Only used when `reverse_peer_complete_vnets` is set to true.
 - `reverse_use_remote_gateways`: (Optional) If you have selected `create_reverse_peering`, enables the use of remote gateways for the virtual networks. Defaults to false.
+- `sync_remote_address_space_enabled`: (Optional) If the peering sync status changes a plan will be created to sync the peering address space with an azapi update resource. Defaults to false.
+- `sync_remote_address_space_triggers`: (Optional) A value that when changed will trigger a resync of the remote address space. This must be supplied if `sync_remote_address_space_enabled` is `true`. Defaults to null.
 
  ---
  `timeouts` (Optional) supports the following:
@@ -296,7 +354,6 @@ variable "peerings" {
   - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
   - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
   - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
-  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
 
 DESCRIPTION
   nullable    = false
@@ -307,8 +364,6 @@ variable "retry" {
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
-    multiplier           = optional(number, 1.5)
-    randomization_factor = optional(number, 0.5)
   })
   default     = {}
   description = "Retry configuration for the resource operations"
@@ -348,6 +403,11 @@ variable "subnets" {
     address_prefix   = optional(string)
     address_prefixes = optional(list(string))
     name             = string
+    ipam_pools = optional(list(object({
+      pool_id         = string
+      prefix_length   = optional(number)
+      allocation_type = optional(string, "Static")
+    })))
     nat_gateway = optional(object({
       id = string
     }))
@@ -362,10 +422,14 @@ variable "subnets" {
     service_endpoint_policies = optional(map(object({
       id = string
     })))
-    service_endpoints               = optional(set(string))
+    service_endpoints = optional(list(string))
+    service_endpoints_with_location = optional(list(object({
+      service   = string
+      locations = optional(list(string), ["*"])
+    })))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
-    delegation = optional(list(object({
+    delegations = optional(list(object({
       name = string
       service_delegation = object({
         name = string
@@ -381,8 +445,6 @@ variable "subnets" {
       error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
       interval_seconds     = optional(number, 10)
       max_interval_seconds = optional(number, 180)
-      multiplier           = optional(number, 1.5)
-      randomization_factor = optional(number, 0.5)
     }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
@@ -399,8 +461,12 @@ variable "subnets" {
   description = <<DESCRIPTION
 (Optional) A map of subnets to create
 
- - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
- - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix` or `address_prefixes` must be specified.
+ - `address_prefix` - (Optional) The address prefix to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
+ - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
+ - `ipam_pools` - (Optional) IPAM pools to allocate address space from. When specified, the subnet will request address space from these pools. Each pool configuration supports:
+   - `pool_id`: Resource ID of the IPAM pool to allocate from
+   - `prefix_length`: The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
+   - `allocation_type`: Type of allocation - "Static" (default) or "Dynamic"
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -408,11 +474,19 @@ variable "subnets" {
  - `private_endpoint_network_policies` - (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
- - `service_endpoints` - (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+ - `service_endpoints` - DEPRECATED: (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`. Use `service_endpoints_with_location` instead for the new format with location support.
+ - `service_endpoints_with_location` - (Optional) Service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+   - `service` - (Required) The service name. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
+   - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
 
  ---
- `delegation` supports the following:
+ `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
  - `name` - (Required) A name for this delegation.
+  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
+
+`delegations` supports the following:
+ - `name` - (Required) A name for this delegation.
+  - `service_delegation` - (Required) The service delegation to associate with the subnet. This is an object with a `name` property that specifies the name of the service delegation.
 
  ---
  `nat_gateway` supports the following:
@@ -438,8 +512,6 @@ variable "subnets" {
   - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
   - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
   - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
-  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
-  - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. Defaults to 0.5.
 
  ---
  `role_assignments` supports the following:
@@ -455,15 +527,36 @@ variable "subnets" {
 DESCRIPTION
 
   validation {
-    condition     = alltrue([for _, subnet in var.subnets : subnet.address_prefix != null || subnet.address_prefixes != null])
-    error_message = "One of `address_prefix` or `address_prefixes` must be set."
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      # IPAM subnets need ipam_pools configured
+      subnet.ipam_pools != null ||
+      # Non-IPAM subnets need one of these address configurations
+      subnet.address_prefix != null || subnet.address_prefixes != null
+    ])
+    error_message = "Each subnet must specify one of: ipam_pools (for IPAM allocation), address_prefix, or address_prefixes."
   }
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = null
-  description = "(Optional) Subscription ID passed in by an external process.  If this is not supplied, then the configuration either needs to include the subscription ID, or needs to be supplied properties to create the subscription."
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      # For IPAM subnets, only ipam_pools should be specified (not static addresses)
+      subnet.ipam_pools != null ? (
+        subnet.address_prefix == null && subnet.address_prefixes == null
+        ) : (
+        # For non-IPAM subnets, exactly one address method should be specified
+        (subnet.address_prefix != null && subnet.address_prefixes == null) ||
+        (subnet.address_prefix == null && subnet.address_prefixes != null)
+      )
+    ])
+    error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix or address_prefixes."
+  }
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      !(subnet.service_endpoints != null && subnet.service_endpoints_with_location != null)
+    ])
+    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location` for the same subnet. Use only `service_endpoints_with_location` for the new format with location support."
+  }
 }
 
 variable "tags" {

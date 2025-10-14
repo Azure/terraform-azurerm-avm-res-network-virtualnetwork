@@ -4,28 +4,30 @@ variable "name" {
   nullable    = false
 }
 
-variable "remote_virtual_network" {
-  type = object({
-    resource_id = string
-  })
-  description = <<DESCRIPTION
-  (Required) The Remote Virtual Network, which will be peered to and the optional reverse peering will be created in.
-
-  - resource_id - The ID of the Virtual Network.
-  DESCRIPTION
-  nullable    = false
-}
-
-variable "virtual_network" {
-  type = object({
-    resource_id = string
-  })
+variable "parent_id" {
+  type        = string
   description = <<DESCRIPTION
   (Required) The local Virtual Network, into which the peering will be created and that will be peered with the optional reverse peering.
-
-  - resource_id - The ID of the Virtual Network.
   DESCRIPTION
   nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.parent_id))
+    error_message = "The parent_id must be a valid Virtual Network resource ID"
+  }
+}
+
+variable "remote_virtual_network_id" {
+  type        = string
+  description = <<DESCRIPTION
+  (Required) The Remote Virtual Network, which will be peered to and the optional reverse peering will be created in.
+  DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.remote_virtual_network_id))
+    error_message = "The remote_virtual_network_id must be a valid Virtual Network resource ID"
+  }
 }
 
 variable "allow_forwarded_traffic" {
@@ -123,8 +125,6 @@ variable "retry" {
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
-    multiplier           = optional(number, 1.5)
-    randomization_factor = optional(number, 0.5)
   })
   default     = {}
   description = "Retry configuration for the resource operations"
@@ -226,12 +226,22 @@ variable "reverse_use_remote_gateways" {
   nullable    = false
 }
 
-variable "subscription_id" {
-  type        = string
+variable "sync_remote_address_space_enabled" {
+  type        = bool
+  default     = false
+  description = "Synchronize the address space of the remote virtual network with the local virtual network peering if the remote address space is updated. Defaults to `false`"
+  nullable    = false
+}
+
+variable "sync_remote_address_space_triggers" {
+  type        = any
   default     = null
-  description = <<DESCRIPTION
-  (Optional) The subscription ID to use for the feature registration.
-DESCRIPTION
+  description = "A value, when changed, will trigger the remote address space to be synced again. This can be used to force a re-sync of the remote address space if needed."
+
+  validation {
+    condition     = !var.sync_remote_address_space_enabled || (var.sync_remote_address_space_enabled && var.sync_remote_address_space_triggers != null)
+    error_message = "sync_remote_address_space_triggers must be set when sync_remote_address_space_enabled is true"
+  }
 }
 
 variable "timeouts" {

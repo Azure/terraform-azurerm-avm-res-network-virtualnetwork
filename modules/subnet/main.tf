@@ -1,19 +1,28 @@
+# Create subnet with conditional IPAM or traditional addressing
 resource "azapi_resource" "subnet" {
   name      = var.name
-  parent_id = var.virtual_network.resource_id
-  type      = "Microsoft.Network/virtualNetworks/subnets@2023-11-01"
+  parent_id = var.parent_id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {
-      addressPrefix   = var.address_prefix
-      addressPrefixes = var.address_prefixes
-      delegations = var.delegation != null ? [
-        for delegation in var.delegation : {
-          name = delegation.name
-          properties = {
-            serviceName = delegation.service_delegation.name
+      # Conditional addressing: IPAM pools OR traditional prefix/prefixes
+      ipamPoolPrefixAllocations = var.ipam_pools != null ? [
+        for pool in var.ipam_pools : {
+          pool = {
+            id = pool.pool_id
           }
+          numberOfIpAddresses = tostring(
+            pool.prefix_length <= 32
+            ? pow(2, 32 - pool.prefix_length) # IPv4 calculation
+            : 0                               # IPv6 - Azure uses 0 for IPv6 pools
+          )
         }
-      ] : []
+      ] : null
+      addressPrefix   = var.ipam_pools == null ? var.address_prefix : null
+      addressPrefixes = var.ipam_pools == null ? var.address_prefixes : null
+
+      # Common subnet properties
+      delegations           = local.delegations
       defaultOutboundAccess = var.default_outbound_access_enabled
       natGateway = var.nat_gateway != null ? {
         id = var.nat_gateway.id
@@ -26,9 +35,10 @@ resource "azapi_resource" "subnet" {
       routeTable = var.route_table != null ? {
         id = var.route_table.id
       } : null
-      serviceEndpoints = var.service_endpoints != null ? [
-        for service_endpoint in var.service_endpoints : {
-          service = service_endpoint
+      serviceEndpoints = local.service_endpoints_to_use != null ? [
+        for service_endpoint in local.service_endpoints_to_use : {
+          service   = service_endpoint.service
+          locations = can(service_endpoint.locations) ? service_endpoint.locations : null
         }
       ] : null
       serviceEndpointPolicies = var.service_endpoint_policies != null ? [
@@ -39,7 +49,9 @@ resource "azapi_resource" "subnet" {
       sharingScope = var.sharing_scope
     }
   }
-  locks                     = [var.virtual_network.resource_id]
+  ignore_null_property      = true
+  locks                     = [var.parent_id]
+  response_export_values    = var.ipam_pools != null ? ["properties.addressPrefixes"] : []
   retry                     = var.retry
   schema_validation_enabled = true
 
@@ -48,19 +60,6 @@ resource "azapi_resource" "subnet" {
     delete = var.timeouts.delete
     read   = var.timeouts.read
     update = var.timeouts.update
-  }
-
-  depends_on = [
-    azapi_update_resource.allow_multiple_address_prefixes_on_subnet,
-    azapi_update_resource.allow_deletion_of_ip_prefix_from_subnet,
-    azapi_update_resource.enable_shared_vnet
-  ]
-
-  lifecycle {
-    ignore_changes = [
-      body.properties.ipConfigurations,
-      body.properties.privateEndpoints
-    ]
   }
 }
 
@@ -75,34 +74,4 @@ resource "azurerm_role_assignment" "subnet" {
   role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
-}
-
-resource "azapi_update_resource" "allow_multiple_address_prefixes_on_subnet" {
-  count = local.has_multiple_address_prefixes ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowMultipleAddressPrefixesOnSubnet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-}
-
-resource "azapi_update_resource" "allow_deletion_of_ip_prefix_from_subnet" {
-  count = local.has_multiple_address_prefixes ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/AllowDeletionOfIpPrefixFromSubnet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
-}
-
-resource "azapi_update_resource" "enable_shared_vnet" {
-  count = var.sharing_scope == "Tenant" ? 1 : 0
-
-  resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.Network/subscriptionFeatureRegistrations/EnableSharedVNet"
-  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
-  body = {
-    properties = {}
-  }
 }
