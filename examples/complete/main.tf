@@ -23,6 +23,7 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+  storage_use_azuread = true
 }
 
 ## Section to provide a random Azure region for the resource group
@@ -103,11 +104,13 @@ resource "azurerm_user_assigned_identity" "this" {
 }
 
 resource "azurerm_storage_account" "this" {
-  account_replication_type = "ZRS"
-  account_tier             = "Standard"
-  location                 = azurerm_resource_group.this.location
-  name                     = module.naming.storage_account.name_unique
-  resource_group_name      = azurerm_resource_group.this.name
+  account_replication_type        = "ZRS"
+  account_tier                    = "Standard"
+  location                        = azurerm_resource_group.this.location
+  name                            = module.naming.storage_account.name_unique
+  resource_group_name             = azurerm_resource_group.this.name
+  allow_nested_items_to_be_public = false
+  shared_access_key_enabled       = false
 }
 
 resource "azurerm_subnet_service_endpoint_storage_policy" "this" {
@@ -131,8 +134,6 @@ resource "azurerm_log_analytics_workspace" "this" {
   name                = module.naming.log_analytics_workspace.name_unique
   resource_group_name = azurerm_resource_group.this.name
 }
-
-
 
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
@@ -196,7 +197,15 @@ module "vnet1" {
       route_table = {
         id = azurerm_route_table.this.id
       }
-      service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
+      service_endpoints_with_location = [
+        {
+          service = "Microsoft.Storage"
+        },
+        {
+          service   = "Microsoft.KeyVault"
+          locations = [azurerm_resource_group.this.location]
+        }
+      ]
       service_endpoint_policies = {
         policy1 = {
           id = azurerm_subnet_service_endpoint_storage_policy.this.id

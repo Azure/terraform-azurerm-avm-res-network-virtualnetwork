@@ -422,7 +422,6 @@ variable "subnets" {
     service_endpoint_policies = optional(map(object({
       id = string
     })))
-    service_endpoints = optional(list(string))
     service_endpoints_with_location = optional(list(object({
       service   = string
       locations = optional(list(string), ["*"])
@@ -549,13 +548,6 @@ DESCRIPTION
       )
     ])
     error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix or address_prefixes."
-  }
-  validation {
-    condition = alltrue([
-      for _, subnet in var.subnets :
-      !(subnet.service_endpoints != null && subnet.service_endpoints_with_location != null)
-    ])
-    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location` for the same subnet. Use only `service_endpoints_with_location` for the new format with location support."
   }
 }
 

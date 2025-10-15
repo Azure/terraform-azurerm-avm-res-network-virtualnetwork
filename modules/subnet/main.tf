@@ -35,10 +35,10 @@ resource "azapi_resource" "subnet" {
       routeTable = var.route_table != null ? {
         id = var.route_table.id
       } : null
-      serviceEndpoints = local.service_endpoints_to_use != null ? [
-        for service_endpoint in local.service_endpoints_to_use : {
+      serviceEndpoints = var.service_endpoints_with_location != null ? [
+        for service_endpoint in var.service_endpoints_with_location : {
           service   = service_endpoint.service
-          locations = can(service_endpoint.locations) ? service_endpoint.locations : null
+          locations = service_endpoint.locations
         }
       ] : null
       serviceEndpointPolicies = var.service_endpoint_policies != null ? [
@@ -49,7 +49,6 @@ resource "azapi_resource" "subnet" {
       sharingScope = var.sharing_scope
     }
   }
-  ignore_null_property      = true
   locks                     = [var.parent_id]
   response_export_values    = var.ipam_pools != null ? ["properties.addressPrefixes"] : []
   retry                     = var.retry
