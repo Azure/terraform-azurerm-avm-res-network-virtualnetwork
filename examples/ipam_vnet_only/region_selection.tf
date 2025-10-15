@@ -1,6 +1,6 @@
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.2"
+  version = "0.9.0"
 }
 
 # This allows us to randomize the region for the resource group.

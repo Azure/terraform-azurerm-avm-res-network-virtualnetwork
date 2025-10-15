@@ -241,7 +241,7 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.0
 
 ### <a name="module_vnet_retry_test"></a> [vnet\_retry\_test](#module\_vnet\_retry\_test)
 

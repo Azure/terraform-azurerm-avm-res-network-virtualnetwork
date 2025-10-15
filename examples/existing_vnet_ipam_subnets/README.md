@@ -327,7 +327,7 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.0
 
 ### <a name="module_traditional_subnet"></a> [traditional\_subnet](#module\_traditional\_subnet)
 

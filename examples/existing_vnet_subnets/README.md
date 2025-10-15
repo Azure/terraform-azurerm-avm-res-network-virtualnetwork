@@ -114,7 +114,7 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.0
 
 ### <a name="module_subnets"></a> [subnets](#module\_subnets)
 

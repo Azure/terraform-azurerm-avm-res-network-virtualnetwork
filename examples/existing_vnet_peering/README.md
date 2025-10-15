@@ -126,7 +126,7 @@ Version:
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.0
 
 ## Usage
 

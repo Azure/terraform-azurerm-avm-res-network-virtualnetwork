@@ -1,6 +1,9 @@
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.2"
+  version = "0.9.0"
+
+  has_pair       = true
+  is_recommended = true
 }
 
 # This allows us to randomize the region for the resource group.
@@ -63,6 +66,9 @@ locals {
     "australiacentral2"
   ]
   working_regions_from_module = [
-    for region in module.regions.regions : region.name if contains(local.working_regions, region.name)
+    for region in module.regions.regions : {
+      name               = region.name
+      paired_region_name = region.paired_region_name
+    } if contains(local.working_regions, region.name)
   ]
 }

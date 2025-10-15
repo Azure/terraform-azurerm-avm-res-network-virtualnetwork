@@ -52,7 +52,7 @@ resource "random_string" "this" {
 ## Section to create a resource group for the virtual network
 # This creates a resource group in the specified location
 resource "azurerm_resource_group" "this" {
-  location = local.selected_region
+  location = local.selected_region.name
   name     = "rg-avm-vnet-service-endpoints-${random_string.this.result}"
 }
 
@@ -74,11 +74,11 @@ module "virtualnetwork" {
       service_endpoints_with_location = [
         {
           service   = "Microsoft.Storage"
-          locations = [local.region.name, local.region.paired_region_name]
+          locations = [local.selected_region.name, local.selected_region.paired_region_name]
         },
         {
           service   = "Microsoft.Sql"
-          locations = [local.region.name]
+          locations = [local.selected_region.name]
         },
         {
           service   = "Microsoft.AzureCosmosDB"
@@ -165,7 +165,7 @@ The following Modules are called:
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.0
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
