@@ -222,7 +222,7 @@ variable "service_endpoints_with_location" {
   }))
   default     = null
   description = <<DESCRIPTION
-(Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+(Optional) A set of service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
 - `service` - (Required) The service name. Changing this forces a new resource to be created.
 - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
 DESCRIPTION

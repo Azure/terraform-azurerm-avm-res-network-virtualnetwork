@@ -216,7 +216,14 @@ module "vnet_ipam_traditional_subnets" {
       network_security_group = {
         id = azurerm_network_security_group.web.id
       }
-      service_endpoints = ["Microsoft.Storage", "Microsoft.Sql"]
+      service_endpoints_with_location = [
+        {
+          service = "Microsoft.Storage"
+        },
+        {
+          service = "Microsoft.Sql"
+        }
+      ]
     }
 
     app = {
@@ -225,7 +232,9 @@ module "vnet_ipam_traditional_subnets" {
       network_security_group = {
         id = azurerm_network_security_group.app.id
       }
-      service_endpoints = ["Microsoft.Storage"]
+      service_endpoints_with_location = [{
+        service = "Microsoft.Storage"
+      }]
     }
 
     data = {
@@ -263,7 +272,9 @@ module "additional_subnet" {
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
-  service_endpoints = ["Microsoft.KeyVault"]
+  service_endpoints_with_location = [{
+    service = "Microsoft.KeyVault"
+  }]
 
   depends_on = [module.vnet_ipam_traditional_subnets]
 }

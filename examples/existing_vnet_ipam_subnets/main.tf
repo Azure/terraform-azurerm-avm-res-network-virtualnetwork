@@ -215,7 +215,7 @@ module "ipam_subnet" {
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
-  service_endpoints = ["Microsoft.Storage"]
+  service_endpoints_with_location = [{ service = "Microsoft.Storage" }]
 }
 
 # Test: Create traditional subnet using the same module
@@ -229,5 +229,5 @@ module "traditional_subnet" {
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
-  service_endpoints = ["Microsoft.KeyVault"]
+  service_endpoints_with_location = [{ service = "Microsoft.KeyVault" }]
 }
