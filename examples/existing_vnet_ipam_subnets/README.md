@@ -123,7 +123,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "this" {
-  location = local.selected_region
+  location = local.selected_region.name
   name     = module.naming.resource_group.name_unique
 }
 
@@ -226,7 +226,10 @@ module "ipam_subnet" {
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
-  service_endpoints_with_location = [{ service = "Microsoft.Storage" }]
+  service_endpoints_with_location = [{
+    service   = "Microsoft.Storage"
+    locations = [local.selected_region.name, local.selected_region.paired_region_name]
+  }]
 }
 
 # Test: Create traditional subnet using the same module
@@ -240,7 +243,9 @@ module "traditional_subnet" {
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
-  service_endpoints_with_location = [{ service = "Microsoft.KeyVault" }]
+  service_endpoints_with_location = [{
+    service = "Microsoft.KeyVault"
+  }]
 }
 ```
 

@@ -61,6 +61,9 @@ locals {
     "austriaeast"
   ]
   working_regions_from_module = [
-    for region in module.regions.regions : region.name if contains(local.working_regions, region.name)
+    for region in module.regions.regions : {
+      name               = region.name
+      paired_region_name = region.paired_region_name
+    } if contains(local.working_regions, region.name)
   ]
 }

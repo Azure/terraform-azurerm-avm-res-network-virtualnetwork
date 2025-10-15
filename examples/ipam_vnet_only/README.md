@@ -181,7 +181,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "this" {
-  location = local.selected_region
+  location = local.selected_region.name
   name     = module.naming.resource_group.name_unique
 }
 
@@ -208,8 +208,6 @@ resource "azapi_resource" "network_manager" {
   }
   schema_validation_enabled = false
 }
-
-
 
 # IPAM Pool for VNet address space only
 resource "azapi_resource" "ipam_pool" {
@@ -287,10 +285,12 @@ module "vnet_ipam_traditional_subnets" {
       }
       service_endpoints_with_location = [
         {
-          service = "Microsoft.Storage"
+          service   = "Microsoft.Storage"
+          locations = [local.selected_region.name, local.selected_region.paired_region_name]
         },
         {
-          service = "Microsoft.Sql"
+          service   = "Microsoft.Sql"
+          locations = [local.selected_region.name]
         }
       ]
     }
@@ -302,7 +302,8 @@ module "vnet_ipam_traditional_subnets" {
         id = azurerm_network_security_group.app.id
       }
       service_endpoints_with_location = [{
-        service = "Microsoft.Storage"
+        service   = "Microsoft.Storage"
+        locations = [local.selected_region.name, local.selected_region.paired_region_name]
       }]
     }
 
