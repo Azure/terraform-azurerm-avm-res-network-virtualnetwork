@@ -21,22 +21,6 @@ provider "azurerm" {
   }
 }
 
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.7.0"
-
-  has_pair           = true
-  is_recommended     = true
-  recommended_filter = false # disabling legacy filter
-}
-
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
-}
-
 ## Section to provide a random suffix for the resource names
 # This allows us to randomize the names of the resources
 resource "random_string" "this" {
@@ -46,14 +30,11 @@ resource "random_string" "this" {
   upper   = false
 }
 
-locals {
-  region = module.regions.regions[random_integer.region_index.result]
-}
 
 ## Section to create a resource group for the virtual network
 # This creates a resource group in the specified location
 resource "azurerm_resource_group" "this" {
-  location = local.region.name
+  location = local.selected_region
   name     = "rg-avm-vnet-service-endpoints-${random_string.this.result}"
 }
 

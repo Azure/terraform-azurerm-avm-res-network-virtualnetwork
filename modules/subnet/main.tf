@@ -36,7 +36,7 @@ resource "azapi_resource" "subnet" {
     }
   }
   locks                     = [var.parent_id]
-  response_export_values    = ["properties.addressPrefixes"]
+  response_export_values    = ["properties.addressPrefixes", "properties.addressPrefix"]
   retry                     = var.retry
   schema_validation_enabled = true
 
