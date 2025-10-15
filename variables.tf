@@ -422,7 +422,6 @@ variable "subnets" {
     service_endpoint_policies = optional(map(object({
       id = string
     })))
-    service_endpoints = optional(list(string))
     service_endpoints_with_location = optional(list(object({
       service   = string
       locations = optional(list(string), ["*"])
@@ -474,8 +473,7 @@ variable "subnets" {
  - `private_endpoint_network_policies` - (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
- - `service_endpoints` - DEPRECATED: (Optional) The list of Service endpoints to associate with the subnet. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`. Use `service_endpoints_with_location` instead for the new format with location support.
- - `service_endpoints_with_location` - (Optional) Service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+ - `service_endpoints_with_location` - (Optional) Service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
    - `service` - (Required) The service name. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
    - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
 
@@ -549,13 +547,6 @@ DESCRIPTION
       )
     ])
     error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix or address_prefixes."
-  }
-  validation {
-    condition = alltrue([
-      for _, subnet in var.subnets :
-      !(subnet.service_endpoints != null && subnet.service_endpoints_with_location != null)
-    ])
-    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location` for the same subnet. Use only `service_endpoints_with_location` for the new format with location support."
   }
 }
 

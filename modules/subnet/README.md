@@ -136,6 +136,7 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_ipam](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_role_assignment.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -375,19 +376,9 @@ map(object({
 
 Default: `null`
 
-### <a name="input_service_endpoints"></a> [service\_endpoints](#input\_service\_endpoints)
-
-Description: DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
-
-Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
-
-Type: `list(string)`
-
-Default: `null`
-
 ### <a name="input_service_endpoints_with_location"></a> [service\_endpoints\_with\_location](#input\_service\_endpoints\_with\_location)
 
-Description: (Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+Description: (Optional) A set of service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
 - `service` - (Required) The service name. Changing this forces a new resource to be created.
 - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
 

@@ -28,20 +28,6 @@ provider "azurerm" {
   }
 }
 
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.2"
-}
-
-# This allows us to randomize the region for the resource group.
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
-}
-## End of section to provide a random Azure region for the resource group
-
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
@@ -50,7 +36,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
 
@@ -141,7 +127,7 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.0
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 

@@ -25,47 +25,13 @@ provider "azurerm" {
   }
 }
 
-locals {
-  regions = [
-    "eastus2",
-    "westus2",
-    "eastus",
-    "westeurope",
-    "uksouth",
-    "northeurope",
-    "centralus",
-    "australiaeast",
-    "westus",
-    "southcentralus",
-    "francecentral",
-    "southafricanorth",
-    "swedencentral",
-    "centralindia",
-    "eastasia",
-    "canadacentral",
-    "germanywestcentral",
-    "italynorth",
-    "norwayeast",
-    "polandcentral",
-    "switzerlandnorth",
-    "uaenorth",
-    "brazilsouth",
-    "israelcentral"
-  ]
-}
-
-resource "random_integer" "region_index" {
-  max = length(local.regions) - 1
-  min = 0
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.4.2"
 }
 
 resource "azurerm_resource_group" "this" {
-  location = local.regions[random_integer.region_index.result]
+  location = local.selected_region
   name     = "${module.naming.resource_group.name_unique}-retry-test"
 }
 

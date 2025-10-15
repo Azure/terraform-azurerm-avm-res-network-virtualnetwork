@@ -215,21 +215,6 @@ variable "service_endpoint_policies" {
 DESCRIPTION
 }
 
-variable "service_endpoints" {
-  type        = list(string)
-  default     = null
-  description = <<DESCRIPTION
-DEPRECATED: (Optional) A set of service endpoints to associate with the subnet. Changing this forces a new resource to be created.
-
-Use `var.service_endpoints_with_location` instead, which allows specifying locations for the service endpoints.
-DESCRIPTION
-
-  validation {
-    error_message = "Service endpoints must be unique."
-    condition     = var.service_endpoints != null ? length(var.service_endpoints) == length(toset(var.service_endpoints)) : true
-  }
-}
-
 variable "service_endpoints_with_location" {
   type = list(object({
     service   = string
@@ -237,15 +222,11 @@ variable "service_endpoints_with_location" {
   }))
   default     = null
   description = <<DESCRIPTION
-(Optional) A set of service endpoints with location restrictions to associate with the subnet. Cannot be used together with `service_endpoints`. Each service endpoint is an object with the following properties:
+(Optional) A set of service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
 - `service` - (Required) The service name. Changing this forces a new resource to be created.
 - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
 DESCRIPTION
 
-  validation {
-    condition     = !(var.service_endpoints != null && var.service_endpoints_with_location != null)
-    error_message = "Cannot specify both `service_endpoints` and `service_endpoints_with_location`. Use only `service_endpoints_with_location` for location support."
-  }
   validation {
     error_message = "Locations values must be unique"
     condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(toset(endpoint.locations)) == length(endpoint.locations)]) : true
