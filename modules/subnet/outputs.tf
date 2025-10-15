@@ -1,6 +1,6 @@
 output "address_prefixes" {
   description = "The address prefixes of the subnet. For IPAM subnets, this shows the dynamically allocated ranges."
-  value       = var.ipam_pools != null ? try(azapi_resource.subnet.output.properties.addressPrefixes, []) : (var.address_prefixes != null ? var.address_prefixes : (var.address_prefix != null ? [var.address_prefix] : []))
+  value       = local.ipam_enabled ? azapi_resource.subnet_ipam[0].output.properties.addressPrefixes : azapi_resource.subnet[0].output.properties.addressPrefixes
 }
 
 output "application_gateway_ip_configuration_resource_id" {

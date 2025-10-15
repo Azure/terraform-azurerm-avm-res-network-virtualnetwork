@@ -1,4 +1,5 @@
 locals {
+  ipam_enabled                       = var.ipam_pools != null
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }
 

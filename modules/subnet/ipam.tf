@@ -1,13 +1,23 @@
-resource "azapi_resource" "subnet" {
-  count = local.ipam_enabled ? 0 : 1
+resource "azapi_resource" "subnet_ipam" {
+  count = local.ipam_enabled ? 1 : 0
 
   name      = var.name
   parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {
-      addressPrefix         = var.ipam_pools == null ? var.address_prefix : null
-      addressPrefixes       = var.ipam_pools == null ? var.address_prefixes : null
+      ipamPoolPrefixAllocations = [
+        for pool in var.ipam_pools : {
+          pool = {
+            id = pool.pool_id
+          }
+          numberOfIpAddresses = tostring(
+            pool.prefix_length <= 32
+            ? pow(2, 32 - pool.prefix_length) # IPv4 calculation
+            : 0                               # IPv6 - Azure uses 0 for IPv6 pools
+          )
+        }
+      ]
       delegations           = local.delegations
       defaultOutboundAccess = var.default_outbound_access_enabled
       natGateway = var.nat_gateway != null ? {
@@ -46,22 +56,4 @@ resource "azapi_resource" "subnet" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
-}
-
-moved {
-  from = azapi_resource.subnet
-  to   = azapi_resource.subnet[0]
-}
-
-resource "azurerm_role_assignment" "subnet" {
-  for_each = var.role_assignments
-
-  principal_id                           = each.value.principal_id
-  scope                                  = local.ipam_enabled ? azapi_resource.subnet_ipam[0].id : azapi_resource.subnet[0].id
-  condition                              = each.value.condition
-  condition_version                      = each.value.condition_version
-  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
-  role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
-  role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
