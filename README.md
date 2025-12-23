@@ -57,6 +57,9 @@ This module provides comprehensive IPAM (IP Address Management) support through 
 - **[existing\_vnet\_ipam\_subnets](examples/existing\_vnet\_ipam\_subnets/)** - Adding IPAM subnets to existing VNet managed by IPAM
 - **[ipam\_vnet\_only](examples/ipam\_vnet\_only/)** - IPAM VNet creation without subnets
 
+### Shared Interface Example
+- **[shared\_interfaces](examples/shared\_interfaces/)** - Exercises AVM shared interfaces (diagnostics, role assignments, lock) for VNet and subnets
+
 ## Prerequisites
 
 ### For IPAM Features
@@ -216,7 +219,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_address_space"></a> [address\_space](#input\_address\_space)
 
-Description:   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.  
+Description:   (Optional) The address spaces applied to the virtual network. You can supply more than one address space.
   Either address\_space or ipam\_pools must be specified, but not both.
 
 Type: `set(string)`
@@ -301,8 +304,8 @@ Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
+Description: This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
