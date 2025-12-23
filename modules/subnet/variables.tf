@@ -166,6 +166,13 @@ variable "retry" {
   description = "Retry configuration for the resource operations, includes IPAM-specific error patterns"
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = "Controls whether telemetry headers are sent to Azure APIs when using AzAPI resources."
+  nullable    = false
+}
+
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string

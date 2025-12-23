@@ -21,4 +21,5 @@ module "subnet" {
   service_endpoints_with_location               = each.value.service_endpoints_with_location
   sharing_scope                                 = each.value.sharing_scope
   timeouts                                      = each.value.timeouts
+  enable_telemetry                              = var.enable_telemetry
 }
