@@ -1,14 +1,9 @@
 output "address_prefixes" {
   description = "The address prefixes of the subnet. For IPAM subnets, this shows the dynamically allocated ranges."
-  value = local.ipam_enabled ? azapi_resource.subnet_ipam[0].output.properties.addressPrefixes : (
-    # Try to get from output.properties first (normal operation)
-    try(azapi_resource.subnet[0].output.properties.addressPrefixes, null) != null ?
-    azapi_resource.subnet[0].output.properties.addressPrefixes :
-    try([azapi_resource.subnet[0].output.properties.addressPrefix], null) != null ?
-    [azapi_resource.subnet[0].output.properties.addressPrefix] :
-    # Fallback to body for import scenarios (when output.properties doesn't contain address info)
-    try(azapi_resource.subnet[0].body.properties.addressPrefixes, null) != null ?
-    azapi_resource.subnet[0].body.properties.addressPrefixes :
+  value = local.ipam_enabled ? azapi_resource.subnet_ipam[0].output.properties.addressPrefixes : try(
+    azapi_resource.subnet[0].output.properties.addressPrefixes,
+    [azapi_resource.subnet[0].output.properties.addressPrefix],
+    azapi_resource.subnet[0].body.properties.addressPrefixes,
     [azapi_resource.subnet[0].body.properties.addressPrefix]
   )
 }
