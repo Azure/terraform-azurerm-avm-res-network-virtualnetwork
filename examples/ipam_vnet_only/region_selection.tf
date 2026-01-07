@@ -11,7 +11,7 @@ resource "random_integer" "region_index" {
 
 locals {
   selected_region = local.working_regions_from_module[random_integer.region_index.result]
-  # Regions that allow resource group and avnm ipam creation as of 15-Oct-2025
+  # Regions that support AVNM IPAM as of 15-Oct-2025
   working_regions = [
     "eastus2",
     "westus2",
