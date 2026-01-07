@@ -127,4 +127,8 @@ module "vnet2" {
       address_prefixes = ["10.2.5.0/24", "10.2.6.0/24"]
     }
   }
+
+  depends_on = [
+    azapi_update_resource.allow_multiple_peering_links_between_vnets
+  ]
 }
