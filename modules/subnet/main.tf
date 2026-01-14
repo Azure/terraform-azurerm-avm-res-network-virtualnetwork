@@ -53,15 +53,19 @@ moved {
   to   = azapi_resource.subnet[0]
 }
 
-resource "azurerm_role_assignment" "subnet" {
-  for_each = var.role_assignments
+module "avm_interfaces" {
+  source = "git::https://github.com/Azure/terraform-azure-avm-utl-interfaces.git?ref=feat/prepv1"
+  #version = "0.4.0"
 
-  principal_id                           = each.value.principal_id
-  scope                                  = local.ipam_enabled ? azapi_resource.subnet_ipam[0].id : azapi_resource.subnet[0].id
-  condition                              = each.value.condition
-  condition_version                      = each.value.condition_version
-  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
-  role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
-  role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+  # Required by the interfaces module (used for some extension resources).
+  parent_id        = var.parent_id
+  this_resource_id = local.ipam_enabled ? azapi_resource.subnet_ipam[0].id : azapi_resource.subnet[0].id
+  enable_telemetry = var.enable_telemetry
+
+  role_assignments = var.role_assignments
+}
+
+moved {
+  from = azurerm_role_assignment.subnet
+  to   = module.avm_interfaces.azapi_resource.role_assignments
 }
