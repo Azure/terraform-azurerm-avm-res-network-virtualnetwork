@@ -193,7 +193,7 @@ DESCRIPTION
 
   validation {
     condition = alltrue([
-      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : can(regex("^\\/subscriptions\\/[\\w-]+\\/resourceGroups\\/[\\w-]+\\/providers\\/Microsoft\\.Network\\/networkManagers\\/[\\w-]+\\/ipamPools\\/[\\w-]+$", ipam_pool.id))
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : can(regex("^\\/subscriptions\\/[\\w-]+\\/resourceGroups\\/[\\w-]+\\/providers\\/Microsoft\\.Network\\/networkManagers\\/[\\w-]+\\/ipamPools\\/[\\w\\.-]+$", ipam_pool.id))
     ]) || var.ipam_pools == null
     error_message = "IPAM pool ID must be a valid ipamPools resource ID."
   }
