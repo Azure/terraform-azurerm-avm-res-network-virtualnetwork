@@ -11,7 +11,7 @@ resource "azapi_resource" "vnet" {
         var.ipam_pools != null ? {
           ipamPoolPrefixAllocations = [
             for ipam_pool in var.ipam_pools : {
-              numberOfIpAddresses = tostring(pow(2, (ipam_pool.prefix_length >= 48 ? 128 : 32) - ipam_pool.prefix_length))
+              numberOfIpAddresses = ipam_pool.number_of_ip_addresses != null ? ipam_pool.number_of_ip_addresses : tostring(pow(2, (ipam_pool.prefix_length >= 48 ? 128 : 32) - ipam_pool.prefix_length))
               pool = {
                 id = ipam_pool.id
               }

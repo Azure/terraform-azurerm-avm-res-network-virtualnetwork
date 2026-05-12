@@ -270,8 +270,8 @@ module "vnet_ipam_traditional_subnets" {
   enable_telemetry = true
   # VNet address space allocated from IPAM pool
   ipam_pools = [{
-    id            = azapi_resource.ipam_pool.id
-    prefix_length = 16 # /16 VNet from the /12 pool
+    id                     = azapi_resource.ipam_pool.id
+    number_of_ip_addresses = "65536" # /16 VNet from the /12 pool
   }]
   name = "${module.naming.virtual_network.name_unique}-ipam-vnet"
   # Traditional subnets with static addressing (IPAM VNet gets dynamic space)
