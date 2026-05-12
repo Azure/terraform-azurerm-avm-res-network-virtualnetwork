@@ -233,7 +233,8 @@ Default: `null`
 Description: (Optional) A list of IPAM pools to allocate subnet address space from. Each pool supports the following:
 
 - `pool_id` - (Required) The ID of the IPAM pool to allocate from.
-- `prefix_length` - (Required) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet).
+- `number_of_ip_addresses` - (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
+- `prefix_length` - (Optional) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet). Required if `number_of_ip_addresses` is not specified.
 
 Note: Only one IPAM pool allocation per subnet is currently supported. When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
 
@@ -241,8 +242,9 @@ Type:
 
 ```hcl
 list(object({
-    pool_id       = string
-    prefix_length = number
+    pool_id                = string
+    number_of_ip_addresses = optional(string)
+    prefix_length          = optional(number)
   }))
 ```
 

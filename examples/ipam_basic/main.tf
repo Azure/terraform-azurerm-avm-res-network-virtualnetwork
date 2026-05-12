@@ -91,8 +91,8 @@ module "vnet_retry_test" {
   enable_telemetry = true
   # VNet gets address space from IPAM pool
   ipam_pools = [{
-    id            = azapi_resource.ipam_pool.id
-    prefix_length = 24 # /24 VNet (256 IP addresses)
+    id                     = azapi_resource.ipam_pool.id
+    number_of_ip_addresses = "256"
   }]
   name = "${module.naming.virtual_network.name_unique}-retry-test"
   # Multiple IPAM subnets - this should test the retry logic
@@ -101,29 +101,29 @@ module "vnet_retry_test" {
     subnet1 = {
       name = "subnet1-retry-test"
       ipam_pools = [{
-        pool_id       = azapi_resource.ipam_pool.id
-        prefix_length = 26 # /26 (64 addresses)
+        pool_id                = azapi_resource.ipam_pool.id
+        number_of_ip_addresses = "64"
       }]
     }
     subnet2 = {
       name = "subnet2-retry-test"
       ipam_pools = [{
-        pool_id       = azapi_resource.ipam_pool.id
-        prefix_length = 26 # /26 (64 addresses) - may overlap with subnet1 initially
+        pool_id                = azapi_resource.ipam_pool.id
+        number_of_ip_addresses = "64"
       }]
     }
     subnet3 = {
       name = "subnet3-retry-test"
       ipam_pools = [{
-        pool_id       = azapi_resource.ipam_pool.id
-        prefix_length = 27 # /27 (32 addresses)
+        pool_id                = azapi_resource.ipam_pool.id
+        number_of_ip_addresses = "32"
       }]
     }
     subnet4 = {
       name = "subnet4-retry-test"
       ipam_pools = [{
-        pool_id       = azapi_resource.ipam_pool.id
-        prefix_length = 27 # /27 (32 addresses)
+        pool_id                = azapi_resource.ipam_pool.id
+        number_of_ip_addresses = "32"
       }]
     }
   }

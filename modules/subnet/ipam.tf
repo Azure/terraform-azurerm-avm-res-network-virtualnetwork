@@ -11,7 +11,7 @@ resource "azapi_resource" "subnet_ipam" {
           pool = {
             id = pool.pool_id
           }
-          numberOfIpAddresses = tostring(
+          numberOfIpAddresses = pool.number_of_ip_addresses != null ? pool.number_of_ip_addresses : tostring(
             pool.prefix_length <= 32
             ? pow(2, 32 - pool.prefix_length) # IPv4 calculation
             : 0                               # IPv6 - Azure uses 0 for IPv6 pools
