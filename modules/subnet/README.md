@@ -235,7 +235,9 @@ Description: (Optional) A list of IPAM pools to allocate subnet address space fr
 - `pool_id` - (Required) The ID of the IPAM pool to allocate from.
 - `prefix_length` - (Required) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet).
 
-Note: Only one IPAM pool allocation per subnet is currently supported. When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
+Multiple entries are supported and are passed through to the Azure API as separate `ipamPoolPrefixAllocations`. The platform combines the allocated ranges into the resulting `addressPrefixes` on the subnet. Multiple entries referencing the same `pool_id` are allowed; the IPAM service treats them as independent allocations against that pool.
+
+When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
 
 Type:
 
