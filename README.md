@@ -609,6 +609,9 @@ Description: (Optional) A map of subnets to create
  - `id` - (Optional) The ID of the Route Table which should be associated with the Subnet. Changing this forces a new association to be created.
 
  ---
+ `ignore_route_table_changes` - (Optional) When set to `true`, the subnet is managed via an alternate `azapi_resource` block whose `lifecycle.ignore_changes` includes `body.properties.routeTable`. This lets an external owner (Azure Virtual Network Manager routing configuration in `ManagedOnly` mode, or a Policy `deployIfNotExists` route-table assignment) own the route-table association without Terraform stripping it on subsequent PUTs against unrelated subnet attributes. Defaults to `false`. Flipping this flag on an existing subnet replaces the underlying resource; use `moved` blocks in the calling module if you need to preserve state.
+
+ ---
  `timeouts` (Optional) supports the following:
  - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
  - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
@@ -691,6 +694,7 @@ map(object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })))
+    ignore_route_table_changes = optional(bool, false)
   }))
 ```
 
