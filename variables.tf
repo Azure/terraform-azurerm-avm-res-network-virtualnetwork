@@ -206,6 +206,12 @@ DESCRIPTION
     error_message = "Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6."
   }
   validation {
+    condition = alltrue([
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool.number_of_ip_addresses != null || ipam_pool.prefix_length != null
+    ]) || var.ipam_pools == null
+    error_message = "Each IPAM pool entry must specify either number_of_ip_addresses or prefix_length."
+  }
+  validation {
     condition     = var.ipam_pools == null || (length(var.ipam_pools) >= 1 && length(var.ipam_pools) <= 2)
     error_message = "Only one or two IPAM pools can be specified."
   }
