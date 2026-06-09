@@ -185,7 +185,9 @@ variable "ipam_pools" {
   }))
   default     = null
   description = <<DESCRIPTION
-(Optional) Specifies the IPAM settings for requesting an address_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+(Optional) Specifies the IPAM settings for requesting an address_space from an IP Pool.
+
+A virtual network supports a maximum of two IPv4 prefix allocations and two IPv6 prefix allocations. When more than one IPv4 (or more than one IPv6) allocation is supplied, every allocation of that IP family must reference the same IPAM pool `id`.
 
 - `id`: The ID of the IPAM pool.
 - `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.
@@ -204,22 +206,32 @@ DESCRIPTION
     error_message = "Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6."
   }
   validation {
-    condition = alltrue([
-      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : length(ipam_pool) >= 1 && length(ipam_pool) <= 2
-    ]) || var.ipam_pools == null
-    error_message = "Only one or two IPAM pools can be specified."
+    condition     = var.ipam_pools == null ? true : length(var.ipam_pools) >= 1 && length(var.ipam_pools) <= 4
+    error_message = "Between one and four IPAM pool allocations can be specified (a maximum of two IPv4 and two IPv6 prefix allocations per virtual network)."
   }
   validation {
-    condition = length([
-      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length == 64
-    ]) <= 1 || var.ipam_pools == null
-    error_message = "Only one IPv6 pool can be specified."
+    condition = var.ipam_pools == null ? true : length([
+      for ipam_pool in var.ipam_pools : ipam_pool if ipam_pool.prefix_length >= 48 && ipam_pool.prefix_length <= 64
+    ]) <= 2
+    error_message = "A maximum of two IPv6 prefix allocations can be specified per virtual network."
   }
   validation {
-    condition = length([
-      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
-    ]) <= 1 || var.ipam_pools == null
-    error_message = "Only one IPv4 pool can be specified."
+    condition = var.ipam_pools == null ? true : length([
+      for ipam_pool in var.ipam_pools : ipam_pool if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
+    ]) <= 2
+    error_message = "A maximum of two IPv4 prefix allocations can be specified per virtual network."
+  }
+  validation {
+    condition = var.ipam_pools == null ? true : length(distinct([
+      for ipam_pool in var.ipam_pools : ipam_pool.id if ipam_pool.prefix_length >= 2 && ipam_pool.prefix_length <= 29
+    ])) <= 1
+    error_message = "When a virtual network contains multiple IPv4 allocations, all allocations must reference the same IPv4 IPAM pool `id`."
+  }
+  validation {
+    condition = var.ipam_pools == null ? true : length(distinct([
+      for ipam_pool in var.ipam_pools : ipam_pool.id if ipam_pool.prefix_length >= 48 && ipam_pool.prefix_length <= 64
+    ])) <= 1
+    error_message = "When a virtual network contains multiple IPv6 allocations, all allocations must reference the same IPv6 IPAM pool `id`."
   }
 }
 

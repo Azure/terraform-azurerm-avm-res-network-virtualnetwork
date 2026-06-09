@@ -365,7 +365,9 @@ Default: `null`
 
 ### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
 
-Description: (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
+Description: (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool.
+
+A virtual network supports a maximum of two IPv4 prefix allocations and two IPv6 prefix allocations. When more than one IPv4 (or more than one IPv6) allocation is supplied, every allocation of that IP family must reference the same IPAM pool `id`.
 
 - `id`: The ID of the IPAM pool.
 - `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.

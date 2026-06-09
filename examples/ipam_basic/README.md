@@ -143,10 +143,16 @@ module "vnet_retry_test" {
   parent_id        = azurerm_resource_group.this.id
   enable_telemetry = true
   # VNet gets address space from IPAM pool
-  ipam_pools = [{
-    id            = azapi_resource.ipam_pool.id
-    prefix_length = 24 # /24 VNet (256 IP addresses)
-  }]
+  ipam_pools = [
+    {
+      id            = azapi_resource.ipam_pool.id
+      prefix_length = 24 # /24 VNet (256 IP addresses)
+    },
+    {
+      id            = azapi_resource.ipam_pool.id
+      prefix_length = 24 # /24 VNet (256 IP addresses)
+    }
+  ]
   name = "${module.naming.virtual_network.name_unique}-retry-test"
   # Multiple IPAM subnets - this should test the retry logic
   subnets = {
