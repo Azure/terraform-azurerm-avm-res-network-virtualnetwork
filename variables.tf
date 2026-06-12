@@ -217,7 +217,7 @@ DESCRIPTION
   }
   validation {
     condition = length([
-      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length == 64
+      for ipam_pool in var.ipam_pools != null ? var.ipam_pools : [] : ipam_pool if ipam_pool.prefix_length != null ? ipam_pool.prefix_length >= 48 && ipam_pool.prefix_length <= 64 : false
     ]) <= 1 || var.ipam_pools == null
     error_message = "Only one IPv6 pool can be specified."
   }
