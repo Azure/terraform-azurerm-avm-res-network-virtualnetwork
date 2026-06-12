@@ -1,5 +1,3 @@
-
-
 resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
@@ -62,5 +60,3 @@ resource "azapi_resource" "vnet" {
     update = var.timeouts.update
   }
 }
-
-
