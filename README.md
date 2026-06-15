@@ -27,7 +27,7 @@ The module supports:
 - Assigning delegations to subnets
 - **IPAM pool allocation for virtual network address space**
 - **IPAM pool allocation for individual subnets**
-- **Mixed IPAM and traditional addressing within the same virtual network**
+- **Choice of IPAM or traditional static addressing per virtual network**
 
 ## IPAM Support
 
@@ -36,8 +36,7 @@ This module provides comprehensive IPAM (IP Address Management) support through 
 ### What IPAM Provides
 - **VNet address space allocation** from centralized IPAM pools
 - **Subnet address allocation** from IPAM pools
-- **Multiple pool support** for IPv4 and IPv6 addressing
-- **Mixed addressing** - combine IPAM and traditional subnets in the same VNet
+- **Dual-stack support** - one IPv4 pool and one IPv6 pool per virtual network
 - **All standard subnet features** work with IPAM subnets (NSGs, service endpoints, delegations, etc.)
 
 ### Benefits
@@ -56,6 +55,21 @@ This module provides comprehensive IPAM (IP Address Management) support through 
 - **[ipam\_basic](examples/ipam\_basic/)** - Complete IPAM usage with VNet and multiple subnets
 - **[existing\_vnet\_ipam\_subnets](examples/existing\_vnet\_ipam\_subnets/)** - Adding IPAM subnets to existing VNet managed by IPAM
 - **[ipam\_vnet\_only](examples/ipam\_vnet\_only/)** - IPAM VNet creation without subnets
+
+### IPAM Allocation Rules and Sizing
+
+Address space is requested from an IPAM pool as a **single allocation per pool**. The following are enforced by the Azure Resource Provider (they are platform rules, not module limitations):
+
+| Rule | Detail |
+|------|--------|
+| One pool per IP type | At most one IPv4 pool and one IPv6 pool per virtual network. |
+| No duplicate pools | The same pool cannot be referenced more than once on a VNet or subnet. |
+| No IPAM + static mix | A virtual network uses either IPAM pools or a static `address_space`, not both. |
+| Subnet pools are a subset | A subnet may only reference pools that its virtual network already uses. |
+
+**Sizing:** set the size on the single pool entry using either `number_of_ip_addresses` (for example `"256"`) or `prefix_length` (for example `24`). To request more address space from a pool, increase that value - do **not** add a second entry for the same pool.
+
+**Resolved prefixes (summarization vs. fragmentation):** Azure resolves one allocation into one or more CIDR blocks. Contiguous free space is summarized into a single larger prefix (for example two `/21` worth of space surface as one `/20`); fragmented free space is returned as multiple non-adjacent prefixes (for example a single allocation may surface as `/25` + `/28`). This is why one pool can show a varying number of address prefixes. The module exposes these resolved prefixes as a **read-only** output, so summarization or fragmentation does **not** cause Terraform drift.
 
 ## Prerequisites
 
@@ -162,6 +176,11 @@ module "avm-res-network-subnet" {
 - **"Network Manager not found"**: Ensure Azure Virtual Network Manager exists before creating IPAM pools
 - **"Subnet overlap errors"**: Module uses retry logic to handle allocation conflicts automatically
 - **"Pool exhausted"**: Check that your IPAM pool has sufficient available address space for the requested subnets
+- **`CannotHaveDuplicatePoolIds`**: The same pool is referenced more than once. Use a single `ipam_pools` entry and increase `number_of_ip_addresses` instead of adding duplicate entries.
+- **`only one association of each IP type is allowed`**: Only one IPv4 pool and one IPv6 pool are permitted per virtual network. Remove the additional same-family pool.
+- **`CannotMixAddressPrefixAndPoolInPayload`**: A virtual network cannot combine IPAM pools with a static `address_space`. Choose one addressing model.
+- **`SubnetPoolsMustBeSubsetOfVnetPools`**: A subnet references a pool that its virtual network does not use. Reference the pool on the VNet first.
+- **A single pool shows multiple or changing address prefixes**: Expected behavior. One allocation is resolved into one or more CIDRs (summarized when contiguous, split when fragmented). These resolved prefixes are read-only and do not cause Terraform drift.
 ```
 ```
 
