@@ -82,15 +82,17 @@ DESCRIPTION
 
 variable "ipam_pools" {
   type = list(object({
-    pool_id       = string
-    prefix_length = number
+    pool_id                = string
+    number_of_ip_addresses = optional(string)
+    prefix_length          = optional(number)
   }))
   default     = null
   description = <<DESCRIPTION
 (Optional) A list of IPAM pools to allocate subnet address space from. Each pool supports the following:
 
 - `pool_id` - (Required) The ID of the IPAM pool to allocate from.
-- `prefix_length` - (Required) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet).
+- `number_of_ip_addresses` - (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
+- `prefix_length` - (Optional) The prefix length for the subnet allocation (e.g., 24 for a /24 subnet). Required if `number_of_ip_addresses` is not specified.
 
 Note: Only one IPAM pool allocation per subnet is currently supported. When using IPAM pools, do not specify `address_prefix` or `address_prefixes`.
 DESCRIPTION
@@ -100,8 +102,8 @@ DESCRIPTION
     error_message = "Only one IPAM pool allocation per subnet is supported."
   }
   validation {
-    condition     = var.ipam_pools == null ? true : alltrue([for pool in var.ipam_pools : pool.prefix_length >= 16 && pool.prefix_length <= 30])
-    error_message = "IPAM pool prefix_length must be between 16 and 30 for IPv4 subnets."
+    condition     = var.ipam_pools == null ? true : alltrue([for pool in var.ipam_pools : pool.number_of_ip_addresses != null || (pool.prefix_length != null && pool.prefix_length >= 16 && pool.prefix_length <= 30)])
+    error_message = "Either number_of_ip_addresses or a prefix_length between 16 and 30 must be specified for each IPAM pool."
   }
 }
 

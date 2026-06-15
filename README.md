@@ -368,14 +368,16 @@ Default: `null`
 Description: (Optional) Specifies the IPAM settings for requesting an address\_space from an IP Pool. Only one IPv4 and one IPv6 pool can be specified.
 
 - `id`: The ID of the IPAM pool.
-- `prefix_length`: The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.
+- `number_of_ip_addresses`: (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
+- `prefix_length`: (Optional) The length of the /XX CIDR range to request. for example 24 for a /24. Prefix length must be between 2 and 29 for IPv4 and 48 and 64 for IPv6.
 
 Type:
 
 ```hcl
 list(object({
-    id            = string
-    prefix_length = number
+    id                     = string
+    number_of_ip_addresses = optional(string)
+    prefix_length          = optional(number)
   }))
 ```
 
@@ -574,7 +576,8 @@ Description: (Optional) A map of subnets to create
  - `address_prefixes` - (Optional) The address prefixes to use for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be specified.
  - `ipam_pools` - (Optional) IPAM pools to allocate address space from. When specified, the subnet will request address space from these pools. Each pool configuration supports:
    - `pool_id`: Resource ID of the IPAM pool to allocate from
-   - `prefix_length`: The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
+   - `number_of_ip_addresses`: (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
+   - `prefix_length`: (Optional) The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
    - `allocation_type`: Type of allocation - "Static" (default) or "Dynamic"
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
@@ -640,9 +643,10 @@ map(object({
     address_prefixes = optional(list(string))
     name             = string
     ipam_pools = optional(list(object({
-      pool_id         = string
-      prefix_length   = optional(number)
-      allocation_type = optional(string, "Static")
+      pool_id                = string
+      number_of_ip_addresses = optional(string)
+      prefix_length          = optional(number)
+      allocation_type        = optional(string, "Static")
     })))
     nat_gateway = optional(object({
       id = string
