@@ -136,7 +136,9 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_ignore_route_table](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet_ipam](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_ipam_ignore_route_table](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_role_assignment.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -227,6 +229,27 @@ list(object({
 ```
 
 Default: `null`
+
+### <a name="input_ignore_route_table_changes"></a> [ignore\_route\_table\_changes](#input\_ignore\_route\_table\_changes)
+
+Description: (Optional) When set to `true`, the module manages the subnet via an alternate `azapi_resource` block whose `lifecycle.ignore_changes` includes `body.properties.routeTable`. This lets an external controller (such as Azure Virtual Network Manager routing configurations in `ManagedOnly` mode, or a Policy `deployIfNotExists` route-table assignment) own the route-table association without Terraform stripping it on subsequent `apply` operations against unrelated subnet attributes.
+
+When set to `false` (default), the module retains full ownership of `routeTable` and will assert `var.route_table` (or `null`) on every PUT — matching the behaviour of earlier module versions.
+
+**State migration when flipping from `false` to `true` on an existing subnet:** the underlying resource address changes from `azapi_resource.subnet[0]` (or `azapi_resource.subnet_ipam[0]` for IPAM subnets) to `azapi_resource.subnet_ignore_route_table[0]` (or `azapi_resource.subnet_ipam_ignore_route_table[0]`). Without an explicit `moved` block in the calling configuration, Terraform plans a destroy-and-recreate. Add a `moved` block alongside the call to this submodule, for example:
+
+```hcl
+moved {
+  from = module.vnet.module.subnet["my-subnet"].azapi_resource.subnet[0]
+  to   = module.vnet.module.subnet["my-subnet"].azapi_resource.subnet_ignore_route_table[0]
+}
+```
+
+(Use `subnet_ipam` → `subnet_ipam_ignore_route_table` for IPAM-allocated subnets.) New subnets created with the flag already `true` need no migration.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
 
