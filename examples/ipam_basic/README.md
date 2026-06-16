@@ -80,7 +80,7 @@ provider "azurerm" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -235,13 +235,13 @@ The following Modules are called:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.0
+Version: 0.12.0
 
 ### <a name="module_vnet_retry_test"></a> [vnet\_retry\_test](#module\_vnet\_retry\_test)
 
