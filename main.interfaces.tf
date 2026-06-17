@@ -1,11 +1,37 @@
-# Applying Management Lock to the Virtual Network if specified.
-resource "azurerm_management_lock" "this" {
-  count = (var.lock != null ? 1 : 0)
+# Shared AVM interfaces (lock, role assignments, diagnostic settings) transformed
+# into azapi resource payloads via the avm-utl-interfaces utility module.
+module "interfaces" {
+  source  = "Azure/avm-utl-interfaces/azure"
+  version = "0.6.0"
 
-  lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
-  scope      = azapi_resource.vnet.id
-  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
+  diagnostic_settings              = var.diagnostic_settings
+  enable_telemetry                 = var.enable_telemetry
+  lock                             = var.lock
+  role_assignment_definition_scope = local.role_assignment_definition_scope
+  role_assignments                 = var.role_assignments
+}
+
+# Applying Management Lock to the Virtual Network if specified.
+resource "azapi_resource" "lock" {
+  count = var.lock != null ? 1 : 0
+
+  name                   = coalesce(module.interfaces.lock_azapi.name, "lock-${var.lock.kind}")
+  parent_id              = azapi_resource.vnet.id
+  type                   = module.interfaces.lock_azapi.type
+  body                   = module.interfaces.lock_azapi.body
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  retry                  = var.retry
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  timeouts {
+    create = var.timeouts.create
+    delete = var.timeouts.delete
+    read   = var.timeouts.read
+    update = var.timeouts.update
+  }
 
   depends_on = [
     azapi_resource.vnet,
@@ -14,47 +40,72 @@ resource "azurerm_management_lock" "this" {
   ]
 }
 
-resource "azurerm_role_assignment" "vnet_level" {
-  for_each = var.role_assignments
+resource "azapi_resource" "role_assignments" {
+  for_each = module.interfaces.role_assignments_azapi
 
-  principal_id                           = each.value.principal_id
-  scope                                  = azapi_resource.vnet.id
-  condition                              = each.value.condition
-  condition_version                      = each.value.condition_version
-  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
-  role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
-  role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+  name                   = each.value.name
+  parent_id              = azapi_resource.vnet.id
+  type                   = each.value.type
+  body                   = each.value.body
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property   = true
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  retry                  = var.retry
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  timeouts {
+    create = var.timeouts.create
+    delete = var.timeouts.delete
+    read   = var.timeouts.read
+    update = var.timeouts.update
+  }
 
   depends_on = [
     azapi_resource.vnet
   ]
 }
 
-resource "azurerm_monitor_diagnostic_setting" "this" {
-  for_each = var.diagnostic_settings
+resource "azapi_resource" "diagnostic_settings" {
+  for_each = module.interfaces.diagnostic_settings_azapi
 
-  name                           = each.value.name != null ? each.value.name : "diag-${var.name}"
-  target_resource_id             = azapi_resource.vnet.id
-  eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id
-  eventhub_name                  = each.value.event_hub_name
-  log_analytics_destination_type = each.value.log_analytics_destination_type == "Dedicated" ? null : each.value.log_analytics_destination_type
-  log_analytics_workspace_id     = each.value.workspace_resource_id
-  partner_solution_id            = each.value.marketplace_partner_resource_id
-  storage_account_id             = each.value.storage_account_resource_id
+  name                      = coalesce(each.value.name, "diag-${var.name}")
+  parent_id                 = azapi_resource.vnet.id
+  type                      = each.value.type
+  body                      = each.value.body
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_null_property      = true
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values    = []
+  retry                     = var.retry
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
-  dynamic "enabled_log" {
-    for_each = each.value.log_categories
-
-    content {
-      category = enabled_log.value
-    }
+  timeouts {
+    create = var.timeouts.create
+    delete = var.timeouts.delete
+    read   = var.timeouts.read
+    update = var.timeouts.update
   }
-  dynamic "enabled_log" {
-    for_each = each.value.log_groups
 
-    content {
-      category_group = enabled_log.value
-    }
-  }
+  depends_on = [
+    azapi_resource.vnet
+  ]
+}
+
+moved {
+  from = azurerm_management_lock.this[0]
+  to   = azapi_resource.lock[0]
+}
+
+moved {
+  from = azurerm_role_assignment.vnet_level
+  to   = azapi_resource.role_assignments
+}
+
+moved {
+  from = azurerm_monitor_diagnostic_setting.this
+  to   = azapi_resource.diagnostic_settings
 }
