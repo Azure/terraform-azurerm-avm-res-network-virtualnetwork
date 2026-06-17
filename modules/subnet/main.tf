@@ -60,6 +60,7 @@ resource "azapi_resource" "role_assignments" {
   parent_id              = local.ipam_enabled ? azapi_resource.subnet_ipam[0].id : azapi_resource.subnet[0].id
   type                   = each.value.type
   body                   = each.value.body
+  ignore_null_property   = true
   response_export_values = []
   retry                  = var.retry
 }
