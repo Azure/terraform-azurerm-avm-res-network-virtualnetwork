@@ -165,7 +165,7 @@ variable "extended_location" {
 DESCRIPTION
 
   validation {
-    condition     = var.extended_location != null ? contains("EdgeZone", var.extended_location.type) : true
+    condition     = var.extended_location != null ? var.extended_location.type == "EdgeZone" : true
     error_message = "Extended location type must be EdgeZone"
   }
 }
