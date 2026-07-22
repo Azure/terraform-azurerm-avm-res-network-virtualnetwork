@@ -7,7 +7,6 @@
 # extended_location. It must accept a valid EdgeZone and reject other types.
 
 mock_provider "azapi" {}
-mock_provider "azurerm" {}
 mock_provider "modtm" {}
 mock_provider "random" {}
 
