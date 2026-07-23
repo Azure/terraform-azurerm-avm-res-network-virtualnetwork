@@ -73,7 +73,7 @@ For comprehensive multi-subnet IPAM scenarios with time-delayed sequential creat
 ### For IPAM Subnets
 - **IPAM-enabled Virtual Network**: Parent VNet must be created with IPAM pools (not traditional VNet)
 - **Azure Virtual Network Manager**: Required with IPAM pools configured
-- **azapi provider**: Version ~> 2.4 required for IPAM subnet operations
+- **azapi provider**: Version ~> 2.10 required for IPAM subnet operations
 
 ## Usage
 
@@ -127,7 +127,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.5)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.10)
 
 ## Resources
 
