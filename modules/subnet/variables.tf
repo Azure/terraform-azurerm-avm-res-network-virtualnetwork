@@ -150,6 +150,8 @@ variable "private_endpoint_network_policies_enabled" {
 (Optional) Controls whether the `privateEndpointNetworkPolicies` property is sent to Azure for the subnet. Defaults to `true`.
 
 When `true`, the value of `private_endpoint_network_policies` is applied. When `false`, the property is omitted from the request entirely, which is required in regions that do not support it (e.g. South Africa West) because they reject the property outright.
+
+Note: unlike `private_link_service_network_policies_enabled` (where `false` sends `"Disabled"`), setting this to `false` removes the property from the request rather than sending a value. To send `"Disabled"`, leave this `true` and set `private_endpoint_network_policies = "Disabled"`.
 DESCRIPTION
   nullable    = false
 }
