@@ -74,7 +74,7 @@ Address space is requested from an IPAM pool as a **single allocation per pool**
 ### For IPAM Features
 - **Azure Virtual Network Manager**: Required for all IPAM functionality
 - **Supported Azure region**: IPAM must be available in your target region (see [Regional Support](#ipam-regional-support))
-- **azapi provider**: Version ~> 2.4 required for IPAM resource management
+- **azapi provider**: Version ~> 2.10 required for IPAM resource management
 - **Proper permissions**: Network Manager and IPAM pool management permissions
 
 ## Usage
