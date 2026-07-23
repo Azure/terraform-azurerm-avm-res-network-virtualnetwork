@@ -63,7 +63,7 @@ resource "azurerm_virtual_network_gateway" "hub" {
   location            = azurerm_resource_group.this.location
   name                = "${module.naming.virtual_network_gateway.name_unique}-hub"
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "VpnGw1"
+  sku                 = "VpnGw1AZ"
   type                = "Vpn"
   vpn_type            = "RouteBased"
 
