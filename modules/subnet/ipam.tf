@@ -5,7 +5,7 @@ resource "azapi_resource" "subnet_ipam" {
   parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
-    properties = {
+    properties = merge({
       ipamPoolPrefixAllocations = [
         for pool in var.ipam_pools : {
           pool = {
@@ -26,7 +26,6 @@ resource "azapi_resource" "subnet_ipam" {
       networkSecurityGroup = var.network_security_group != null ? {
         id = var.network_security_group.id
       } : null
-      privateEndpointNetworkPolicies    = var.private_endpoint_network_policies
       privateLinkServiceNetworkPolicies = var.private_link_service_network_policies_enabled == false ? "Disabled" : "Enabled"
       routeTable = var.route_table != null ? {
         id = var.route_table.id
@@ -43,7 +42,9 @@ resource "azapi_resource" "subnet_ipam" {
         }
       ] : null
       sharingScope = var.sharing_scope
-    }
+      }, var.private_endpoint_network_policies_enabled ? {
+      privateEndpointNetworkPolicies = var.private_endpoint_network_policies
+    } : {})
   }
   locks                     = [var.parent_id]
   response_export_values    = ["properties.addressPrefixes"]

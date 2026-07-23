@@ -132,6 +132,8 @@ variable "private_endpoint_network_policies" {
   default     = "Enabled"
   description = <<DESCRIPTION
 (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
+
+This value is only applied when `private_endpoint_network_policies_enabled` is `true`. Set `private_endpoint_network_policies_enabled` to `false` to omit the `privateEndpointNetworkPolicies` property from the request entirely (required in regions that do not support it, e.g. South Africa West).
 DESCRIPTION
   nullable    = false
 
@@ -139,6 +141,17 @@ DESCRIPTION
     condition     = can(regex("^(Disabled|Enabled|NetworkSecurityGroupEnabled|RouteTableEnabled)$", var.private_endpoint_network_policies))
     error_message = "private_endpoint_network_policies must be one of Disabled, Enabled, NetworkSecurityGroupEnabled, or RouteTableEnabled."
   }
+}
+
+variable "private_endpoint_network_policies_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+(Optional) Controls whether the `privateEndpointNetworkPolicies` property is sent to Azure for the subnet. Defaults to `true`.
+
+When `true`, the value of `private_endpoint_network_policies` is applied. When `false`, the property is omitted from the request entirely, which is required in regions that do not support it (e.g. South Africa West) because they reject the property outright.
+DESCRIPTION
+  nullable    = false
 }
 
 variable "private_link_service_network_policies_enabled" {

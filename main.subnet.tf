@@ -13,6 +13,7 @@ module "subnet" {
   nat_gateway                                   = each.value.nat_gateway
   network_security_group                        = each.value.network_security_group
   private_endpoint_network_policies             = each.value.private_endpoint_network_policies
+  private_endpoint_network_policies_enabled     = each.value.private_endpoint_network_policies_enabled
   private_link_service_network_policies_enabled = each.value.private_link_service_network_policies_enabled
   retry                                         = each.value.retry
   role_assignments                              = each.value.role_assignments

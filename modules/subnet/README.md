@@ -280,9 +280,21 @@ Default: `null`
 
 Description: (Optional) Enable or Disable network policies for the private endpoint on the subnet. Possible values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled` and `RouteTableEnabled`. Defaults to `Enabled`.
 
+This value is only applied when `private_endpoint_network_policies_enabled` is `true`. Set `private_endpoint_network_policies_enabled` to `false` to omit the `privateEndpointNetworkPolicies` property from the request entirely (required in regions that do not support it, e.g. South Africa West).
+
 Type: `string`
 
 Default: `"Enabled"`
+
+### <a name="input_private_endpoint_network_policies_enabled"></a> [private\_endpoint\_network\_policies\_enabled](#input\_private\_endpoint\_network\_policies\_enabled)
+
+Description: (Optional) Controls whether the `privateEndpointNetworkPolicies` property is sent to Azure for the subnet. Defaults to `true`.
+
+When `true`, the value of `private_endpoint_network_policies` is applied. When `false`, the property is omitted from the request entirely, which is required in regions that do not support it (e.g. South Africa West) because they reject the property outright.
+
+Type: `bool`
+
+Default: `true`
 
 ### <a name="input_private_link_service_network_policies_enabled"></a> [private\_link\_service\_network\_policies\_enabled](#input\_private\_link\_service\_network\_policies\_enabled)
 
