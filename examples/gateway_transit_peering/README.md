@@ -74,6 +74,8 @@ resource "azurerm_public_ip" "gateway" {
   name                = "${module.naming.public_ip.name_unique}-gw"
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
+  # AZ VPN gateway SKUs require the associated Standard public IP to have zones.
+  zones = ["1", "2", "3"]
 }
 
 # A real VPN gateway is required so that the spoke -> hub reverse peering can set
@@ -82,7 +84,7 @@ resource "azurerm_virtual_network_gateway" "hub" {
   location            = azurerm_resource_group.this.location
   name                = "${module.naming.virtual_network_gateway.name_unique}-hub"
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "VpnGw1"
+  sku                 = "VpnGw1AZ"
   type                = "Vpn"
   vpn_type            = "RouteBased"
 
