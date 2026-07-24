@@ -41,6 +41,13 @@ resource "azapi_resource" "reverse" {
   body = {
     properties = {
       remoteVirtualNetwork = {
+        # Reference the forward peering resource's parent_id here (not the
+        # identical-valued var.parent_id): this reference is what creates the
+        # implicit dependency that makes Terraform provision this reverse peering
+        # only after the forward one. Azure validates useRemoteGateways against
+        # the forward peering's allowGatewayTransit at create time, so reducing
+        # this to var.parent_id lets the two be created in parallel and the
+        # reverse fails non-deterministically. See #57.
         id = azapi_resource.this[0].parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
@@ -56,12 +63,6 @@ resource "azapi_resource" "reverse" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-
-  # The reverse (e.g. spoke->hub) peering may set useRemoteGateways, which Azure
-  # validates at creation time against allowGatewayTransit on the forward
-  # (e.g. hub->spoke) peering. The forward peering must therefore be fully
-  # provisioned before the reverse is created. See #57.
-  depends_on = [azapi_resource.this]
 
   timeouts {
     create = var.timeouts.create
@@ -119,6 +120,13 @@ resource "azapi_resource" "reverse_address_space_peering" {
   body = {
     properties = {
       remoteVirtualNetwork = {
+        # Reference the forward peering resource's parent_id here (not the
+        # identical-valued var.parent_id): this reference is what creates the
+        # implicit dependency that makes Terraform provision this reverse peering
+        # only after the forward one. Azure validates useRemoteGateways against
+        # the forward peering's allowGatewayTransit at create time, so reducing
+        # this to var.parent_id lets the two be created in parallel and the
+        # reverse fails non-deterministically. See #57.
         id = azapi_resource.address_space_peering[0].parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
@@ -140,11 +148,6 @@ resource "azapi_resource" "reverse_address_space_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-
-  # The reverse peering may set useRemoteGateways, which Azure validates at
-  # creation time against allowGatewayTransit on the forward peering. The forward
-  # peering must therefore be fully provisioned before the reverse. See #57.
-  depends_on = [azapi_resource.address_space_peering]
 
   timeouts {
     create = var.timeouts.create
@@ -198,6 +201,13 @@ resource "azapi_resource" "reverse_subnet_peering" {
   body = {
     properties = {
       remoteVirtualNetwork = {
+        # Reference the forward peering resource's parent_id here (not the
+        # identical-valued var.parent_id): this reference is what creates the
+        # implicit dependency that makes Terraform provision this reverse peering
+        # only after the forward one. Azure validates useRemoteGateways against
+        # the forward peering's allowGatewayTransit at create time, so reducing
+        # this to var.parent_id lets the two be created in parallel and the
+        # reverse fails non-deterministically. See #57.
         id = azapi_resource.subnet_peering[0].parent_id
       }
       allowVirtualNetworkAccess = var.reverse_allow_virtual_network_access
@@ -215,11 +225,6 @@ resource "azapi_resource" "reverse_subnet_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-
-  # The reverse peering may set useRemoteGateways, which Azure validates at
-  # creation time against allowGatewayTransit on the forward peering. The forward
-  # peering must therefore be fully provisioned before the reverse. See #57.
-  depends_on = [azapi_resource.subnet_peering]
 
   timeouts {
     create = var.timeouts.create
