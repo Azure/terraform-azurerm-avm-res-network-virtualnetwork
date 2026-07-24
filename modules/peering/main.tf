@@ -57,6 +57,12 @@ resource "azapi_resource" "reverse" {
   retry                     = var.retry
   schema_validation_enabled = true
 
+  # The reverse (e.g. spoke->hub) peering may set useRemoteGateways, which Azure
+  # validates at creation time against allowGatewayTransit on the forward
+  # (e.g. hub->spoke) peering. The forward peering must therefore be fully
+  # provisioned before the reverse is created. See #57.
+  depends_on = [azapi_resource.this]
+
   timeouts {
     create = var.timeouts.create
     delete = var.timeouts.delete
@@ -135,6 +141,11 @@ resource "azapi_resource" "reverse_address_space_peering" {
   retry                     = var.retry
   schema_validation_enabled = true
 
+  # The reverse peering may set useRemoteGateways, which Azure validates at
+  # creation time against allowGatewayTransit on the forward peering. The forward
+  # peering must therefore be fully provisioned before the reverse. See #57.
+  depends_on = [azapi_resource.address_space_peering]
+
   timeouts {
     create = var.timeouts.create
     delete = var.timeouts.delete
@@ -204,6 +215,11 @@ resource "azapi_resource" "reverse_subnet_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+
+  # The reverse peering may set useRemoteGateways, which Azure validates at
+  # creation time against allowGatewayTransit on the forward peering. The forward
+  # peering must therefore be fully provisioned before the reverse. See #57.
+  depends_on = [azapi_resource.subnet_peering]
 
   timeouts {
     create = var.timeouts.create
