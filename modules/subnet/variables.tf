@@ -217,26 +217,14 @@ variable "service_endpoint_policies" {
 DESCRIPTION
 }
 
-variable "service_endpoints_with_location" {
-  type = list(object({
-    service   = string
-    locations = optional(list(string), ["*"])
-  }))
+variable "service_endpoints" {
+  type        = set(string)
   default     = null
   description = <<DESCRIPTION
-(Optional) A set of service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
-- `service` - (Required) The service name. Changing this forces a new resource to be created.
-- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
-DESCRIPTION
+(Optional) A set of service endpoints to associate with the subnet, specified as a set of service names (e.g. `["Microsoft.Storage", "Microsoft.Sql"]`).
 
-  validation {
-    error_message = "Locations values must be unique"
-    condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(toset(endpoint.locations)) == length(endpoint.locations)]) : true
-  }
-  validation {
-    error_message = "Service names must be unique"
-    condition     = var.service_endpoints_with_location != null ? length([for endpoint in var.service_endpoints_with_location : endpoint.service]) == length(toset([for endpoint in var.service_endpoints_with_location : endpoint.service])) : true
-  }
+Locations are intentionally not configurable: Azure implicitly expands service-endpoint locations (for example, `Microsoft.Storage` in a region adds its paired region), which caused perpetual drift when locations were sent explicitly. See issues #22 and #39.
+DESCRIPTION
 }
 
 variable "sharing_scope" {

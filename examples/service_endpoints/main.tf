@@ -48,60 +48,27 @@ module "virtualnetwork" {
   address_space = ["10.0.0.0/16"]
   name          = "vnet-avm-service-endpoints-${random_string.this.result}"
   subnets = {
-    # Subnet with service endpoints for all regions
+    # Subnet with service endpoints
     subnet_all_endpoints = {
       name           = "subnet-all-regions"
       address_prefix = "10.0.0.0/24"
-      # New format: allow all regions with "*"
-      service_endpoints_with_location = [
-        {
-          service   = "Microsoft.Storage"
-          locations = [local.selected_region.name, local.selected_region.paired_region_name]
-        },
-        {
-          service   = "Microsoft.Sql"
-          locations = [local.selected_region.name]
-        },
-        {
-          service   = "Microsoft.AzureCosmosDB"
-          locations = ["*"]
-        },
-        {
-          service   = "Microsoft.KeyVault"
-          locations = ["*"]
-        },
-        {
-          service   = "Microsoft.ServiceBus"
-          locations = ["*"]
-        },
-        {
-          service   = "Microsoft.EventHub"
-          locations = ["*"]
-        },
-        {
-          service   = "Microsoft.Web"
-          locations = ["*"]
-        },
-        {
-          service   = "Microsoft.CognitiveServices"
-          locations = ["*"]
-        }
+      service_endpoints = [
+        "Microsoft.Storage",
+        "Microsoft.Sql",
+        "Microsoft.AzureCosmosDB",
+        "Microsoft.KeyVault",
+        "Microsoft.ServiceBus",
+        "Microsoft.EventHub",
+        "Microsoft.Web",
+        "Microsoft.CognitiveServices",
         # Container registry is in preview and not available in all regions
-        # {
-        #   service   = "Microsoft.ContainerRegistry"
-        #   locations = ["*"]
-        # },
+        # "Microsoft.ContainerRegistry",
       ]
     }
     subnet_storage_global = {
-      name           = "subnet-storage-global"
-      address_prefix = "10.0.1.0/24"
-      service_endpoints_with_location = [
-        {
-          service   = "Microsoft.Storage.Global"
-          locations = ["*"]
-        },
-      ]
+      name              = "subnet-storage-global"
+      address_prefix    = "10.0.1.0/24"
+      service_endpoints = ["Microsoft.Storage.Global"]
     }
   }
 }

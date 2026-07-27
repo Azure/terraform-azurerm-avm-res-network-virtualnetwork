@@ -183,15 +183,7 @@ module "vnet1" {
       route_table = {
         id = azurerm_route_table.this.id
       }
-      service_endpoints_with_location = [
-        {
-          service = "Microsoft.Storage"
-        },
-        {
-          service   = "Microsoft.KeyVault"
-          locations = [azurerm_resource_group.this.location]
-        }
-      ]
+      service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
       service_endpoint_policies = {
         policy1 = {
           id = azurerm_subnet_service_endpoint_storage_policy.this.id
