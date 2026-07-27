@@ -91,3 +91,40 @@ run "duplicate_service_names_deduped" {
     error_message = "Duplicate service names should collapse to a single service endpoint."
   }
 }
+
+# `set(string)` normalises input into a canonical (lexicographic) order, so the
+# order a consumer happens to write the endpoints in cannot churn the request
+# body. Here the input is deliberately NOT in alphabetical order; the emitted
+# body must still come out sorted.
+#
+# Note this covers the module's half of the ordering guarantee only. The other
+# half - that the order *Azure* returns cannot cause drift - lives in the azapi
+# provider, which matches list items by `service` via `list_unique_id_property`
+# rather than by position. That path needs a real API response, so it cannot be
+# exercised under `mock_provider`; it is covered instead by the idempotency
+# check (apply, then assert an empty plan) in the `service_endpoints` example.
+run "input_order_is_normalised" {
+  command = plan
+
+  variables {
+    address_prefixes = ["10.0.0.0/24"]
+    service_endpoints = [
+      "Microsoft.Storage",
+      "Microsoft.AzureCosmosDB",
+      "Microsoft.Web",
+      "Microsoft.KeyVault",
+    ]
+  }
+
+  assert {
+    condition = [
+      for endpoint in azapi_resource.subnet[0].body.properties.serviceEndpoints : endpoint.service
+      ] == [
+      "Microsoft.AzureCosmosDB",
+      "Microsoft.KeyVault",
+      "Microsoft.Storage",
+      "Microsoft.Web",
+    ]
+    error_message = "Service endpoints should be emitted in a canonical sorted order regardless of input order."
+  }
+}
