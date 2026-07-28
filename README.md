@@ -604,7 +604,7 @@ Description: (Optional) A map of subnets to create
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
  - `service_endpoints` - (Optional) A set of service endpoint names to associate with the subnet, for example `["Microsoft.Storage", "Microsoft.Sql"]`. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`. Locations are not configurable because Azure implicitly expands service-endpoint locations, which causes perpetual drift.
- - `service_endpoints_with_location` - **Removed.** Use `service_endpoints` instead. This attribute is still declared so that configurations which set it fail with an explanatory error rather than having it silently discarded; setting it is always an error.
+ - `service_endpoints_with_location` - (Optional) **Deprecated**, use `service_endpoints` instead. Still honoured for backward compatibility: the `service` names are applied and the `locations` are ignored, because Azure expands service-endpoint locations implicitly, which caused perpetual drift. Using it emits a deprecation warning, and it will be removed in a future release. Cannot be combined with `service_endpoints`.
 
  ---
  `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
@@ -681,9 +681,10 @@ map(object({
     service_endpoints               = optional(set(string))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
-    # Retained solely so that upgrading consumers get an explanatory error
-    # instead of having this attribute silently dropped during object type
-    # conversion. See the validation block below. Remove in a future release.
+    # Deprecated in favour of `service_endpoints`. Still honoured (the service
+    # names are mapped through and the locations discarded) so that upgrading
+    # does not break existing configurations; a check block warns when it is
+    # used. Remove in a future release.
     service_endpoints_with_location = optional(list(object({
       service   = string
       locations = optional(list(string), ["*"])
