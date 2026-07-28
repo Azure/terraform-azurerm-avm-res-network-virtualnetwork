@@ -432,6 +432,13 @@ variable "subnets" {
     service_endpoints               = optional(set(string))
     default_outbound_access_enabled = optional(bool, false)
     sharing_scope                   = optional(string, null)
+    # Retained solely so that upgrading consumers get an explanatory error
+    # instead of having this attribute silently dropped during object type
+    # conversion. See the validation block below. Remove in a future release.
+    service_endpoints_with_location = optional(list(object({
+      service   = string
+      locations = optional(list(string), ["*"])
+    })))
     delegations = optional(list(object({
       name = string
       service_delegation = object({
@@ -479,6 +486,7 @@ variable "subnets" {
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
  - `service_endpoints` - (Optional) A set of service endpoint names to associate with the subnet, for example `["Microsoft.Storage", "Microsoft.Sql"]`. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`. Locations are not configurable because Azure implicitly expands service-endpoint locations, which causes perpetual drift.
+ - `service_endpoints_with_location` - **Removed.** Use `service_endpoints` instead. This attribute is still declared so that configurations which set it fail with an explanatory error rather than having it silently discarded; setting it is always an error.
 
  ---
  `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
@@ -550,6 +558,12 @@ DESCRIPTION
       )
     ])
     error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix or address_prefixes."
+  }
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets : subnet.service_endpoints_with_location == null
+    ])
+    error_message = "`service_endpoints_with_location` has been removed. Use `service_endpoints` with a set of service names instead, for example `service_endpoints = [\"Microsoft.Storage\"]`. Locations are no longer configurable because Azure expands service-endpoint locations implicitly, which caused perpetual drift."
   }
 }
 
