@@ -128,3 +128,21 @@ run "input_order_is_normalised" {
     error_message = "Service endpoints should be emitted in a canonical sorted order regardless of input order."
   }
 }
+
+# The removed `service_endpoints_with_location` variable is still declared so
+# that setting it produces an error naming the replacement, rather than the
+# generic "unexpected argument" error Terraform would raise on its own.
+run "service_endpoints_with_location_rejected" {
+  command = plan
+
+  variables {
+    address_prefixes = ["10.0.0.0/24"]
+    service_endpoints_with_location = [
+      {
+        service = "Microsoft.Storage"
+      }
+    ]
+  }
+
+  expect_failures = [var.service_endpoints_with_location]
+}

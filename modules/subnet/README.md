@@ -386,6 +386,23 @@ Type: `set(string)`
 
 Default: `null`
 
+### <a name="input_service_endpoints_with_location"></a> [service\_endpoints\_with\_location](#input\_service\_endpoints\_with\_location)
+
+Description: **Removed.** Use `service_endpoints` instead, which takes a set of service names.
+
+This variable is still declared so that configurations which set it fail with an explanatory error naming the replacement, rather than the generic "unexpected argument" error. Setting it is always an error. It will be removed entirely in a future release.
+
+Type:
+
+```hcl
+list(object({
+    service   = string
+    locations = optional(list(string), ["*"])
+  }))
+```
+
+Default: `null`
+
 ### <a name="input_sharing_scope"></a> [sharing\_scope](#input\_sharing\_scope)
 
 Description: (Optional) The sharing scope for the subnet. Possible values are `DelegatedServices` and `Tenant`. Defaults to `DelegatedServices`.

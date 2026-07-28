@@ -227,6 +227,24 @@ Locations are intentionally not configurable: Azure implicitly expands service-e
 DESCRIPTION
 }
 
+variable "service_endpoints_with_location" {
+  type = list(object({
+    service   = string
+    locations = optional(list(string), ["*"])
+  }))
+  default     = null
+  description = <<DESCRIPTION
+**Removed.** Use `service_endpoints` instead, which takes a set of service names.
+
+This variable is still declared so that configurations which set it fail with an explanatory error naming the replacement, rather than the generic "unexpected argument" error. Setting it is always an error. It will be removed entirely in a future release.
+DESCRIPTION
+
+  validation {
+    condition     = var.service_endpoints_with_location == null
+    error_message = "`service_endpoints_with_location` has been removed. Use `service_endpoints` with a set of service names instead, for example `service_endpoints = [\"Microsoft.Storage\"]`. Locations are no longer configurable because Azure expands service-endpoint locations implicitly, which caused perpetual drift."
+  }
+}
+
 variable "sharing_scope" {
   type        = string
   default     = null
