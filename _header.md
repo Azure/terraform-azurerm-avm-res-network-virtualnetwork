@@ -81,7 +81,7 @@ Address space is requested from an IPAM pool as a **single allocation per pool**
 
 Version 0.2.0 rewrote the module from `azurerm` resources to `azapi` resources and changed the state layout without shipping `moved` blocks. Current tooling can bridge the resource-type changes: [Terraform v1.8.0](https://github.com/hashicorp/terraform/releases/tag/v1.8.0) added provider-supported moves between resource types, and [AzAPI v2.1.0](https://github.com/Azure/terraform-provider-azapi/releases/tag/v2.1.0) added moves from `azurerm` resources to `azapi_resource`. This module requires Terraform `>= 1.9, < 2.0` and AzAPI `~> 2.11`.
 
-This mechanism has not been validated end to end against a real v0.1.3 deployment. Back up the state first, treat the addresses below as templates, and verify them against `terraform state list`.
+The addresses below were verified against Terraform's move validation and AzAPI's cross-type state conversion using a synthetic v0.1.x state, but the migration has not been applied end to end against a real v0.1.3 deployment. Back up the state first, treat the addresses below as templates, and verify them against `terraform state list`.
 
 ### Move retained resources
 
@@ -95,7 +95,7 @@ moved {
 
 moved {
   from = module.vnet.azurerm_subnet.subnet["subnet_key"]
-  to   = module.vnet.module.subnet["subnet_key"].azapi_resource.subnet[0]
+  to   = module.vnet.module.subnet["subnet_key"].azapi_resource.subnet
 }
 
 moved {
@@ -104,7 +104,7 @@ moved {
 }
 ```
 
-The subnet destination above is for static addressing. If the target subnet uses `ipam_pools`, use `module.vnet.module.subnet["subnet_key"].azapi_resource.subnet_ipam[0]` instead. The peering destination is for the full-virtual-network peering used by v0.1.x and selected by the current default `peer_complete_vnets = true`.
+The static subnet destination is deliberately unindexed. The subnet submodule already declares `moved { from = azapi_resource.subnet, to = azapi_resource.subnet[0] }` for the v0.15.0 IPAM change, and Terraform rejects two statements that move into the same instance with an `Ambiguous move statements` error. Targeting the unindexed address lets Terraform chain the two moves. If the target subnet uses `ipam_pools`, target `module.vnet.module.subnet["subnet_key"].azapi_resource.subnet_ipam[0]` instead; that address is indexed because no such chained move exists for it. The peering destination is for the full-virtual-network peering used by v0.1.x and selected by the current default `peer_complete_vnets = true`.
 
 ### Remove resources folded into parent bodies
 
