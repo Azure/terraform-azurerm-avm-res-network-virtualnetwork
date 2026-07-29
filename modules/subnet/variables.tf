@@ -227,6 +227,10 @@ Locations are intentionally not configurable: Azure implicitly expands service-e
 DESCRIPTION
 }
 
+# The variable is intentionally unused beyond its own validation: it exists
+# solely so that setting the removed argument fails with a message naming the
+# replacement, instead of Terraform's generic "unexpected argument" error.
+# tflint-ignore: terraform_unused_declarations
 variable "service_endpoints_with_location" {
   type = list(object({
     service   = string
