@@ -30,10 +30,9 @@ resource "azapi_resource" "subnet_ipam" {
       routeTable = var.route_table != null ? {
         id = var.route_table.id
       } : null
-      serviceEndpoints = var.service_endpoints_with_location != null ? [
-        for service_endpoint in var.service_endpoints_with_location : {
-          service   = service_endpoint.service
-          locations = service_endpoint.locations
+      serviceEndpoints = var.service_endpoints != null ? [
+        for service_endpoint in var.service_endpoints : {
+          service = service_endpoint
         }
       ] : null
       serviceEndpointPolicies = var.service_endpoint_policies != null ? [
@@ -47,6 +46,7 @@ resource "azapi_resource" "subnet_ipam" {
     } : {})
   }
   locks                     = [var.parent_id]
+  list_unique_id_property   = { "properties.serviceEndpoints" = "service" }
   response_export_values    = ["properties.addressPrefixes"]
   retry                     = var.retry
   schema_validation_enabled = true

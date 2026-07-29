@@ -232,6 +232,20 @@ variable "service_endpoint_policies" {
 DESCRIPTION
 }
 
+variable "service_endpoints" {
+  type        = set(string)
+  default     = null
+  description = <<DESCRIPTION
+(Optional) A set of service endpoints to associate with the subnet, specified as a set of service names (e.g. `["Microsoft.Storage", "Microsoft.Sql"]`).
+
+Locations are intentionally not configurable: Azure implicitly expands service-endpoint locations (for example, `Microsoft.Storage` in a region adds its paired region), which caused perpetual drift when locations were sent explicitly. See issues #22 and #39.
+DESCRIPTION
+}
+
+# The variable is intentionally unused beyond its own validation: it exists
+# solely so that setting the removed argument fails with a message naming the
+# replacement, instead of Terraform's generic "unexpected argument" error.
+# tflint-ignore: terraform_unused_declarations
 variable "service_endpoints_with_location" {
   type = list(object({
     service   = string
@@ -239,18 +253,14 @@ variable "service_endpoints_with_location" {
   }))
   default     = null
   description = <<DESCRIPTION
-(Optional) A set of service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
-- `service` - (Required) The service name. Changing this forces a new resource to be created.
-- `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]`, which means the service endpoint applies to all regions. If you want to restrict the service endpoint to specific regions, you can provide a set of region names. Changing this forces a new resource to be created.
+**Removed.** Use `service_endpoints` instead, which takes a set of service names.
+
+This variable is still declared so that configurations which set it fail with an explanatory error naming the replacement, rather than the generic "unexpected argument" error. Setting it is always an error. It will be removed entirely in a future release.
 DESCRIPTION
 
   validation {
-    error_message = "Locations values must be unique"
-    condition     = var.service_endpoints_with_location != null ? alltrue([for endpoint in var.service_endpoints_with_location : length(toset(endpoint.locations)) == length(endpoint.locations)]) : true
-  }
-  validation {
-    error_message = "Service names must be unique"
-    condition     = var.service_endpoints_with_location != null ? length([for endpoint in var.service_endpoints_with_location : endpoint.service]) == length(toset([for endpoint in var.service_endpoints_with_location : endpoint.service])) : true
+    condition     = var.service_endpoints_with_location == null
+    error_message = "`service_endpoints_with_location` has been removed. Use `service_endpoints` with a set of service names instead, for example `service_endpoints = [\"Microsoft.Storage\"]`. Locations are no longer configurable because Azure expands service-endpoint locations implicitly, which caused perpetual drift."
   }
 }
 

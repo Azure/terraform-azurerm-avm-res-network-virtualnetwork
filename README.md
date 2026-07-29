@@ -604,9 +604,8 @@ Description: (Optional) A map of subnets to create
  - `private_endpoint_network_policies_enabled` - (Optional) Controls whether the `privateEndpointNetworkPolicies` property is sent to Azure for the subnet. Defaults to `true`. Set to `false` to omit the property entirely, which is required in regions that do not support it (e.g. South Africa West) because they reject the property outright. Note: unlike `private_link_service_network_policies_enabled` (where `false` sends `Disabled`), setting this to `false` removes the property from the request rather than sending a value; to send `Disabled`, leave this `true` and set `private_endpoint_network_policies = "Disabled"`.
  - `private_link_service_network_policies_enabled` - (Optional) Enable or Disable network policies for the private link service on the subnet. Setting this to `true` will **Enable** the policy and setting this to `false` will **Disable** the policy. Defaults to `true`.
  - `service_endpoint_policies` - (Optional) The map of objects with IDs of Service Endpoint Policies to associate with the subnet.
- - `service_endpoints_with_location` - (Optional) Service endpoints with location restrictions to associate with the subnet. Each service endpoint is an object with the following properties:
-   - `service` - (Required) The service name. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`.
-   - `locations` - (Optional) A set of Azure region names where the service endpoint should apply. Default is `["*"]` to apply to all regions.
+ - `service_endpoints` - (Optional) A set of service endpoint names to associate with the subnet, for example `["Microsoft.Storage", "Microsoft.Sql"]`. Possible values include: `Microsoft.AzureActiveDirectory`, `Microsoft.AzureCosmosDB`, `Microsoft.ContainerRegistry`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.Storage`, `Microsoft.Storage.Global` and `Microsoft.Web`. Locations are not configurable because Azure implicitly expands service-endpoint locations, which causes perpetual drift.
+ - `service_endpoints_with_location` - **Removed.** Use `service_endpoints` instead. This attribute is still declared so that setting it fails with an explanatory error rather than being silently discarded; setting it is always an error.
 
  ---
  `delegation` (This setting is deprecated, use `delegations` instead) supports the following:
@@ -681,12 +680,16 @@ map(object({
     service_endpoint_policies = optional(map(object({
       id = string
     })))
+    service_endpoints               = optional(set(string))
+    default_outbound_access_enabled = optional(bool, false)
+    sharing_scope                   = optional(string, null)
+    # Retained solely so that setting it produces an explanatory error instead
+    # of being silently discarded during object type conversion. See the
+    # validation block below. Remove in a future release.
     service_endpoints_with_location = optional(list(object({
       service   = string
       locations = optional(list(string), ["*"])
     })))
-    default_outbound_access_enabled = optional(bool, false)
-    sharing_scope                   = optional(string, null)
     delegations = optional(list(object({
       name = string
       service_delegation = object({

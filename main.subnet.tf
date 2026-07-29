@@ -19,7 +19,7 @@ module "subnet" {
   role_assignments                              = each.value.role_assignments
   route_table                                   = each.value.route_table
   service_endpoint_policies                     = each.value.service_endpoint_policies
-  service_endpoints_with_location               = each.value.service_endpoints_with_location
+  service_endpoints                             = each.value.service_endpoints
   sharing_scope                                 = each.value.sharing_scope
   timeouts                                      = each.value.timeouts
 }
