@@ -349,17 +349,16 @@ variable "peerings" {
 
  ---
  `timeouts` (Optional) supports the following:
- - `create` - (Defaults to 30 minutes) Used when creating the Subnet.
- - `delete` - (Defaults to 30 minutes) Used when deleting the Subnet.
- - `read` - (Defaults to 5 minutes) Used when retrieving the Subnet.
- - `update` - (Defaults to 30 minutes) Used when updating the Subnet.
+ - `create` - (Defaults to 30 minutes) Used when creating the Virtual Network Peering.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the Virtual Network Peering.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Virtual Network Peering.
+ - `update` - (Defaults to 30 minutes) Used when updating the Virtual Network Peering.
 
 ---
   `retry` (Optional) supports the following:
   - `error_message_regex` - (Optional) A list of regular expressions to match against the error message returned by the API. If any of these match, the retry will be triggered.
   - `interval_seconds` - (Optional) The number of seconds to wait between retries. Defaults to 10.
   - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to 180.
-  - `multiplier` - (Optional) The multiplier to apply to the interval between retries Defaults to 1.5.
 
 DESCRIPTION
   nullable    = false
