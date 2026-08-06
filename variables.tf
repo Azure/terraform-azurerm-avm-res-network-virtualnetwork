@@ -30,6 +30,10 @@ variable "address_space" {
     condition     = (var.address_space != null && var.ipam_pools == null) || (var.address_space == null && var.ipam_pools != null)
     error_message = "Either address_space or ipam_pools must be specified, but not both."
   }
+  validation {
+    condition     = alltrue([for prefix in var.address_space != null ? var.address_space : [] : can(cidrhost(prefix, 0))])
+    error_message = "Each entry in address_space must be a valid CIDR block, for example \"10.0.0.0/16\"."
+  }
 }
 
 variable "bgp_community" {
@@ -363,6 +367,20 @@ variable "peerings" {
 
 DESCRIPTION
   nullable    = false
+
+  validation {
+    condition = alltrue(flatten([
+      for _, peering in var.peerings : [
+        for address_space in concat(
+          peering.local_peered_address_spaces != null ? peering.local_peered_address_spaces : [],
+          peering.remote_peered_address_spaces != null ? peering.remote_peered_address_spaces : [],
+          peering.reverse_local_peered_address_spaces != null ? peering.reverse_local_peered_address_spaces : [],
+          peering.reverse_remote_peered_address_spaces != null ? peering.reverse_remote_peered_address_spaces : []
+        ) : can(cidrhost(address_space.address_prefix, 0))
+      ]
+    ]))
+    error_message = "Each peering address_prefix must be a valid CIDR block, for example \"10.0.0.0/16\"."
+  }
 }
 
 variable "retry" {
@@ -560,6 +578,14 @@ DESCRIPTION
       )
     ])
     error_message = "IPAM subnets should only specify ipam_pools. Non-IPAM subnets must specify exactly one of: address_prefix or address_prefixes."
+  }
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      (subnet.address_prefix == null || can(cidrhost(subnet.address_prefix, 0))) &&
+      alltrue([for prefix in subnet.address_prefixes != null ? subnet.address_prefixes : [] : can(cidrhost(prefix, 0))])
+    ])
+    error_message = "Each subnet address_prefix and address_prefixes entry must be a valid CIDR block, for example \"10.0.0.0/24\"."
   }
   validation {
     condition = alltrue([

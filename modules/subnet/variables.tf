@@ -25,6 +25,11 @@ variable "address_prefix" {
   description = <<DESCRIPTION
 (Optional) The address prefix for the subnet. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 DESCRIPTION
+
+  validation {
+    condition     = var.address_prefix == null || can(cidrhost(var.address_prefix, 0))
+    error_message = "address_prefix must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "address_prefixes" {
@@ -33,6 +38,11 @@ variable "address_prefixes" {
   description = <<DESCRIPTION
 (Optional) The address prefixes for the subnet. You can supply more than one address prefix. One of `address_prefix`, `address_prefixes`, or `ipam_pools` must be supplied.
 DESCRIPTION
+
+  validation {
+    condition     = alltrue([for prefix in var.address_prefixes != null ? var.address_prefixes : [] : can(cidrhost(prefix, 0))])
+    error_message = "Each entry in address_prefixes must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "default_outbound_access_enabled" {
