@@ -71,17 +71,59 @@ Address space is requested from an IPAM pool as a **single allocation per pool**
 
 **Resolved prefixes (summarization vs. fragmentation):** Azure resolves one allocation into one or more CIDR blocks. Contiguous free space is summarized into a single larger prefix (for example two `/21` worth of space surface as one `/20`); fragmented free space is returned as multiple non-adjacent prefixes (for example a single allocation may surface as `/25` + `/28`). This is why one pool can show a varying number of address prefixes. The module exposes these resolved prefixes as a **read-only** output, so summarization or fragmentation does **not** cause Terraform drift.
 
+## Ignoring out-of-band subnet changes (`ignore_body_changes`)
+
+Some Azure controllers modify subnet properties **out-of-band** - outside Terraform - after the subnet is created. The most common case is **Azure Virtual Network Manager (AVNM)** routing configurations (or Azure Policy `DeployIfNotExists`) attaching a **managed route table** to a subnet. On the next `terraform plan` the module sees the externally-added `routeTable` and tries to revert it to the configured value (`null`), producing **perpetual drift** and fighting the external controller on every apply.
+
+Each subnet accepts an optional `ignore_body_changes` list. It maps to the `azapi` provider's write-only [`ignore_body_changes`](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#ignore_body_changes) argument: the listed body paths are ignored after create, so the external controller can own them without drift.
+
+```terraform
+module "vnet" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  # ... version, name, location, parent_id, address_space ...
+
+  subnets = {
+    workload = {
+      name             = "snet-workload"
+      address_prefixes = ["10.0.1.0/24"]
+
+      # Let AVNM / Azure Policy own the route table association out-of-band.
+      # Do NOT also set route_table on this subnet (see note below).
+      ignore_body_changes = ["properties.routeTable"]
+    }
+  }
+}
+```
+
+**Supported paths.** Any subnet body property expressed in dot notation and starting with `properties.`. The provider ignores whichever paths you list; it does not restrict them to a fixed set, so newer subnet properties work without a module change. Commonly used paths:
+
+| Path | Property |
+|------|----------|
+| `properties.routeTable` | Route table association (AVNM routing / Policy DINE) - the canonical case |
+| `properties.networkSecurityGroup` | Network security group association |
+| `properties.serviceEndpoints` | Service endpoints |
+| `properties.delegations` | Subnet delegations |
+
+**Important - don't manage the same property twice.** Several of these properties are also settable through dedicated inputs (`route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an external controller can own it, leave the corresponding input **unset**. Setting the input *and* ignoring the path means the module renders a value the provider is told to ignore - confusing and self-defeating.
+
+**Behaviour and requirements.**
+
+- Entries must start with `properties.` and use dot notation. Individual list items cannot be targeted - ignore the whole list property. A bare name such as `"routeTable"` is silently ignored by the provider (it would not suppress drift), so the module rejects it with a validation error.
+- `ignore_body_changes` is a **write-only** argument (stored in provider-private state), which requires **Terraform >= 1.11** and **AzAPI >= 2.12**. Changes to the list take effect only after an `apply`.
+- While a path is ignored, configuration changes at that path are **not** sent to Azure until you remove the path from the list.
+- Default is `[]` (nothing ignored) - existing configurations are unaffected.
+
 ## Prerequisites
 
 ### For IPAM Features
 - **Azure Virtual Network Manager**: Required for all IPAM functionality
 - **Supported Azure region**: IPAM must be available in your target region (see [Regional Support](#ipam-regional-support))
-- **azapi provider**: Version ~> 2.11 required for IPAM resource management
+- **azapi provider**: Version ~> 2.12 required for IPAM resource management
 - **Proper permissions**: Network Manager and IPAM pool management permissions
 
 ## Migrating from v0.1.x
 
-Version 0.2.0 rewrote the module from `azurerm` resources to `azapi` resources and changed the state layout without shipping `moved` blocks. Current tooling can bridge the resource-type changes: [Terraform v1.8.0](https://github.com/hashicorp/terraform/releases/tag/v1.8.0) added provider-supported moves between resource types, and [AzAPI v2.1.0](https://github.com/Azure/terraform-provider-azapi/releases/tag/v2.1.0) added moves from `azurerm` resources to `azapi_resource`. This module requires Terraform `>= 1.9, < 2.0` and AzAPI `~> 2.11`.
+Version 0.2.0 rewrote the module from `azurerm` resources to `azapi` resources and changed the state layout without shipping `moved` blocks. Current tooling can bridge the resource-type changes: [Terraform v1.8.0](https://github.com/hashicorp/terraform/releases/tag/v1.8.0) added provider-supported moves between resource types, and [AzAPI v2.1.0](https://github.com/Azure/terraform-provider-azapi/releases/tag/v2.1.0) added moves from `azurerm` resources to `azapi_resource`. This module requires Terraform `>= 1.11, < 2.0` and AzAPI `~> 2.12`.
 
 The addresses below were verified against Terraform's move validation and AzAPI's cross-type state conversion using a synthetic v0.1.x state, but the migration has not been applied end to end against a real v0.1.3 deployment. Back up the state first, treat the addresses below as templates, and verify them against `terraform state list`.
 
@@ -248,9 +290,9 @@ module "avm-res-network-subnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.11)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -654,6 +696,7 @@ Description: (Optional) A map of subnets to create
    - `number_of_ip_addresses`: (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
    - `prefix_length`: (Optional) The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
    - `allocation_type`: Type of allocation - "Static" (default) or "Dynamic"
+ - `ignore_body_changes` - (Optional) A list of subnet body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation, letting an out-of-band controller own those properties without perpetual drift. The canonical use case is AVNM `ManagedOnly` routing or Azure Policy DINE attaching a route table out-of-band: set `["properties.routeTable"]`. Other common paths: `properties.networkSecurityGroup`, `properties.serviceEndpoints`, `properties.delegations`. Every entry must start with `properties.`, uses dot notation, and cannot target individual list items (ignore the whole list). **Important:** these properties are also settable via dedicated inputs (`route_table`, `network_security_group`, `service_endpoints`, `delegations`) - when you ignore a path so an external controller can own it, leave the matching input unset so the module and the controller don't fight over it. This is a write-only argument (requires Terraform >= 1.11); changes take effect only after an `apply`. Defaults to `[]`.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
@@ -723,6 +766,7 @@ map(object({
       prefix_length          = optional(number)
       allocation_type        = optional(string, "Static")
     })))
+    ignore_body_changes = optional(list(string), [])
     nat_gateway = optional(object({
       id = string
     }))

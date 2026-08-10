@@ -50,6 +50,7 @@ resource "azapi_resource" "subnet_ipam" {
   response_export_values    = ["properties.addressPrefixes"]
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = var.ignore_body_changes
 
   timeouts {
     create = var.timeouts.create

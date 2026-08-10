@@ -414,6 +414,7 @@ variable "subnets" {
       prefix_length          = optional(number)
       allocation_type        = optional(string, "Static")
     })))
+    ignore_body_changes = optional(list(string), [])
     nat_gateway = optional(object({
       id = string
     }))
@@ -478,6 +479,7 @@ variable "subnets" {
    - `number_of_ip_addresses`: (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
    - `prefix_length`: (Optional) The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
    - `allocation_type`: Type of allocation - "Static" (default) or "Dynamic"
+ - `ignore_body_changes` - (Optional) A list of subnet body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation, letting an out-of-band controller own those properties without perpetual drift. The canonical use case is AVNM `ManagedOnly` routing or Azure Policy DINE attaching a route table out-of-band: set `["properties.routeTable"]`. Other common paths: `properties.networkSecurityGroup`, `properties.serviceEndpoints`, `properties.delegations`. Every entry must start with `properties.`, uses dot notation, and cannot target individual list items (ignore the whole list). **Important:** these properties are also settable via dedicated inputs (`route_table`, `network_security_group`, `service_endpoints`, `delegations`) - when you ignore a path so an external controller can own it, leave the matching input unset so the module and the controller don't fight over it. This is a write-only argument (requires Terraform >= 1.11); changes take effect only after an `apply`. Defaults to `[]`.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
