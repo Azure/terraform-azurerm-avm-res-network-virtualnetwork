@@ -30,6 +30,10 @@ variable "address_space" {
     condition     = (var.address_space != null && var.ipam_pools == null) || (var.address_space == null && var.ipam_pools != null)
     error_message = "Either address_space or ipam_pools must be specified, but not both."
   }
+  validation {
+    condition     = var.address_space == null ? true : alltrue([for cidr in var.address_space : can(cidrhost(cidr, 0))])
+    error_message = "Each entry in address_space must be a valid CIDR block, for example \"10.0.0.0/16\"."
+  }
 }
 
 variable "bgp_community" {
@@ -393,6 +397,18 @@ variable "peerings" {
 
 DESCRIPTION
   nullable    = false
+
+  validation {
+    condition = alltrue([
+      for _, peering in var.peerings : alltrue(concat(
+        [for a in coalesce(peering.local_peered_address_spaces, []) : can(cidrhost(a.address_prefix, 0))],
+        [for a in coalesce(peering.remote_peered_address_spaces, []) : can(cidrhost(a.address_prefix, 0))],
+        [for a in coalesce(peering.reverse_local_peered_address_spaces, []) : can(cidrhost(a.address_prefix, 0))],
+        [for a in coalesce(peering.reverse_remote_peered_address_spaces, []) : can(cidrhost(a.address_prefix, 0))],
+      ))
+    ])
+    error_message = "Each peering `address_prefix` (local/remote/reverse peered address spaces) must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "retry" {
@@ -598,6 +614,20 @@ DESCRIPTION
       for _, subnet in var.subnets : subnet.service_endpoints_with_location == null
     ])
     error_message = "`service_endpoints_with_location` has been removed. Use `service_endpoints` with a set of service names instead, for example `service_endpoints = [\"Microsoft.Storage\"]`. Locations are no longer configurable because Azure expands service-endpoint locations implicitly, which caused perpetual drift."
+  }
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      subnet.address_prefix == null ? true : can(cidrhost(subnet.address_prefix, 0))
+    ])
+    error_message = "Each subnet `address_prefix` must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
+  validation {
+    condition = alltrue([
+      for _, subnet in var.subnets :
+      subnet.address_prefixes == null ? true : alltrue([for cidr in subnet.address_prefixes : can(cidrhost(cidr, 0))])
+    ])
+    error_message = "Each entry in a subnet's `address_prefixes` must be a valid CIDR block, for example \"10.0.0.0/24\"."
   }
 }
 
