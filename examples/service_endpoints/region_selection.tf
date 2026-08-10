@@ -4,6 +4,12 @@ module "regions" {
 
   has_pair       = true
   is_recommended = true
+  # Exclude Azure canary/EUAP regions (for example eastus2euap, centraluseuap),
+  # which are not generally available for resource deployment. This prevents
+  # spurious LocationNotAvailable failures when the example e2e tests randomly
+  # select a region.
+  region_name_regex      = "euap$"
+  region_name_regex_mode = "not_match"
 }
 
 # This allows us to randomize the region for the resource group.
