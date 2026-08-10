@@ -23,6 +23,7 @@ resource "azapi_resource" "this" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -63,6 +64,7 @@ resource "azapi_resource" "reverse" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -102,6 +104,7 @@ resource "azapi_resource" "address_space_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -148,6 +151,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -183,6 +187,7 @@ resource "azapi_resource" "subnet_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -225,6 +230,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create

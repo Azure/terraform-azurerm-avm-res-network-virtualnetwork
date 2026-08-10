@@ -50,7 +50,7 @@ module "avm-res-network-virtualnetwork-subnet" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
@@ -146,6 +146,27 @@ Description: Enable only IPv6 peering for the virtual network peering
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: (Optional) Peering body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift.
+
+- `virtual_networks_virtual_network_peerings` - The list of ignored body paths, applied to every peering resource this submodule manages.
+
+Notes:
+- Paths use dot notation and are relative to the peering request body. Individual list items cannot be targeted; ignore the whole list property instead.
+- This is a write-only argument stored in provider-private state, so changes to it take effect only after an `apply` (a non-empty value requires Terraform >= 1.11).
+- While a path is ignored, configuration changes at that path are not sent to Azure until the path is removed from this list.
+
+Type:
+
+```hcl
+object({
+    virtual_networks_virtual_network_peerings = optional(list(string), [])
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_local_peered_address_spaces"></a> [local\_peered\_address\_spaces](#input\_local\_peered\_address\_spaces)
 

@@ -40,7 +40,7 @@ resource "azapi_resource" "subnet" {
   response_export_values    = ["properties.addressPrefixes", "properties.addressPrefix"]
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = var.ignore_body_changes
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_subnets) > 0 ? var.ignore_body_changes.virtual_networks_subnets : null
 
   timeouts {
     create = var.timeouts.create

@@ -3,13 +3,15 @@ module "subnet" {
   source   = "./modules/subnet"
   for_each = var.subnets
 
-  name                                          = each.value.name
-  parent_id                                     = azapi_resource.vnet.id
-  address_prefix                                = each.value.address_prefix
-  address_prefixes                              = each.value.address_prefixes
-  default_outbound_access_enabled               = each.value.default_outbound_access_enabled
-  delegations                                   = each.value.delegations
-  ignore_body_changes                           = each.value.ignore_body_changes
+  name                            = each.value.name
+  parent_id                       = azapi_resource.vnet.id
+  address_prefix                  = each.value.address_prefix
+  address_prefixes                = each.value.address_prefixes
+  default_outbound_access_enabled = each.value.default_outbound_access_enabled
+  delegations                     = each.value.delegations
+  ignore_body_changes = {
+    virtual_networks_subnets = length(each.value.ignore_body_changes) > 0 ? each.value.ignore_body_changes : var.ignore_body_changes.virtual_networks_subnets.virtual_networks_subnets
+  }
   ipam_pools                                    = each.value.ipam_pools
   nat_gateway                                   = each.value.nat_gateway
   network_security_group                        = each.value.network_security_group

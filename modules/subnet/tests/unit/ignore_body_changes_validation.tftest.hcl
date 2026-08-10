@@ -4,10 +4,9 @@
 #
 # Backs #61 / supersedes #70. `ignore_body_changes` maps to the write-only azapi
 # argument that lets an out-of-band controller (AVNM routing / Azure Policy DINE)
-# own a subnet property without perpetual drift. Entries must be body paths that
-# start with `properties.`; a bare property name such as `routeTable` is silently
-# ignored by the provider and would fail to suppress drift, so the module rejects
-# it. These tests assert that guardrail.
+# own a subnet property without perpetual drift. Per AVM spec TFFR8 the variable
+# is an object keyed by the resource type (`virtual_networks_subnets`); each
+# entry must be a non-empty body path. These tests assert that guardrail.
 
 mock_provider "azapi" {}
 
@@ -16,9 +15,9 @@ variables {
   parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet"
 }
 
-# A valid `properties.`-prefixed path must be accepted and must not strip the
-# configured routeTable from the request body.
-run "valid_properties_path_accepted" {
+# A valid path must be accepted and must not strip the configured routeTable from
+# the request body.
+run "valid_path_accepted" {
   command = plan
 
   variables {
@@ -26,7 +25,9 @@ run "valid_properties_path_accepted" {
     route_table = {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/routeTables/rt-test"
     }
-    ignore_body_changes = ["properties.routeTable"]
+    ignore_body_changes = {
+      virtual_networks_subnets = ["properties.routeTable"]
+    }
   }
 
   assert {
@@ -35,29 +36,31 @@ run "valid_properties_path_accepted" {
   }
 }
 
-# An empty list is valid (nothing ignored).
-run "empty_list_accepted" {
+# The default empty object is valid (nothing ignored).
+run "empty_object_accepted" {
   command = plan
 
   variables {
     address_prefixes    = ["10.0.0.0/24"]
-    ignore_body_changes = []
+    ignore_body_changes = {}
   }
 
   assert {
-    condition     = length(var.ignore_body_changes) == 0
-    error_message = "Empty ignore_body_changes must be accepted."
+    condition     = length(var.ignore_body_changes.virtual_networks_subnets) == 0
+    error_message = "Empty ignore_body_changes must be accepted and default the list to []."
   }
 }
 
-# A bare property name (missing the `properties.` prefix) must be rejected -
-# the provider would silently ignore it and drift would not be suppressed.
-run "bare_property_name_rejected" {
+# A blank / whitespace-only entry must be rejected - the provider would silently
+# ignore it and drift would not be suppressed.
+run "blank_path_rejected" {
   command = plan
 
   variables {
-    address_prefixes    = ["10.0.0.0/24"]
-    ignore_body_changes = ["routeTable"]
+    address_prefixes = ["10.0.0.0/24"]
+    ignore_body_changes = {
+      virtual_networks_subnets = ["   "]
+    }
   }
 
   expect_failures = [
