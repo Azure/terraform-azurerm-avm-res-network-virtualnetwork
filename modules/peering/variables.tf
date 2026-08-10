@@ -101,6 +101,11 @@ variable "local_peered_address_spaces" {
   }))
   default     = []
   description = "The address space of the local virtual network to peer. Only relevant if peer_complete_vnets is false"
+
+  validation {
+    condition     = alltrue([for a in(var.local_peered_address_spaces == null ? [] : var.local_peered_address_spaces) : can(cidrhost(a.address_prefix, 0))])
+    error_message = "Each `address_prefix` in `local_peered_address_spaces` must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "local_peered_subnets" {
@@ -133,6 +138,11 @@ variable "remote_peered_address_spaces" {
   }))
   default     = []
   description = "The address space of the remote virtual network to peer. Only relevant if peer_complete_vnets is false"
+
+  validation {
+    condition     = alltrue([for a in(var.remote_peered_address_spaces == null ? [] : var.remote_peered_address_spaces) : can(cidrhost(a.address_prefix, 0))])
+    error_message = "Each `address_prefix` in `remote_peered_address_spaces` must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "remote_peered_subnets" {
@@ -194,6 +204,11 @@ variable "reverse_local_peered_address_spaces" {
   }))
   default     = []
   description = "The address space of the remote virtual network to peer. Only relevant if reverse_peer_complete_vnets is false"
+
+  validation {
+    condition     = alltrue([for a in(var.reverse_local_peered_address_spaces == null ? [] : var.reverse_local_peered_address_spaces) : can(cidrhost(a.address_prefix, 0))])
+    error_message = "Each `address_prefix` in `reverse_local_peered_address_spaces` must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "reverse_local_peered_subnets" {
@@ -232,6 +247,11 @@ variable "reverse_remote_peered_address_spaces" {
   }))
   default     = []
   description = "The address space of the local virtual network to peer. Only relevant if reverse_peer_complete_vnets is false"
+
+  validation {
+    condition     = alltrue([for a in(var.reverse_remote_peered_address_spaces == null ? [] : var.reverse_remote_peered_address_spaces) : can(cidrhost(a.address_prefix, 0))])
+    error_message = "Each `address_prefix` in `reverse_remote_peered_address_spaces` must be a valid CIDR block, for example \"10.0.0.0/24\"."
+  }
 }
 
 variable "reverse_remote_peered_subnets" {
