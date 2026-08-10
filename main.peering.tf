@@ -11,6 +11,7 @@ module "peering" {
   create_reverse_peering                = each.value.create_reverse_peering
   do_not_verify_remote_gateways         = each.value.do_not_verify_remote_gateways
   enable_only_ipv6_peering              = each.value.enable_only_ipv6_peering
+  ignore_body_changes                   = var.ignore_body_changes.virtual_networks_virtual_network_peerings
   local_peered_address_spaces           = each.value.local_peered_address_spaces
   local_peered_subnets                  = each.value.local_peered_subnets
   peer_complete_vnets                   = each.value.peer_complete_vnets

@@ -127,7 +127,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.11)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 ## Resources
 
@@ -225,6 +225,37 @@ list(object({
 ```
 
 Default: `null`
+
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: (Optional) Subnet body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation. Use this to let out-of-band controllers own specific subnet properties without producing perpetual `terraform plan` drift.
+
+- `virtual_networks_subnets` - The list of ignored body paths for the subnet managed by this module.
+
+The canonical use case is Azure Virtual Network Manager (AVNM) `ManagedOnly` routing configurations or Azure Policy `DeployIfNotExists` policies that attach a route table to the subnet out-of-band. Set `virtual_networks_subnets = ["properties.routeTable"]` so Terraform stops re-asserting `routeTable` and the external association survives subsequent plans.
+
+Common paths:
+- `properties.routeTable` - route table association (AVNM / Policy DINE)
+- `properties.networkSecurityGroup` - network security group association
+- `properties.serviceEndpoints` - service endpoints
+- `properties.delegations` - subnet delegations
+- `tags` - top-level tags applied out-of-band
+
+Notes:
+- Paths use dot notation and are relative to the subnet request body. Individual list items cannot be targeted; ignore the whole list property instead.
+- **Important:** several of these properties are also settable through dedicated module inputs (for example `route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an out-of-band controller can own it, leave the corresponding input unset - do not manage the same property from both places, or the module and the external controller will fight over it.
+- This is a write-only argument stored in provider-private state, so changes to it take effect only after an `apply` (a non-empty value requires Terraform >= 1.11).
+- While a path is ignored, configuration changes at that path are not sent to Azure until the path is removed from this list.
+
+Type:
+
+```hcl
+object({
+    virtual_networks_subnets = optional(list(string), [])
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_ipam_pools"></a> [ipam\_pools](#input\_ipam\_pools)
 

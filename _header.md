@@ -69,19 +69,72 @@ Address space is requested from an IPAM pool as a **single allocation per pool**
 
 **Resolved prefixes (summarization vs. fragmentation):** Azure resolves one allocation into one or more CIDR blocks. Contiguous free space is summarized into a single larger prefix (for example two `/21` worth of space surface as one `/20`); fragmented free space is returned as multiple non-adjacent prefixes (for example a single allocation may surface as `/25` + `/28`). This is why one pool can show a varying number of address prefixes. The module exposes these resolved prefixes as a **read-only** output, so summarization or fragmentation does **not** cause Terraform drift.
 
+## Ignoring out-of-band subnet changes (`ignore_body_changes`)
+
+Some Azure controllers modify subnet properties **out-of-band** - outside Terraform - after the subnet is created. The most common case is **Azure Virtual Network Manager (AVNM)** routing configurations (or Azure Policy `DeployIfNotExists`) attaching a **managed route table** to a subnet. On the next `terraform plan` the module sees the externally-added `routeTable` and tries to revert it to the configured value (`null`), producing **perpetual drift** and fighting the external controller on every apply.
+
+The module implements the AVM `ignore_body_changes` interface ([TFFR8](https://azure.github.io/Azure-Verified-Modules/spec/TFFR8)). It maps to the `azapi` provider's write-only [`ignore_body_changes`](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#ignore_body_changes) argument: the listed body paths are ignored after create, so the external controller can own them without drift.
+
+There are two ways to set it, and they compose:
+
+- **Per subnet (most common):** set `ignore_body_changes` on an individual entry of the `subnets` map. This takes precedence over the module-wide value for that subnet.
+- **Module-wide / other resources:** the root `ignore_body_changes` object is keyed by resource type (the same snake_case key an AzAPI `resource_types` map uses). `virtual_networks` targets the virtual network itself, `virtual_networks_subnets` applies to **every** subnet, and `virtual_networks_virtual_network_peerings` applies to every peering.
+
+```terraform
+module "vnet" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  # ... version, name, location, parent_id, address_space ...
+
+  subnets = {
+    workload = {
+      name             = "snet-workload"
+      address_prefixes = ["10.0.1.0/24"]
+
+      # Per-subnet: let AVNM / Azure Policy own the route table association
+      # out-of-band. Do NOT also set route_table on this subnet (see note below).
+      ignore_body_changes = ["properties.routeTable"]
+    }
+  }
+
+  # Module-wide equivalents (applied to every subnet / the vnet itself):
+  ignore_body_changes = {
+    virtual_networks         = ["tags"] # e.g. tags applied by Azure Policy
+    virtual_networks_subnets = {
+      virtual_networks_subnets = ["properties.routeTable"]
+    }
+  }
+}
+```
+
+**Supported paths.** Any body property expressed in dot notation, for example `properties.routeTable` or the top-level `tags`. The provider ignores whichever paths you list; it does not restrict them to a fixed set, so newer properties work without a module change. Commonly used subnet paths:
+
+| Path | Property |
+|------|----------|
+| `properties.routeTable` | Route table association (AVNM routing / Policy DINE) - the canonical case |
+| `properties.networkSecurityGroup` | Network security group association |
+| `properties.serviceEndpoints` | Service endpoints |
+| `properties.delegations` | Subnet delegations |
+
+**Important - don't manage the same property twice.** Several of these properties are also settable through dedicated inputs (`route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an external controller can own it, leave the corresponding input **unset**. Setting the input *and* ignoring the path means the module renders a value the provider is told to ignore - confusing and self-defeating.
+
+**Behaviour and requirements.**
+
+- Paths use dot notation. Individual list items cannot be targeted - ignore the whole list property. Each entry must be a non-empty string; blank entries are rejected with a validation error.
+- `ignore_body_changes` is a **write-only** argument (stored in provider-private state). Supplying a **non-empty** value requires **Terraform >= 1.11** and **AzAPI >= 2.12**. Changes to the list take effect only after an `apply`.
+- Because empty lists collapse to no argument, the default (nothing ignored) keeps the module usable on **Terraform < 1.11** - existing configurations are unaffected.
+- While a path is ignored, configuration changes at that path are **not** sent to Azure until you remove the path from the list.
+
 ## Prerequisites
 
 ### For IPAM Features
 - **Azure Virtual Network Manager**: Required for all IPAM functionality
 - **Supported Azure region**: IPAM must be available in your target region (see [Regional Support](#ipam-regional-support))
-- **azapi provider**: Version ~> 2.11 required for IPAM resource management
+- **azapi provider**: Version ~> 2.12 required for IPAM resource management
 - **Proper permissions**: Network Manager and IPAM pool management permissions
 
 ## Migrating from v0.1.x
 
-Version 0.2.0 rewrote the module from `azurerm` resources to `azapi` resources and changed the state layout without shipping `moved` blocks. Current tooling can bridge the resource-type changes: [Terraform v1.8.0](https://github.com/hashicorp/terraform/releases/tag/v1.8.0) added provider-supported moves between resource types, and [AzAPI v2.1.0](https://github.com/Azure/terraform-provider-azapi/releases/tag/v2.1.0) added moves from `azurerm` resources to `azapi_resource`. This module requires Terraform `>= 1.9, < 2.0` and AzAPI `~> 2.11`.
-
-The addresses below were verified against Terraform's move validation and AzAPI's cross-type state conversion using a synthetic v0.1.x state, but the migration has not been applied end to end against a real v0.1.3 deployment. Back up the state first, treat the addresses below as templates, and verify them against `terraform state list`.
+Version 0.2.0 rewrote the module from `azurerm` resources to `azapi` resources and changed the state layout without shipping `moved` blocks. Current tooling can bridge the resource-type changes: [Terraform v1.8.0](https://github.com/hashicorp/terraform/releases/tag/v1.8.0) added provider-supported moves between resource types, and [AzAPI v2.1.0](https://github.com/Azure/terraform-provider-azapi/releases/tag/v2.1.0) added moves from `azurerm` resources to `azapi_resource`. This module requires Terraform `>= 1.9, < 2.0` and AzAPI `~> 2.12`. The addresses below were verified against Terraform's move validation and AzAPI's cross-type state conversion using a synthetic v0.1.x state, but the migration has not been applied end to end against a real v0.1.3 deployment. Back up the state first, treat the addresses below as templates, and verify them against `terraform state list`.
 
 ### Move retained resources
 

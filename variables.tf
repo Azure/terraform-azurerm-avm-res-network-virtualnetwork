@@ -178,6 +178,37 @@ variable "flow_timeout_in_minutes" {
 DESCRIPTION
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    virtual_networks = optional(list(string), [])
+    virtual_networks_subnets = optional(object({
+      virtual_networks_subnets = optional(list(string), [])
+    }), {})
+    virtual_networks_virtual_network_peerings = optional(object({
+      virtual_networks_virtual_network_peerings = optional(list(string), [])
+    }), {})
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Prefer Terraform's `lifecycle.ignore_changes` when the paths are static; use this variable when the paths must be derived from variables or other non-static values.
+
+Keys follow the same naming rule as an AzAPI `resource_types` map (the snake_case ARM resource type with the `Microsoft.` prefix dropped), scoped per resource and per submodule:
+
+- `virtual_networks` - Ignored body paths for the virtual network managed by this module (for example `["tags"]` when Azure Policy applies tags out-of-band).
+- `virtual_networks_subnets` - Override slot for the subnet submodule. Supply only the keys you want to override.
+  - `virtual_networks_subnets` - Ignored body paths applied to **every** subnet, for example `["properties.routeTable"]` for the AVNM `ManagedOnly` routing / Azure Policy DINE scenario. A per-subnet `ignore_body_changes` entry in the `subnets` map takes precedence over this shared value.
+- `virtual_networks_virtual_network_peerings` - Override slot for the peering submodule.
+  - `virtual_networks_virtual_network_peerings` - Ignored body paths applied to every peering resource.
+
+Paths use dot notation, for example `properties.routeTable` or the top-level `tags`. Individual list items cannot be targeted; ignore the whole list property instead. While a path is ignored, configuration changes at that path are **not** sent to Azure until the path is removed from the list.
+
+**Important:** several subnet properties are also settable through dedicated inputs (for example `route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an out-of-band controller can own it, leave the corresponding input unset - do not manage the same property from both places.
+
+Supplying a **non-empty** value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument held in provider-private state; changes take effect only after an `apply`. Leaving every list empty (the default) emits no argument, so the module remains usable on earlier Terraform versions.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "ipam_pools" {
   type = list(object({
     id                     = string
@@ -414,6 +445,7 @@ variable "subnets" {
       prefix_length          = optional(number)
       allocation_type        = optional(string, "Static")
     })))
+    ignore_body_changes = optional(list(string), [])
     nat_gateway = optional(object({
       id = string
     }))
@@ -478,6 +510,7 @@ variable "subnets" {
    - `number_of_ip_addresses`: (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
    - `prefix_length`: (Optional) The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
    - `allocation_type`: Type of allocation - "Static" (default) or "Dynamic"
+ - `ignore_body_changes` - (Optional) A per-subnet list of body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation, letting an out-of-band controller own those properties without perpetual drift. This is the **per-item override** for this subnet and takes precedence over the module-wide `ignore_body_changes.virtual_networks_subnets.virtual_networks_subnets` value. The canonical use case is AVNM `ManagedOnly` routing or Azure Policy DINE attaching a route table out-of-band: set `["properties.routeTable"]`. Other common paths: `properties.networkSecurityGroup`, `properties.serviceEndpoints`, `properties.delegations`; a top-level `tags` path is also valid. Uses dot notation and cannot target individual list items (ignore the whole list). **Important:** these properties are also settable via dedicated inputs (`route_table`, `network_security_group`, `service_endpoints`, `delegations`) - when you ignore a path so an external controller can own it, leave the matching input unset so the module and the controller don't fight over it. Supplying a non-empty value is a write-only argument (requires Terraform >= 1.11); changes take effect only after an `apply`. Defaults to `[]`.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -
  - `name` - (Required) The name of the subnet. Changing this forces a new resource to be created.
