@@ -110,6 +110,25 @@ module "avm-res-network-virtualnetwork-subnet" {
 }
 ```
 
+## Out-of-band changes and drift detection
+
+The subnet resources set `ignore_missing_property = false` on the underlying `azapi_resource`. This means that when a body property the module manages (for example `properties.routeTable` or `properties.networkSecurityGroup`) is removed or changed **out-of-band** - typically by an Azure Virtual Network Manager (AVNM) `ManagedOnly` routing configuration or an Azure Policy `DeployIfNotExists` assignment - Terraform surfaces the change as drift on the next plan and offers to restore the module-managed value.
+
+If you intend an external controller to own a specific property, do **not** fight it on every plan. Instead, suppress drift for that single path with `ignore_body_changes` (see issue #61 / AVM spec `TFFR8`) and leave the corresponding dedicated input (`route_table`, `network_security_group`, ...) unset so the module and the controller do not both manage it:
+
+```terraform
+subnets = {
+  app = {
+    name             = "subnet-app"
+    address_prefixes = ["10.0.1.0/24"]
+    # Let AVNM/Policy own the route table association; suppress that path only.
+    ignore_body_changes = ["properties.routeTable"]
+  }
+}
+```
+
+With this pairing, every other managed property still benefits from drift detection while the ignored path is left to the external controller.
+
 ## Common Issues
 
 - **"Cannot create IPAM subnet"**: Ensure parent VNet was created with IPAM pools, not traditional addressing
