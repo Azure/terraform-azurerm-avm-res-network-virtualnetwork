@@ -66,6 +66,14 @@ resource "azapi_resource" "role_assignments" {
   ignore_null_property   = true
   response_export_values = []
   retry                  = var.retry
+
+  # Role assignment names are immutable GUIDs in Azure; they are never renamed,
+  # only replaced. Ignoring changes to `name` prevents a destroy/recreate (and the
+  # associated RBAC outage) on upgrade, when the moved-in azurerm name is not yet
+  # known to the upstream random_uuid resource. See issue #137.
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 # Shared AVM interfaces (role assignments) transformed into azapi resource
