@@ -48,4 +48,4 @@ avm.tflint_module.merged.hcl
 avmmakefile
 examples/*/policy
 *.mptfbackup
-.avm
+.avm/managed-files.json
