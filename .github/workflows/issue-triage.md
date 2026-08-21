@@ -21,6 +21,15 @@ network:
         description: 'Issue number to triage (required for on-demand manual runs)'
         required: true
         type: string
+# The compiler-generated agent, output and conclusion jobs share a static
+# concurrency group per workflow. `features.group-concurrency-queue: false`
+# below strips `queue: max` from those groups, so Actions applies its default
+# `single` queueing and keeps only the newest pending run — a third arrival
+# discards the middle one. Fanning several issues out at once therefore lost
+# conclusion jobs and their failure reports. Discriminating by issue number
+# gives each dispatched run its own group. Stripped from the compiled lock.
+concurrency:
+  job-discriminator: ${{ github.event.inputs.issue_number || github.event.issue.number || github.run_id }}
 # Read-only permissions for triage
 permissions:
   contents: read
