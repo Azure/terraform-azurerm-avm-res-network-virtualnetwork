@@ -63,4 +63,13 @@ resource "azapi_resource" "vnet" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
+
+  # The VNet GET response includes child collections managed by separate
+  # resources or external controllers. Preserve them when importing the parent.
+  lifecycle {
+    ignore_changes = [
+      body.properties["subnets"],
+      body.properties["virtualNetworkPeerings"],
+    ]
+  }
 }

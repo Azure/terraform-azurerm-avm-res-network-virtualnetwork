@@ -71,7 +71,13 @@ Address space is requested from an IPAM pool as a **single allocation per pool**
 
 **Resolved prefixes (summarization vs. fragmentation):** Azure resolves one allocation into one or more CIDR blocks. Contiguous free space is summarized into a single larger prefix (for example two `/21` worth of space surface as one `/20`); fragmented free space is returned as multiple non-adjacent prefixes (for example a single allocation may surface as `/25` + `/28`). This is why one pool can show a varying number of address prefixes. The module exposes these resolved prefixes as a **read-only** output, so summarization or fragmentation does **not** cause Terraform drift.
 
-## Ignoring out-of-band subnet changes (`ignore_body_changes`)
+## Ignoring out-of-band changes
+
+The virtual network resource does not manage subnets or virtual network peerings inline. Those child resources are managed through the module's subnet and peering submodules, or by external controllers such as Azure Virtual WAN. Azure nevertheless includes both collections in the parent VNet GET response, including during import. The module statically ignores `properties.subnets` and `properties.virtualNetworkPeerings` on the parent resource so an imported VNet does not plan to remove children owned elsewhere. This does not ignore the individual subnet or peering resources; Terraform continues to manage any children declared through the corresponding module inputs.
+
+When adopting existing children into this module, import each subnet or peering into its corresponding child resource address. Ignoring the collections on the parent prevents double-management; it does not add those children to Terraform state.
+
+### Consumer-configurable changes (`ignore_body_changes`)
 
 Some Azure controllers modify subnet properties **out-of-band** - outside Terraform - after the subnet is created. The most common case is **Azure Virtual Network Manager (AVNM)** routing configurations (or Azure Policy `DeployIfNotExists`) attaching a **managed route table** to a subnet. On the next `terraform plan` the module sees the externally-added `routeTable` and tries to revert it to the configured value (`null`), producing **perpetual drift** and fighting the external controller on every apply.
 
@@ -81,6 +87,8 @@ There are two ways to set it, and they compose:
 
 - **Per subnet (most common):** set `ignore_body_changes` on an individual entry of the `subnets` map. This takes precedence over the module-wide value for that subnet.
 - **Module-wide / other resources:** the root `ignore_body_changes` object is keyed by resource type (the same snake\_case key an AzAPI `resource_types` map uses). `virtual_networks` targets the virtual network itself, `virtual_networks_subnets` applies to **every** subnet, and `virtual_networks_virtual_network_peerings` applies to every peering.
+
+Do not add `properties.subnets` or `properties.virtualNetworkPeerings` to `ignore_body_changes.virtual_networks`; the module already ignores those static parent paths. Existing configurations that include them may remove the redundant entries after upgrading.
 
 ```terraform
 module "vnet" {
