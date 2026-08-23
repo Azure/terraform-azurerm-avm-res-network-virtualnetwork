@@ -226,8 +226,24 @@ variable "retry" {
   description = "Retry configuration for the resource operations, includes IPAM-specific error patterns"
 }
 
+variable "resource_types" {
+  type = object({
+    authorization_role_assignments   = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    network_virtual_networks_subnets = optional(string, "Microsoft.Network/virtualNetworks/subnets@2024-07-01")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by the subnet submodule.
+
+- `authorization_role_assignments` - Resource type and API version for subnet role assignments.
+- `network_virtual_networks_subnets` - Resource type and API version for subnets.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "role_assignments" {
   type = map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -241,6 +257,7 @@ variable "role_assignments" {
   description = <<DESCRIPTION
 (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
+- `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated. The name is honored when the assignment is created; later changes are ignored to preserve existing assignments and avoid RBAC outages during upgrades.
 - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
 - `principal_id` - The ID of the principal to assign the role to.
 - `description` - (Optional) The description of the role assignment.
@@ -253,6 +270,14 @@ variable "role_assignments" {
 > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 DESCRIPTION
   nullable    = false
+
+  validation {
+    condition = alltrue([
+      for _, v in var.role_assignments :
+      v.delegated_managed_identity_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.ManagedIdentity/userAssignedIdentities", v.delegated_managed_identity_resource_id))
+    ])
+    error_message = "Each `role_assignments[*].delegated_managed_identity_resource_id` must be a valid user-assigned managed identity resource ID, or null."
+  }
 }
 
 variable "route_table" {

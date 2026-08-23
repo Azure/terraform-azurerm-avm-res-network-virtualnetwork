@@ -4,11 +4,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.11"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -17,13 +13,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -32,7 +22,10 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
@@ -41,8 +34,8 @@ resource "azurerm_resource_group" "this" {
 module "vnet1" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = module.resource_group.location
+  parent_id     = module.resource_group.resource_id
   address_space = ["10.4.0.0/16", "10.5.0.0/16"]
   name          = "${module.naming.virtual_network.name_unique}-1"
   subnets = {
@@ -64,8 +57,8 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = module.resource_group.location
+  parent_id     = module.resource_group.resource_id
   address_space = ["10.6.0.0/16", "10.7.0.0/16"]
   name          = "${module.naming.virtual_network.name_unique}-2"
   peerings = {

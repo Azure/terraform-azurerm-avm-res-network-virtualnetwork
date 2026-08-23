@@ -2,7 +2,7 @@ resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  type      = var.resource_types.network_virtual_networks
   body = {
     properties = {
       addressSpace = merge(

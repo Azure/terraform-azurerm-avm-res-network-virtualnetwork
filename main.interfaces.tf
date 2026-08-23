@@ -17,7 +17,7 @@ resource "azapi_resource" "lock" {
 
   name                   = coalesce(module.interfaces.lock_azapi.name, "lock-${var.lock.kind}")
   parent_id              = azapi_resource.vnet.id
-  type                   = module.interfaces.lock_azapi.type
+  type                   = var.resource_types.authorization_locks
   body                   = module.interfaces.lock_azapi.body
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -45,7 +45,7 @@ resource "azapi_resource" "role_assignments" {
 
   name                   = each.value.name
   parent_id              = azapi_resource.vnet.id
-  type                   = each.value.type
+  type                   = var.resource_types.authorization_role_assignments
   body                   = each.value.body
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -79,7 +79,7 @@ resource "azapi_resource" "diagnostic_settings" {
 
   name                      = coalesce(each.value.name, "diag-${var.name}")
   parent_id                 = azapi_resource.vnet.id
-  type                      = each.value.type
+  type                      = var.resource_types.insights_diagnostic_settings
   body                      = each.value.body
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

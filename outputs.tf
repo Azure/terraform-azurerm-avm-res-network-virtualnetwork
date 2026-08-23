@@ -18,8 +18,11 @@ DESCRIPTION
 }
 
 output "resource" {
-  description = "The Azure Virtual Network resource.  This will be null if an existing vnet is supplied."
-  value       = azapi_resource.vnet
+  description = "Deprecated: The Azure Virtual Network resource. Use the discrete outputs instead."
+  # TFFR2 is a SHOULD. Retain this legacy output until a planned breaking release
+  # so existing consumers are not broken by the authoring-tool migration.
+  # tflint-ignore: no_entire_resource_output_tffr2
+  value = azapi_resource.vnet
 }
 
 output "resource_id" {

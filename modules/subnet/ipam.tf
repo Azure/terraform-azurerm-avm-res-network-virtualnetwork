@@ -3,7 +3,7 @@ resource "azapi_resource" "subnet_ipam" {
 
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_subnets
   body = {
     properties = merge({
       ipamPoolPrefixAllocations = [

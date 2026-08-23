@@ -266,8 +266,9 @@ DESCRIPTION
 
 variable "lock" {
   type = object({
-    kind = string
-    name = optional(string, null)
+    kind  = string
+    name  = optional(string, null)
+    notes = optional(string, null)
   })
   default     = null
   description = <<DESCRIPTION
@@ -275,6 +276,7 @@ variable "lock" {
 
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  - `notes` - (Optional) Notes about the lock. This value maps to `Microsoft.Authorization/locks.properties.notes`.
   DESCRIPTION
 
   validation {
@@ -411,6 +413,37 @@ DESCRIPTION
   }
 }
 
+variable "resource_types" {
+  type = object({
+    authorization_locks            = optional(string, "Microsoft.Authorization/locks@2020-05-01")
+    authorization_role_assignments = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    insights_diagnostic_settings   = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_virtual_networks       = optional(string, "Microsoft.Network/virtualNetworks@2024-07-01")
+    network_virtual_networks_subnets = optional(object({
+      authorization_role_assignments   = optional(string)
+      network_virtual_networks_subnets = optional(string)
+    }), {})
+    network_virtual_networks_virtual_network_peerings = optional(object({
+      network_virtual_networks_virtual_network_peerings = optional(string)
+    }), {})
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by the module.
+
+- `authorization_locks` - Resource type and API version for management locks.
+- `authorization_role_assignments` - Resource type and API version for virtual network role assignments.
+- `insights_diagnostic_settings` - Resource type and API version for diagnostic settings.
+- `network_virtual_networks` - Resource type and API version for virtual networks.
+- `network_virtual_networks_subnets` - Resource-type overrides passed to the subnet submodule.
+  - `authorization_role_assignments` - Resource-type override for subnet role assignments.
+  - `network_virtual_networks_subnets` - Resource-type override for subnets.
+- `network_virtual_networks_virtual_network_peerings` - Resource-type overrides passed to the peering submodule.
+  - `network_virtual_networks_virtual_network_peerings` - Resource-type override for virtual network peerings.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "retry" {
   type = object({
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
@@ -423,6 +456,7 @@ variable "retry" {
 
 variable "role_assignments" {
   type = map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -436,6 +470,7 @@ variable "role_assignments" {
   description = <<DESCRIPTION
   (Optional) A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
+  - `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated. The name is honored when the assignment is created; later changes are ignored to preserve existing assignments and avoid RBAC outages during upgrades.
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
   - `description` - (Optional) The description of the role assignment.
@@ -448,6 +483,14 @@ variable "role_assignments" {
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
   nullable    = false
+
+  validation {
+    condition = alltrue([
+      for _, v in var.role_assignments :
+      v.delegated_managed_identity_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.ManagedIdentity/userAssignedIdentities", v.delegated_managed_identity_resource_id))
+    ])
+    error_message = "Each `role_assignments[*].delegated_managed_identity_resource_id` must be a valid user-assigned managed identity resource ID, or null."
+  }
 }
 
 variable "subnets" {
@@ -505,6 +548,7 @@ variable "subnets" {
       max_interval_seconds = optional(number, 180)
     }), {})
     role_assignments = optional(map(object({
+      name                                   = optional(string, null)
       role_definition_id_or_name             = string
       principal_id                           = string
       description                            = optional(string, null)
@@ -574,6 +618,7 @@ variable "subnets" {
 
  ---
  `role_assignments` supports the following:
+ - `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated. The name is honored when the assignment is created; later changes are ignored to preserve existing assignments and avoid RBAC outages during upgrades.
  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
  - `principal_id` - The ID of the principal to assign the role to.
  - `description` - (Optional) The description of the role assignment.

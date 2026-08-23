@@ -3,7 +3,7 @@ resource "azapi_resource" "subnet" {
 
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_subnets
   body = {
     properties = merge({
       addressPrefix         = var.ipam_pools == null ? var.address_prefix : null
@@ -61,7 +61,7 @@ resource "azapi_resource" "role_assignments" {
 
   name                   = each.value.name
   parent_id              = local.ipam_enabled ? azapi_resource.subnet_ipam[0].id : azapi_resource.subnet[0].id
-  type                   = each.value.type
+  type                   = var.resource_types.authorization_role_assignments
   body                   = each.value.body
   ignore_null_property   = true
   response_export_values = []
