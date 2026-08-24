@@ -1434,7 +1434,18 @@ When you are **highly confident** an issue is a confirmed duplicate of another (
 
 **Important:** Do not emit any safe outputs until ALL analysis steps (Steps 1–5) are complete.
 
-**Every issue safe output in this run must carry the target issue number** — `item_number: ${{ github.event.inputs.issue_number || github.event.issue.number }}` for `add-comment`, `add-labels`, and `close-issue`, and `issue_number: ${{ github.event.inputs.issue_number || github.event.issue.number }}` for `set-issue-type`. Manual reruns have no issue in the event context, so a call that omits the number is rejected with "No issue/PR number available" and the label or type is silently lost.
+**Every issue safe output in this run must carry the target issue number.** On a manual rerun there is no issue in the event context, so a call that omits the number is rejected with "No issue/PR number available" and that label or type is silently lost while the comment still posts and looks correct. The number for this run is **#${{ github.event.inputs.issue_number || github.event.issue.number }}**, and it is also on disk at `/tmp/gh-aw/agent/issue-number.txt`.
+
+Every issue safe output carries it, in every combination — never only the first call, and never only the comment:
+
+```json
+{"type": "add_labels", "item_number": ${{ github.event.inputs.issue_number || github.event.issue.number }}, "labels": ["bug"]}
+{"type": "set_issue_type", "issue_number": ${{ github.event.inputs.issue_number || github.event.issue.number }}, "issue_type": "Bug"}
+{"type": "add_comment", "item_number": ${{ github.event.inputs.issue_number || github.event.issue.number }}, "body": "## 🤖 GitHub Agentic Workflow Automated Triage 🤖 …"}
+{"type": "close_issue", "item_number": ${{ github.event.inputs.issue_number || github.event.issue.number }}, "state_reason": "duplicate", "duplicate_of": 4321, "body": "Duplicate of #4321"}
+```
+
+`add-comment`, `add-labels`, and `close-issue` use `item_number`; `set-issue-type` uses `issue_number`. When updating a pull request, use that PR's number as `pull_request_number`. Before you emit anything, check each call you are about to make and confirm the number is present on all of them.
 
 - If you **close the issue** as a duplicate: Use `add-comment` for the triage summary **first**, then use `close-issue` with `state_reason: duplicate`, `duplicate_of: <canonical-issue-number>`, and a body of exactly `Duplicate of #<canonical-issue-number>`. See the Duplicate Closure Flow.
 - If you **close the issue** because it is conclusively fixed: Use `add-comment` for the triage summary **first**, then use `close-issue` with `state_reason: completed` and a body naming the fixing PR. Do not set `duplicate_of` on this path.
@@ -1442,7 +1453,7 @@ When you are **highly confident** an issue is a confirmed duplicate of another (
 - If you find an unlinked **confirmed-fix PR**: Use `update-pull-request` with `pull_request_number`, `operation: append`, and a body of exactly `Fixes #<issue-number>`. Do not update likely or merely related candidates.
 - Use `set-issue-type` with `issue_number` and exactly one of `Bug`, `Feature`, or `Task` when the issue's current type does not match its primary intent.
 - If you find a **possible duplicate** but are **not highly confident** it is the same root cause: do **NOT** use `close-issue`. Use `add-comment` to flag `Possible duplicate of #N` (with the link) and leave the issue open; apply labels with `add-labels` as usual (but not `duplicate`). Reserve `close-issue` for confirmed duplicates only.
-- If you **add labels AND post a comment** (most common case): Call **both** `add-labels` (to apply labels to the issue) AND `add-comment` (for the triage summary). ⚠️ Listing label names inside the comment body does NOT apply them — you MUST call `add-labels` as a separate action.
+- If you **add labels AND post a comment** (most common case): Call **both** `add-labels` (to apply labels to the issue) AND `add-comment` (for the triage summary), and put `item_number` on **both** — the observed failure mode is a run that attaches the number to the comment and omits it from the labels, which loses the labels while the comment still publishes. ⚠️ Listing label names inside the comment body does NOT apply them — you MUST call `add-labels` as a separate action.
 - If you **only post a comment** (no labels to add, no close): Use `add-comment`.
 - On a manual rerun, perform a complete fresh assessment. Use `add-comment` for the current result; the handler will mark older comments carrying this same workflow's hidden `gh-aw-workflow-id` as outdated and minimize them.
 
