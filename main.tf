@@ -63,4 +63,13 @@ resource "azapi_resource" "vnet" {
     read   = var.timeouts.read
     update = var.timeouts.update
   }
+
+  # Azure returns these child collections in the parent body during import,
+  # although this module manages them as separate resources.
+  lifecycle {
+    ignore_changes = [
+      body.properties["subnets"],
+      body.properties["virtualNetworkPeerings"],
+    ]
+  }
 }

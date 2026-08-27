@@ -209,6 +209,8 @@ Paths use dot notation, for example `properties.routeTable` or the top-level `ta
 **Important:** several subnet properties are also settable through dedicated inputs (for example `route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an out-of-band controller can own it, leave the corresponding input unset - do not manage the same property from both places.
 
 Supplying a **non-empty** value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument held in provider-private state; changes take effect only after an `apply`. Leaving every list empty (the default) emits no argument, so the module remains usable on earlier Terraform versions.
+
+**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot protect the very first `terraform plan` you run against a resource you just imported. The virtual network's `properties.subnets` and `properties.virtualNetworkPeerings` are instead protected by a static `lifecycle.ignore_changes` block on `azapi_resource.vnet` (see main.tf), which applies immediately, including on that first post-import plan, because this module always manages subnets and peerings as separate child resources and never sets either key on the parent body.
 DESCRIPTION
   nullable    = false
 }
