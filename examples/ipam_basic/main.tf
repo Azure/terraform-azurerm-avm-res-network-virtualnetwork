@@ -4,11 +4,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.11"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -17,37 +13,34 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.4.3"
 }
 
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = "${module.naming.resource_group.name_unique}-retry-test"
 }
 
-data "azurerm_subscription" "this" {}
+data "azapi_client_config" "current" {}
 
 # Create Network Manager and IPAM Pool
 resource "azapi_resource" "network_manager" {
-  location  = azurerm_resource_group.this.location
-  name      = replace(azurerm_resource_group.this.name, "rg-", "avnm-")
-  parent_id = azurerm_resource_group.this.id
+  location  = module.resource_group.location
+  name      = replace(module.resource_group.name, "rg-", "avnm-")
+  parent_id = module.resource_group.resource_id
   type      = "Microsoft.Network/networkManagers@2024-07-01"
   body = {
     properties = {
       networkManagerScopeAccesses = []
       networkManagerScopes = {
-        subscriptions = [data.azurerm_subscription.this.id]
+        subscriptions = ["/subscriptions/${data.azapi_client_config.current.subscription_id}"]
       }
     }
   }
@@ -56,11 +49,12 @@ resource "azapi_resource" "network_manager" {
     max_interval_seconds = 180
     error_message_regex  = ["CannotDeleteResource", "Cannot delete resource while nested resources exist"]
   }
+  response_export_values    = []
   schema_validation_enabled = false
 }
 
 resource "azapi_resource" "ipam_pool" {
-  location  = azurerm_resource_group.this.location
+  location  = module.resource_group.location
   name      = "pool-retry-test"
   parent_id = azapi_resource.network_manager.id
   type      = "Microsoft.Network/networkManagers/ipamPools@2024-07-01"
@@ -76,6 +70,7 @@ resource "azapi_resource" "ipam_pool" {
     max_interval_seconds = 180
     error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
   }
+  response_export_values    = []
   schema_validation_enabled = false
 
   depends_on = [azapi_resource.network_manager]
@@ -86,8 +81,8 @@ resource "azapi_resource" "ipam_pool" {
 module "vnet_retry_test" {
   source = "../../"
 
-  location         = azurerm_resource_group.this.location
-  parent_id        = azurerm_resource_group.this.id
+  location         = module.resource_group.location
+  parent_id        = module.resource_group.resource_id
   enable_telemetry = true
   # VNet gets address space from IPAM pool
   ipam_pools = [{

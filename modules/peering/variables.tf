@@ -163,6 +163,19 @@ variable "retry" {
   description = "Retry configuration for the resource operations"
 }
 
+variable "resource_types" {
+  type = object({
+    network_virtual_networks_virtual_network_peerings = optional(string, "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by the peering submodule.
+
+- `network_virtual_networks_virtual_network_peerings` - Resource type and API version for virtual network peerings.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "reverse_allow_forwarded_traffic" {
   type        = bool
   default     = false

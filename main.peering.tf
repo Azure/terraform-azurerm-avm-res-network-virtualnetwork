@@ -17,6 +17,7 @@ module "peering" {
   peer_complete_vnets                   = each.value.peer_complete_vnets
   remote_peered_address_spaces          = each.value.remote_peered_address_spaces
   remote_peered_subnets                 = each.value.remote_peered_subnets
+  resource_types                        = var.resource_types.network_virtual_networks_virtual_network_peerings
   retry                                 = each.value.retry
   reverse_allow_forwarded_traffic       = each.value.reverse_allow_forwarded_traffic
   reverse_allow_gateway_transit         = each.value.reverse_allow_gateway_transit

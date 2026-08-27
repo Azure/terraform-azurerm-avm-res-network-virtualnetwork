@@ -4,11 +4,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.11"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -17,37 +13,34 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.4.3"
 }
 
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region.name
   name     = module.naming.resource_group.name_unique
 }
 
-data "azurerm_subscription" "this" {}
+data "azapi_client_config" "current" {}
 
 # Network Manager and IPAM Pool
 resource "azapi_resource" "network_manager" {
-  location  = azurerm_resource_group.this.location
+  location  = module.resource_group.location
   name      = replace(module.naming.resource_group.name_unique, module.naming.resource_group.slug, "avnm")
-  parent_id = azurerm_resource_group.this.id
+  parent_id = module.resource_group.resource_id
   type      = "Microsoft.Network/networkManagers@2024-07-01"
   body = {
     properties = {
       networkManagerScopeAccesses = []
       networkManagerScopes = {
-        subscriptions = [data.azurerm_subscription.this.id]
+        subscriptions = ["/subscriptions/${data.azapi_client_config.current.subscription_id}"]
       }
     }
   }
@@ -56,13 +49,14 @@ resource "azapi_resource" "network_manager" {
     max_interval_seconds = 180
     error_message_regex  = ["CannotDeleteResource", "Cannot delete resource while nested resources exist"]
   }
+  response_export_values    = []
   schema_validation_enabled = false
 }
 
 
 
 resource "azapi_resource" "ipam_pool" {
-  location  = azurerm_resource_group.this.location
+  location  = module.resource_group.location
   name      = "pool-subnet-test"
   parent_id = azapi_resource.network_manager.id
   type      = "Microsoft.Network/networkManagers/ipamPools@2024-07-01"
@@ -78,6 +72,7 @@ resource "azapi_resource" "ipam_pool" {
     max_interval_seconds = 180
     error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
   }
+  response_export_values    = []
   schema_validation_enabled = true
 }
 
@@ -87,8 +82,8 @@ resource "azapi_resource" "ipam_pool" {
 module "ipam_vnet" {
   source = "../../"
 
-  location         = azurerm_resource_group.this.location
-  parent_id        = azurerm_resource_group.this.id
+  location         = module.resource_group.location
+  parent_id        = module.resource_group.resource_id
   enable_telemetry = true
   # VNet gets address space from IPAM pool
   ipam_pools = [{
@@ -102,22 +97,29 @@ module "ipam_vnet" {
   }
 }
 
-resource "azurerm_network_security_group" "app" {
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.network_security_group.name}-app"
-  resource_group_name = azurerm_resource_group.this.name
-
-  security_rule {
-    access                     = "Allow"
-    destination_address_prefix = "*"
-    destination_port_ranges    = ["80", "443"]
-    direction                  = "Inbound"
-    name                       = "AllowHTTP"
-    priority                   = 1001
-    protocol                   = "Tcp"
-    source_address_prefix      = "*"
-    source_port_range          = "*"
+resource "azapi_resource" "app" {
+  location  = module.resource_group.location
+  name      = "${module.naming.network_security_group.name}-app"
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/networkSecurityGroups@2024-07-01"
+  body = {
+    properties = {
+      securityRules = [{
+        name = "AllowHTTP"
+        properties = {
+          access                   = "Allow"
+          destinationAddressPrefix = "*"
+          destinationPortRanges    = ["80", "443"]
+          direction                = "Inbound"
+          priority                 = 1001
+          protocol                 = "Tcp"
+          sourceAddressPrefix      = "*"
+          sourcePortRange          = "*"
+        }
+      }]
+    }
   }
+  response_export_values = []
 }
 
 # Test: Create IPAM subnet using the standalone subnet module
@@ -132,7 +134,7 @@ module "ipam_subnet" {
     prefix_length = 24 # /24 subnet (256 IP addresses)
   }]
   network_security_group = {
-    id = azurerm_network_security_group.app.id
+    id = azapi_resource.app.id
   }
   service_endpoints = ["Microsoft.Storage"]
 }
@@ -146,7 +148,7 @@ module "traditional_subnet" {
   parent_id        = module.ipam_vnet.resource_id
   address_prefixes = ["10.0.1.0/24"] # Must be within the IPAM-allocated VNet space
   network_security_group = {
-    id = azurerm_network_security_group.app.id
+    id = azapi_resource.app.id
   }
   service_endpoints = ["Microsoft.KeyVault"]
 }

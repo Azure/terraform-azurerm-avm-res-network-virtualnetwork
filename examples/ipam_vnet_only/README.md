@@ -154,11 +154,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.11"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -167,37 +163,34 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.4.3"
 }
 
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region.name
   name     = module.naming.resource_group.name_unique
 }
 
-data "azurerm_subscription" "this" {}
+data "azapi_client_config" "current" {}
 
 # Create Network Manager for IPAM
 resource "azapi_resource" "network_manager" {
-  location  = azurerm_resource_group.this.location
+  location  = module.resource_group.location
   name      = replace(module.naming.resource_group.name_unique, module.naming.resource_group.slug, "avnm")
-  parent_id = azurerm_resource_group.this.id
+  parent_id = module.resource_group.resource_id
   type      = "Microsoft.Network/networkManagers@2024-07-01"
   body = {
     properties = {
       networkManagerScopeAccesses = []
       networkManagerScopes = {
-        subscriptions = [data.azurerm_subscription.this.id]
+        subscriptions = ["/subscriptions/${data.azapi_client_config.current.subscription_id}"]
       }
     }
   }
@@ -206,12 +199,13 @@ resource "azapi_resource" "network_manager" {
     max_interval_seconds = 180
     error_message_regex  = ["CannotDeleteResource", "Cannot delete resource while nested resources exist"]
   }
+  response_export_values    = []
   schema_validation_enabled = false
 }
 
 # IPAM Pool for VNet address space only
 resource "azapi_resource" "ipam_pool" {
-  location  = azurerm_resource_group.this.location
+  location  = module.resource_group.location
   name      = "pool-vnet-only"
   parent_id = azapi_resource.network_manager.id
   type      = "Microsoft.Network/networkManagers/ipamPools@2024-07-01"
@@ -227,42 +221,55 @@ resource "azapi_resource" "ipam_pool" {
     max_interval_seconds = 180
     error_message_regex  = ["BadRequest", "Ipam pool.*has Azure resources associated"]
   }
+  response_export_values    = []
   schema_validation_enabled = false
 
-  depends_on = [azapi_resource.ipam_pool]
+  depends_on = [azapi_resource.network_manager]
 }
 
 # Network Security Groups for traditional subnets
-resource "azurerm_network_security_group" "web" {
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.network_security_group.name}-web"
-  resource_group_name = azurerm_resource_group.this.name
-
-  security_rule {
-    access                     = "Allow"
-    destination_address_prefix = "*"
-    destination_port_range     = "80"
-    direction                  = "Inbound"
-    name                       = "AllowHTTP"
-    priority                   = 1001
-    protocol                   = "Tcp"
-    source_address_prefix      = "*"
-    source_port_range          = "*"
+resource "azapi_resource" "web" {
+  location  = module.resource_group.location
+  name      = "${module.naming.network_security_group.name}-web"
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/networkSecurityGroups@2024-07-01"
+  body = {
+    properties = {
+      securityRules = [{
+        name = "AllowHTTP"
+        properties = {
+          access                   = "Allow"
+          destinationAddressPrefix = "*"
+          destinationPortRange     = "80"
+          direction                = "Inbound"
+          priority                 = 1001
+          protocol                 = "Tcp"
+          sourceAddressPrefix      = "*"
+          sourcePortRange          = "*"
+        }
+      }]
+    }
   }
+  response_export_values = []
 }
 
-resource "azurerm_network_security_group" "app" {
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.network_security_group.name}-app"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "app" {
+  location  = module.resource_group.location
+  name      = "${module.naming.network_security_group.name}-app"
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/networkSecurityGroups@2024-07-01"
+  body = {
+    properties = {}
+  }
+  response_export_values = []
 }
 
 # VNet with IPAM address space allocation but traditional subnet addressing
 module "vnet_ipam_traditional_subnets" {
   source = "../../"
 
-  location  = azurerm_resource_group.this.location
-  parent_id = azurerm_resource_group.this.id
+  location  = module.resource_group.location
+  parent_id = module.resource_group.resource_id
   # DNS servers configuration
   dns_servers = {
     dns_servers = toset(["1.1.1.1", "8.8.8.8"])
@@ -281,7 +288,7 @@ module "vnet_ipam_traditional_subnets" {
       name             = "subnet-web"
       address_prefixes = ["172.16.0.0/24"] # First /24 in common /16 IPAM range
       network_security_group = {
-        id = azurerm_network_security_group.web.id
+        id = azapi_resource.web.id
       }
       service_endpoints = ["Microsoft.Storage", "Microsoft.Sql"]
     }
@@ -290,7 +297,7 @@ module "vnet_ipam_traditional_subnets" {
       name             = "subnet-app"
       address_prefixes = ["172.16.1.0/24"] # Second /24 in common /16 IPAM range
       network_security_group = {
-        id = azurerm_network_security_group.app.id
+        id = azapi_resource.app.id
       }
       service_endpoints = ["Microsoft.Storage"]
     }
@@ -299,7 +306,7 @@ module "vnet_ipam_traditional_subnets" {
       name             = "subnet-data"
       address_prefixes = ["172.16.2.0/25"] # /25 in common /16 IPAM range
       network_security_group = {
-        id = azurerm_network_security_group.app.id
+        id = azapi_resource.app.id
       }
     }
 
@@ -308,7 +315,7 @@ module "vnet_ipam_traditional_subnets" {
       name             = "subnet-management"
       address_prefixes = ["172.16.255.240/28"] # Small management subnet
       network_security_group = {
-        id = azurerm_network_security_group.app.id
+        id = azapi_resource.app.id
       }
     }
   }
@@ -328,7 +335,7 @@ module "additional_subnet" {
   # Use a specific address prefix within the IPAM-allocated VNet space
   address_prefixes = ["172.16.2.128/27"] # /27 in the expected IPAM range
   network_security_group = {
-    id = azurerm_network_security_group.app.id
+    id = azapi_resource.app.id
   }
   service_endpoints = ["Microsoft.KeyVault"]
 
@@ -343,9 +350,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9.2)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.11)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -353,13 +358,12 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.app](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.ipam_pool](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.network_manager](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azurerm_network_security_group.app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
-- [azurerm_network_security_group.web](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.web](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azurerm_subscription.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -395,6 +399,12 @@ Version: 0.4.3
 Source: Azure/avm-utl-regions/azurerm
 
 Version: 0.12.0
+
+### <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group)
+
+Source: Azure/avm-res-resources-resourcegroup/azurerm
+
+Version: 0.4.0
 
 ### <a name="module_vnet_ipam_traditional_subnets"></a> [vnet\_ipam\_traditional\_subnets](#module\_vnet\_ipam\_traditional\_subnets)
 

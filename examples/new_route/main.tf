@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -13,13 +13,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -28,23 +22,36 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
 
-resource "azurerm_route_table" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "MyRouteTable"
-  resource_group_name = azurerm_resource_group.this.name
+resource "azapi_resource" "route_table" {
+  location  = module.resource_group.location
+  name      = "MyRouteTable"
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/routeTables@2024-07-01"
+  body = {
+    properties = {}
+  }
+  response_export_values = []
 }
 
-resource "azurerm_route" "this" {
-  address_prefix      = local.address_space
-  name                = "acceptanceTestRoute1"
-  next_hop_type       = "VnetLocal"
-  resource_group_name = azurerm_resource_group.this.name
-  route_table_name    = azurerm_route_table.this.name
+resource "azapi_resource" "route" {
+  name      = "acceptanceTestRoute1"
+  parent_id = azapi_resource.route_table.id
+  type      = "Microsoft.Network/routeTables/routes@2024-07-01"
+  body = {
+    properties = {
+      addressPrefix = local.address_space
+      nextHopType   = "VnetLocal"
+    }
+  }
+  response_export_values = []
 }
 
 locals {
@@ -55,7 +62,7 @@ locals {
       name             = "${module.naming.subnet.name_unique}${i}"
       address_prefixes = [cidrsubnet(local.address_space, 8, i)]
       route_table = {
-        id = azurerm_route_table.this.id
+        id = azapi_resource.route_table.id
       }
     }
   }
@@ -64,10 +71,9 @@ locals {
 module "vnet" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = module.resource_group.location
+  parent_id     = module.resource_group.resource_id
   address_space = ["10.0.0.0/16"]
   name          = module.naming.virtual_network.name
   subnets       = local.subnets
 }
-

@@ -9,9 +9,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     http = {
       source  = "hashicorp/http"
@@ -24,13 +24,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -39,28 +33,38 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
 
 #Creating a Network Security Group with a rule allowing SSH access from the executor's IP address.
-resource "azurerm_network_security_group" "ssh" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_security_group.name
-  resource_group_name = azurerm_resource_group.this.name
-
-  security_rule {
-    access                     = "Allow"
-    destination_address_prefix = "*"
-    destination_port_range     = "22"
-    direction                  = "Inbound"
-    name                       = "test123"
-    priority                   = 100
-    protocol                   = "Tcp"
-    source_address_prefix      = jsondecode(data.http.public_ip.response_body).ip
-    source_port_range          = "*"
+resource "azapi_resource" "ssh" {
+  location  = module.resource_group.location
+  name      = module.naming.network_security_group.name
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/networkSecurityGroups@2024-07-01"
+  body = {
+    properties = {
+      securityRules = [{
+        name = "test123"
+        properties = {
+          access                   = "Allow"
+          destinationAddressPrefix = "*"
+          destinationPortRange     = "22"
+          direction                = "Inbound"
+          priority                 = 100
+          protocol                 = "Tcp"
+          sourceAddressPrefix      = jsondecode(data.http.public_ip.response_body).ip
+          sourcePortRange          = "*"
+        }
+      }]
+    }
   }
+  response_export_values = []
 }
 
 locals {
@@ -71,7 +75,7 @@ locals {
       name             = "${module.naming.subnet.name_unique}${i}"
       address_prefixes = [cidrsubnet(local.address_space, 8, i)]
       network_security_group = {
-        id = azurerm_network_security_group.ssh.id
+        id = azapi_resource.ssh.id
       }
     }
   }
@@ -81,8 +85,8 @@ locals {
 module "vnet" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = module.resource_group.location
+  parent_id     = module.resource_group.resource_id
   address_space = ["10.0.0.0/16"]
   name          = module.naming.virtual_network.name_unique
   subnets       = local.subnets
@@ -102,7 +106,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
@@ -112,8 +116,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_network_security_group.ssh](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.ssh](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [http_http.public_ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
@@ -145,6 +148,12 @@ Version: 0.4.3
 Source: Azure/avm-utl-regions/azurerm
 
 Version: 0.12.0
+
+### <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group)
+
+Source: Azure/avm-res-resources-resourcegroup/azurerm
+
+Version: 0.4.0
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 

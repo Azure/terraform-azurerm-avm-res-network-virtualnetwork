@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -13,13 +13,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -28,7 +22,10 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
@@ -44,11 +41,19 @@ locals {
   }
 }
 
-resource "azurerm_virtual_network" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
+resource "azapi_resource" "this" {
+  location  = module.resource_group.location
+  name      = module.naming.virtual_network.name_unique
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = [local.address_space]
+      }
+    }
+  }
+  response_export_values = []
 }
 
 module "subnets" {
@@ -56,6 +61,6 @@ module "subnets" {
   for_each = local.subnets
 
   name             = each.value.name
-  parent_id        = azurerm_virtual_network.this.id
+  parent_id        = azapi_resource.this.id
   address_prefixes = each.value.address_prefixes
 }

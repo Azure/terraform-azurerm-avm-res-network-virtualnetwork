@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     http = {
       source  = "hashicorp/http"
@@ -17,13 +17,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -32,28 +26,38 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
 
 #Creating a Network Security Group with a rule allowing SSH access from the executor's IP address.
-resource "azurerm_network_security_group" "ssh" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_security_group.name
-  resource_group_name = azurerm_resource_group.this.name
-
-  security_rule {
-    access                     = "Allow"
-    destination_address_prefix = "*"
-    destination_port_range     = "22"
-    direction                  = "Inbound"
-    name                       = "test123"
-    priority                   = 100
-    protocol                   = "Tcp"
-    source_address_prefix      = jsondecode(data.http.public_ip.response_body).ip
-    source_port_range          = "*"
+resource "azapi_resource" "ssh" {
+  location  = module.resource_group.location
+  name      = module.naming.network_security_group.name
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/networkSecurityGroups@2024-07-01"
+  body = {
+    properties = {
+      securityRules = [{
+        name = "test123"
+        properties = {
+          access                   = "Allow"
+          destinationAddressPrefix = "*"
+          destinationPortRange     = "22"
+          direction                = "Inbound"
+          priority                 = 100
+          protocol                 = "Tcp"
+          sourceAddressPrefix      = jsondecode(data.http.public_ip.response_body).ip
+          sourcePortRange          = "*"
+        }
+      }]
+    }
   }
+  response_export_values = []
 }
 
 locals {
@@ -64,7 +68,7 @@ locals {
       name             = "${module.naming.subnet.name_unique}${i}"
       address_prefixes = [cidrsubnet(local.address_space, 8, i)]
       network_security_group = {
-        id = azurerm_network_security_group.ssh.id
+        id = azapi_resource.ssh.id
       }
     }
   }
@@ -74,8 +78,8 @@ locals {
 module "vnet" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = module.resource_group.location
+  parent_id     = module.resource_group.resource_id
   address_space = ["10.0.0.0/16"]
   name          = module.naming.virtual_network.name_unique
   subnets       = local.subnets

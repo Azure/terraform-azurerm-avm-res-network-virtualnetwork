@@ -4,7 +4,7 @@ resource "azapi_resource" "this" {
 
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_virtual_network_peerings
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -38,7 +38,7 @@ resource "azapi_resource" "reverse" {
 
   name      = var.reverse_name
   parent_id = var.remote_virtual_network_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_virtual_network_peerings
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -79,7 +79,7 @@ resource "azapi_resource" "address_space_peering" {
 
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_virtual_network_peerings
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -119,7 +119,7 @@ resource "azapi_resource" "reverse_address_space_peering" {
 
   name      = var.reverse_name
   parent_id = var.remote_virtual_network_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_virtual_network_peerings
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -166,7 +166,7 @@ resource "azapi_resource" "subnet_peering" {
 
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_virtual_network_peerings
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -202,7 +202,7 @@ resource "azapi_resource" "reverse_subnet_peering" {
 
   name      = var.reverse_name
   parent_id = var.remote_virtual_network_id
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type      = var.resource_types.network_virtual_networks_virtual_network_peerings
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -249,7 +249,8 @@ resource "azapi_update_resource" "this" {
   count = var.sync_remote_address_space_enabled && local.is_full_peering ? 1 : 0
 
   resource_id             = azapi_resource.this[0].id
-  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type                    = var.resource_types.network_virtual_networks_virtual_network_peerings
+  response_export_values  = []
   update_query_parameters = local.sync_remote_address_space_query_parameter
 
   lifecycle {
@@ -263,7 +264,8 @@ resource "azapi_update_resource" "reverse" {
   count = var.sync_remote_address_space_enabled && local.is_reverse_full_peering ? 1 : 0
 
   resource_id             = azapi_resource.reverse[0].id
-  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type                    = var.resource_types.network_virtual_networks_virtual_network_peerings
+  response_export_values  = []
   update_query_parameters = local.sync_remote_address_space_query_parameter
 
   lifecycle {
@@ -277,7 +279,8 @@ resource "azapi_update_resource" "address_space_peering" {
   count = var.sync_remote_address_space_enabled && local.is_address_space_peering ? 1 : 0
 
   resource_id             = azapi_resource.address_space_peering[0].id
-  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type                    = var.resource_types.network_virtual_networks_virtual_network_peerings
+  response_export_values  = []
   update_query_parameters = local.sync_remote_address_space_query_parameter
 
   lifecycle {
@@ -291,7 +294,8 @@ resource "azapi_update_resource" "reverse_address_space_peering" {
   count = var.sync_remote_address_space_enabled && local.is_reverse_address_space_peering ? 1 : 0
 
   resource_id             = azapi_resource.reverse_address_space_peering[0].id
-  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type                    = var.resource_types.network_virtual_networks_virtual_network_peerings
+  response_export_values  = []
   update_query_parameters = local.sync_remote_address_space_query_parameter
 
   lifecycle {
@@ -305,7 +309,8 @@ resource "azapi_update_resource" "subnet_peering" {
   count = var.sync_remote_address_space_enabled && local.is_subnet_peering ? 1 : 0
 
   resource_id             = azapi_resource.subnet_peering[0].id
-  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type                    = var.resource_types.network_virtual_networks_virtual_network_peerings
+  response_export_values  = []
   update_query_parameters = local.sync_remote_address_space_query_parameter
 
   lifecycle {
@@ -319,7 +324,8 @@ resource "azapi_update_resource" "reverse_subnet_peering" {
   count = var.sync_remote_address_space_enabled && local.is_reverse_subnet_peering ? 1 : 0
 
   resource_id             = azapi_resource.reverse_subnet_peering[0].id
-  type                    = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
+  type                    = var.resource_types.network_virtual_networks_virtual_network_peerings
+  response_export_values  = []
   update_query_parameters = local.sync_remote_address_space_query_parameter
 
   lifecycle {

@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -13,13 +13,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 ## Section to provide a random suffix for the resource names
 # This allows us to randomize the names of the resources
@@ -33,7 +27,10 @@ resource "random_string" "this" {
 
 ## Section to create a resource group for the virtual network
 # This creates a resource group in the specified location
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region.name
   name     = "rg-avm-vnet-service-endpoints-${random_string.this.result}"
 }
@@ -43,8 +40,8 @@ resource "azurerm_resource_group" "this" {
 module "virtualnetwork" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = module.resource_group.location
+  parent_id     = module.resource_group.resource_id
   address_space = ["10.0.0.0/16"]
   name          = "vnet-avm-service-endpoints-${random_string.this.result}"
   subnets = {

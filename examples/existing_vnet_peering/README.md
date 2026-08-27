@@ -9,9 +9,9 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -20,13 +20,7 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
+provider "azapi" {}
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -35,31 +29,50 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+module "resource_group" {
+  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
+  version = "0.4.0"
+
   location = local.selected_region
   name     = module.naming.resource_group.name_unique
 }
 
-resource "azurerm_virtual_network" "local" {
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.virtual_network.name_unique}-1"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
+resource "azapi_resource" "local" {
+  location  = module.resource_group.location
+  name      = "${module.naming.virtual_network.name_unique}-1"
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.0.0.0/16"]
+      }
+    }
+  }
+  response_export_values = []
 }
 
-resource "azurerm_virtual_network" "remote" {
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.virtual_network.name_unique}-2"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.1.0.0/16"]
+resource "azapi_resource" "remote" {
+  location  = module.resource_group.location
+  name      = "${module.naming.virtual_network.name_unique}-2"
+  parent_id = module.resource_group.resource_id
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.1.0.0/16"]
+      }
+    }
+  }
+  response_export_values = []
 }
 
 module "peering" {
   source = "../../modules/peering"
 
   name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
-  parent_id                            = azurerm_virtual_network.local.id
-  remote_virtual_network_id            = azurerm_virtual_network.remote.id
+  parent_id                            = azapi_resource.local.id
+  remote_virtual_network_id            = azapi_resource.remote.id
   allow_forwarded_traffic              = true
   allow_gateway_transit                = true
   allow_virtual_network_access         = true
@@ -80,7 +93,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -88,9 +101,8 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_virtual_network.local](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
-- [azurerm_virtual_network.remote](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azapi_resource.local](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.remote](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -127,6 +139,12 @@ Version:
 Source: Azure/avm-utl-regions/azurerm
 
 Version: 0.12.0
+
+### <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group)
+
+Source: Azure/avm-res-resources-resourcegroup/azurerm
+
+Version: 0.4.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

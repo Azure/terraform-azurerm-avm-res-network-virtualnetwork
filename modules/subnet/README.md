@@ -356,6 +356,24 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by the subnet submodule.
+
+- `authorization_role_assignments` - Resource type and API version for subnet role assignments.
+- `network_virtual_networks_subnets` - Resource type and API version for subnets.
+
+Type:
+
+```hcl
+object({
+    authorization_role_assignments   = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    network_virtual_networks_subnets = optional(string, "Microsoft.Network/virtualNetworks/subnets@2024-07-01")
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_retry"></a> [retry](#input\_retry)
 
 Description: Retry configuration for the resource operations, includes IPAM-specific error patterns
@@ -384,6 +402,7 @@ Default: `{}`
 
 Description: (Optional) A map of role assignments to create on the subnet. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
+- `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated. The name is honored when the assignment is created; later changes are ignored to preserve existing assignments and avoid RBAC outages during upgrades.
 - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
 - `principal_id` - The ID of the principal to assign the role to.
 - `description` - (Optional) The description of the role assignment.
@@ -399,6 +418,7 @@ Type:
 
 ```hcl
 map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)

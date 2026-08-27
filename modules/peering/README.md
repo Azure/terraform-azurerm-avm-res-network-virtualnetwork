@@ -232,6 +232,22 @@ list(object({
 
 Default: `[]`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by the peering submodule.
+
+- `network_virtual_networks_virtual_network_peerings` - Resource type and API version for virtual network peerings.
+
+Type:
+
+```hcl
+object({
+    network_virtual_networks_virtual_network_peerings = optional(string, "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01")
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_retry"></a> [retry](#input\_retry)
 
 Description: Retry configuration for the resource operations
