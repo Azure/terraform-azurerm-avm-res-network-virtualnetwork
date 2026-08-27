@@ -19,7 +19,9 @@ DESCRIPTION
 
 output "resource" {
   description = "The Azure Virtual Network resource.  This will be null if an existing vnet is supplied."
-  value       = azapi_resource.vnet
+  # Retain this established public output until a breaking release can replace it with discrete outputs.
+  # tflint-ignore: no_entire_resource_output_tffr2
+  value = azapi_resource.vnet
 }
 
 output "resource_id" {
