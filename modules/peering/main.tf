@@ -19,11 +19,11 @@ resource "azapi_resource" "this" {
       peerCompleteVnets         = var.peer_complete_vnets
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
   locks                     = [var.parent_id]
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -60,11 +60,11 @@ resource "azapi_resource" "reverse" {
       peerCompleteVnets         = var.reverse_peer_complete_vnets
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
   locks                     = [var.remote_virtual_network_id]
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -100,11 +100,11 @@ resource "azapi_resource" "address_space_peering" {
       }
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
   locks                     = [var.parent_id]
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -147,11 +147,11 @@ resource "azapi_resource" "reverse_address_space_peering" {
       }
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
   locks                     = [var.remote_virtual_network_id]
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -183,11 +183,11 @@ resource "azapi_resource" "subnet_peering" {
       remoteSubnetNames         = [for subnet in var.remote_peered_subnets : subnet.subnet_name]
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
   locks                     = [var.parent_id]
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -226,11 +226,11 @@ resource "azapi_resource" "reverse_subnet_peering" {
       remoteSubnetNames         = [for subnet in var.reverse_remote_peered_subnets : subnet.subnet_name]
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
   locks                     = [var.remote_virtual_network_id]
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_virtual_network_peerings) > 0 ? var.ignore_body_changes.virtual_networks_virtual_network_peerings : null
 
   timeouts {
     create = var.timeouts.create
@@ -241,7 +241,8 @@ resource "azapi_resource" "reverse_subnet_peering" {
 }
 
 resource "terraform_data" "sync_remote_address_space_triggers" {
-  count            = var.sync_remote_address_space_enabled ? 1 : 0
+  count = var.sync_remote_address_space_enabled ? 1 : 0
+
   triggers_replace = var.sync_remote_address_space_triggers
 }
 

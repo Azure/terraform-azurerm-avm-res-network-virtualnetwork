@@ -45,13 +45,13 @@ resource "azapi_resource" "subnet_ipam" {
       privateEndpointNetworkPolicies = var.private_endpoint_network_policies
     } : {})
   }
-  locks                     = [var.parent_id]
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_subnets) > 0 ? var.ignore_body_changes.virtual_networks_subnets : null
+  ignore_missing_property   = false
   list_unique_id_property   = { "properties.serviceEndpoints" = "service" }
+  locks                     = [var.parent_id]
   response_export_values    = ["properties.addressPrefixes"]
   retry                     = var.retry
   schema_validation_enabled = true
-  ignore_missing_property   = false
-  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_subnets) > 0 ? var.ignore_body_changes.virtual_networks_subnets : null
 
   timeouts {
     create = var.timeouts.create

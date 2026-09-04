@@ -77,7 +77,6 @@ module "vnet" {
   name          = module.naming.virtual_network.name
   subnets       = local.subnets
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->

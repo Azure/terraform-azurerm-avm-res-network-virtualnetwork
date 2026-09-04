@@ -59,8 +59,6 @@ resource "azapi_resource" "network_manager" {
   schema_validation_enabled = false
 }
 
-
-
 resource "azapi_resource" "ipam_pool" {
   location  = azurerm_resource_group.this.location
   name      = "pool-subnet-test"
