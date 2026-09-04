@@ -68,4 +68,3 @@ module "peering" {
   ]
   use_remote_gateways = false
 }
-

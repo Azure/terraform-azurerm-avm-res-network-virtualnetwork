@@ -42,20 +42,16 @@ resource "azapi_resource" "vnet" {
       type = var.extended_location.type
     } : null
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   # ignore_body_changes is a write-only argument; collapse an empty list to null
   # so the argument is absent (and the module stays usable on Terraform < 1.11)
   # when the feature is unused.
   ignore_body_changes = length(var.ignore_body_changes.virtual_networks) > 0 ? var.ignore_body_changes.virtual_networks : null
-  read_headers        = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   # Export specific properties needed for IPAM VNets based on actual API response structure
   response_export_values = var.ipam_pools != null ? [
     "properties.addressSpace.addressPrefixes"
   ] : []
-  retry          = var.retry
-  tags           = var.tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  retry = var.retry
+  tags  = var.tags
 
   timeouts {
     create = var.timeouts.create

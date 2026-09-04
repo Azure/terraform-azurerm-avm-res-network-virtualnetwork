@@ -30,7 +30,6 @@ resource "random_string" "this" {
   upper   = false
 }
 
-
 ## Section to create a resource group for the virtual network
 # This creates a resource group in the specified location
 resource "azurerm_resource_group" "this" {

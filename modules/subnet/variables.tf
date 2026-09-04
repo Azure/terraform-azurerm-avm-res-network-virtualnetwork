@@ -56,39 +56,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "ignore_body_changes" {
-  type = object({
-    virtual_networks_subnets = optional(list(string), [])
-  })
-  default     = {}
-  description = <<DESCRIPTION
-(Optional) Subnet body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation. Use this to let out-of-band controllers own specific subnet properties without producing perpetual `terraform plan` drift.
-
-- `virtual_networks_subnets` - The list of ignored body paths for the subnet managed by this module.
-
-The canonical use case is Azure Virtual Network Manager (AVNM) `ManagedOnly` routing configurations or Azure Policy `DeployIfNotExists` policies that attach a route table to the subnet out-of-band. Set `virtual_networks_subnets = ["properties.routeTable"]` so Terraform stops re-asserting `routeTable` and the external association survives subsequent plans.
-
-Common paths:
-- `properties.routeTable` - route table association (AVNM / Policy DINE)
-- `properties.networkSecurityGroup` - network security group association
-- `properties.serviceEndpoints` - service endpoints
-- `properties.delegations` - subnet delegations
-- `tags` - top-level tags applied out-of-band
-
-Notes:
-- Paths use dot notation and are relative to the subnet request body. Individual list items cannot be targeted; ignore the whole list property instead.
-- **Important:** several of these properties are also settable through dedicated module inputs (for example `route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an out-of-band controller can own it, leave the corresponding input unset - do not manage the same property from both places, or the module and the external controller will fight over it.
-- This is a write-only argument stored in provider-private state, so changes to it take effect only after an `apply` (a non-empty value requires Terraform >= 1.11).
-- While a path is ignored, configuration changes at that path are not sent to Azure until the path is removed from this list.
-DESCRIPTION
-  nullable    = false
-
-  validation {
-    condition     = alltrue([for path in var.ignore_body_changes.virtual_networks_subnets : length(trimspace(path)) > 0])
-    error_message = "Every ignore_body_changes.virtual_networks_subnets entry must be a non-empty body path (for example \"properties.routeTable\" or \"tags\"). Paths are relative to the subnet request body and use dot notation."
-  }
-}
-
 variable "delegation" {
   type = list(object({
     name = string
@@ -121,6 +88,39 @@ variable "delegations" {
 - `service_delegation` - (Required) A block defining the service to delegate to. It supports the
   - `name` - (Required) The name of the service to delegate to.
 DESCRIPTION
+}
+
+variable "ignore_body_changes" {
+  type = object({
+    virtual_networks_subnets = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Subnet body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation. Use this to let out-of-band controllers own specific subnet properties without producing perpetual `terraform plan` drift.
+
+- `virtual_networks_subnets` - The list of ignored body paths for the subnet managed by this module.
+
+The canonical use case is Azure Virtual Network Manager (AVNM) `ManagedOnly` routing configurations or Azure Policy `DeployIfNotExists` policies that attach a route table to the subnet out-of-band. Set `virtual_networks_subnets = ["properties.routeTable"]` so Terraform stops re-asserting `routeTable` and the external association survives subsequent plans.
+
+Common paths:
+- `properties.routeTable` - route table association (AVNM / Policy DINE)
+- `properties.networkSecurityGroup` - network security group association
+- `properties.serviceEndpoints` - service endpoints
+- `properties.delegations` - subnet delegations
+- `tags` - top-level tags applied out-of-band
+
+Notes:
+- Paths use dot notation and are relative to the subnet request body. Individual list items cannot be targeted; ignore the whole list property instead.
+- **Important:** several of these properties are also settable through dedicated module inputs (for example `route_table`, `network_security_group`, `service_endpoints`, `delegations`). When you ignore a path so an out-of-band controller can own it, leave the corresponding input unset - do not manage the same property from both places, or the module and the external controller will fight over it.
+- This is a write-only argument stored in provider-private state, so changes to it take effect only after an `apply` (a non-empty value requires Terraform >= 1.11).
+- While a path is ignored, configuration changes at that path are not sent to Azure until the path is removed from this list.
+DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for path in var.ignore_body_changes.virtual_networks_subnets : length(trimspace(path)) > 0])
+    error_message = "Every ignore_body_changes.virtual_networks_subnets entry must be a non-empty body path (for example \"properties.routeTable\" or \"tags\"). Paths are relative to the subnet request body and use dot notation."
+  }
 }
 
 variable "ipam_pools" {

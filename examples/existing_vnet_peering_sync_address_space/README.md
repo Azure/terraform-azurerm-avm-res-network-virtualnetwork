@@ -74,7 +74,6 @@ module "peering" {
   ]
   use_remote_gateways = false
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
