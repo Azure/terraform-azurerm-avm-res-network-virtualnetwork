@@ -81,11 +81,12 @@ locals {
 module "vnet" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
-  address_space = ["10.0.0.0/16"]
-  name          = module.naming.virtual_network.name_unique
-  subnets       = local.subnets
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.0.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = module.naming.virtual_network.name_unique
+  subnets          = local.subnets
 }
 
 # Fetching the public IP address of the Terraform executor.
@@ -124,7 +125,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ## Outputs
 

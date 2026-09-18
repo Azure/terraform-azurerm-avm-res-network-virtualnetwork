@@ -117,7 +117,7 @@ module "vnet_ipam_traditional_subnets" {
   dns_servers = {
     dns_servers = toset(["1.1.1.1", "8.8.8.8"])
   }
-  enable_telemetry = true
+  enable_telemetry = var.enable_telemetry
   # VNet address space allocated from IPAM pool
   ipam_pools = [{
     id                     = azapi_resource.ipam_pool.id

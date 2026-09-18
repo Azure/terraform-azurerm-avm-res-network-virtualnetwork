@@ -48,10 +48,11 @@ resource "azurerm_resource_group" "this" {
 module "vnet1" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
-  address_space = ["10.4.0.0/16", "10.5.0.0/16"]
-  name          = "${module.naming.virtual_network.name_unique}-1"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.4.0.0/16", "10.5.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "${module.naming.virtual_network.name_unique}-1"
   subnets = {
     subnet1 = {
       name             = "${module.naming.subnet.name_unique}-1-1"
@@ -71,10 +72,11 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
-  address_space = ["10.6.0.0/16", "10.7.0.0/16"]
-  name          = "${module.naming.virtual_network.name_unique}-2"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.6.0.0/16", "10.7.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "${module.naming.virtual_network.name_unique}-2"
   peerings = {
     peertovnet1 = {
       name                               = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
@@ -174,7 +176,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ## Outputs
 
