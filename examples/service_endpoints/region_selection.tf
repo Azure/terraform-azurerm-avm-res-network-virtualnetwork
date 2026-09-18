@@ -2,8 +2,9 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.12.0"
 
-  has_pair       = true
-  is_recommended = true
+  enable_telemetry = var.enable_telemetry
+  has_pair         = true
+  is_recommended   = true
   # Exclude Azure canary/EUAP regions (for example eastus2euap, centraluseuap),
   # which are not generally available for resource deployment. This prevents
   # spurious LocationNotAvailable failures when the example e2e tests randomly

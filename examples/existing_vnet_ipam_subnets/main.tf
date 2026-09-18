@@ -87,7 +87,7 @@ module "ipam_vnet" {
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
-  enable_telemetry = true
+  enable_telemetry = var.enable_telemetry
   # VNet gets address space from IPAM pool
   ipam_pools = [{
     id            = azapi_resource.ipam_pool.id

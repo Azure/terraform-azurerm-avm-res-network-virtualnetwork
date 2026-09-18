@@ -39,7 +39,7 @@ module "vnet" {
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
   address_space    = ["10.0.0.0/16"]
-  enable_telemetry = true
+  enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name
   subnets = {
     subnet1 = {

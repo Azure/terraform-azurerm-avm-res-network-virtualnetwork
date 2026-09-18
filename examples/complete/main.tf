@@ -143,6 +143,7 @@ module "vnet1" {
   dns_servers = {
     dns_servers = ["8.8.8.8", "1.1.1.1", "1.0.0.1"]
   }
+  enable_telemetry     = var.enable_telemetry
   enable_vm_protection = true
   encryption = {
     enabled = true
@@ -202,9 +203,10 @@ module "vnet1" {
 module "vnet2" {
   source = "../../"
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
-  address_space = ["10.0.0.0/27"]
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.0.0.0/27"]
+  enable_telemetry = var.enable_telemetry
   encryption = {
     enabled     = true
     enforcement = "AllowUnencrypted"
