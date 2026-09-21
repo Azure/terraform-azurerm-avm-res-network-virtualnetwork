@@ -6,5 +6,8 @@
   "owners": [
     "jaredfholgate"
   ],
-  "telemetryIdPrefix": "46d3xtrf.res.1ec8f17"
+  "telemetryIdPrefix": "46d3xtrf.res.1ec8f17",
+  "alternativeNames": [
+    "VNET"
+  ]
 }
