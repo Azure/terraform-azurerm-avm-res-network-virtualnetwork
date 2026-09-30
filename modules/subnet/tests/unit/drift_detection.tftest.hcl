@@ -16,8 +16,10 @@
 mock_provider "azapi" {}
 
 variables {
-  name      = "subnet-unit-test"
-  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet"
+  enable_telemetry = false
+  location         = "uksouth"
+  name             = "subnet-unit-test"
+  parent_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet"
 }
 
 # Traditional (non-IPAM) subnet must detect removal of managed properties.
