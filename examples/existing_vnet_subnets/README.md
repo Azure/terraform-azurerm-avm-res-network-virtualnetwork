@@ -62,9 +62,11 @@ module "subnets" {
   source   = "../../modules/subnet"
   for_each = local.subnets
 
+  location         = azurerm_resource_group.this.location
   name             = each.value.name
   parent_id        = azurerm_virtual_network.this.id
   address_prefixes = each.value.address_prefixes
+  enable_telemetry = var.enable_telemetry
 }
 ```
 

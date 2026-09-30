@@ -2,6 +2,7 @@ module "peering" {
   source   = "./modules/peering"
   for_each = var.peerings
 
+  location                              = var.location
   name                                  = each.value.name
   parent_id                             = azapi_resource.vnet.id
   remote_virtual_network_id             = each.value.remote_virtual_network_resource_id
@@ -11,6 +12,7 @@ module "peering" {
   create_reverse_peering                = each.value.create_reverse_peering
   do_not_verify_remote_gateways         = each.value.do_not_verify_remote_gateways
   enable_only_ipv6_peering              = each.value.enable_only_ipv6_peering
+  enable_telemetry                      = var.enable_telemetry
   ignore_body_changes                   = var.ignore_body_changes.virtual_networks_virtual_network_peerings
   local_peered_address_spaces           = each.value.local_peered_address_spaces
   local_peered_subnets                  = each.value.local_peered_subnets
