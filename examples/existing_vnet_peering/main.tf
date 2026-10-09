@@ -50,6 +50,7 @@ resource "azurerm_virtual_network" "remote" {
 module "peering" {
   source = "../../modules/peering"
 
+  location                             = azurerm_resource_group.this.location
   name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
   parent_id                            = azurerm_virtual_network.local.id
   remote_virtual_network_id            = azurerm_virtual_network.remote.id
@@ -57,6 +58,7 @@ module "peering" {
   allow_gateway_transit                = true
   allow_virtual_network_access         = true
   create_reverse_peering               = true
+  enable_telemetry                     = var.enable_telemetry
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true

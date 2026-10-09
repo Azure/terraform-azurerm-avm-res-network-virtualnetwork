@@ -173,10 +173,12 @@ module "vnet_ipam_traditional_subnets" {
 module "additional_subnet" {
   source = "../../modules/subnet"
 
+  location  = azurerm_resource_group.this.location
   name      = "subnet-additional"
   parent_id = module.vnet_ipam_traditional_subnets.resource_id
   # Use a specific address prefix within the IPAM-allocated VNet space
   address_prefixes = ["172.16.2.128/27"] # /27 in the expected IPAM range
+  enable_telemetry = var.enable_telemetry
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }

@@ -10,7 +10,6 @@
 # lengths for both IPv4 and IPv6.
 
 mock_provider "azapi" {}
-mock_provider "modtm" {}
 mock_provider "random" {}
 
 variables {

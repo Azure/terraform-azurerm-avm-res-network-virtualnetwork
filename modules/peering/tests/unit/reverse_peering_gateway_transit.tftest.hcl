@@ -20,6 +20,8 @@
 mock_provider "azapi" {}
 
 variables {
+  enable_telemetry          = false
+  location                  = "uksouth"
   name                      = "peer-hub-to-spoke"
   parent_id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/hub-rg/providers/Microsoft.Network/virtualNetworks/hub-vnet"
   remote_virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/spoke-rg/providers/Microsoft.Network/virtualNetworks/spoke-vnet"
