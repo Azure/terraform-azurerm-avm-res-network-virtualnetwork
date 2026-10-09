@@ -194,7 +194,7 @@ variable "ignore_body_changes" {
   })
   default     = {}
   description = <<DESCRIPTION
-(Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Prefer Terraform's `lifecycle.ignore_changes` when the paths are static; use this variable when the paths must be derived from variables or other non-static values.
+(Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Use this provider argument for paths inside the VNet's dynamic body; Terraform's static `lifecycle.ignore_changes` paths can suppress changes to the whole body.
 
 Keys follow the same naming rule as an AzAPI `resource_types` map (the snake_case ARM resource type with the `Microsoft.` prefix dropped), scoped per resource and per submodule:
 
@@ -210,7 +210,7 @@ Paths use dot notation, for example `properties.routeTable` or the top-level `ta
 
 Supplying a **non-empty** value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument held in provider-private state; changes take effect only after an `apply`. Leaving every list empty (the default) emits no argument, so the module remains usable on earlier Terraform versions.
 
-**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot protect the very first `terraform plan` you run against a resource you just imported. The virtual network's `properties.subnets` and `properties.virtualNetworkPeerings` are instead protected by a static `lifecycle.ignore_changes` block on `azapi_resource.vnet` (see main.tf), which applies immediately, including on that first post-import plan, because this module always manages subnets and peerings as separate child resources and never sets either key on the parent body.
+**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot protect the very first `terraform plan` you run against a resource you just imported. The module instead reads an existing VNet's `properties.subnets` and `properties.virtualNetworkPeerings` before each plan and carries those collections into the parent body. This protects the first post-import plan without suppressing changes to other VNet properties.
 DESCRIPTION
   nullable    = false
 }

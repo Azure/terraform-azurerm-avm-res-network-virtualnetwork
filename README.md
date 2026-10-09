@@ -130,7 +130,7 @@ module "vnet" {
 
 ## Importing an existing virtual network
 
-Importing an existing VNet brings its full `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state, including entries this module doesn't manage (for example a vWAN hub's service-managed peering). Since this module always manages subnets and peerings as separate child resources (`modules/subnet`, `modules/peering`) and never sets either key on the parent body, `azapi_resource.vnet` (main.tf) carries a static `lifecycle.ignore_changes` on both paths. Unlike `ignore_body_changes`, this is native Terraform behavior that applies immediately, so it also covers that first post-import plan.
+Importing an existing VNet brings its full `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state, including entries this module doesn't manage (for example a vWAN hub's service-managed peering). Before each plan, the module reads the existing VNet and includes any returned child collections in the parent request body. A VNet that does not yet exist has no collections to include. This preserves out-of-band subnets and peerings on the first post-import plan and on later updates while still allowing address-space and other body changes to plan normally. The read requires permission to get the VNet; a failure other than "not found" stops the plan.
 
 ## Prerequisites
 
@@ -326,6 +326,7 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.existing_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -500,7 +501,7 @@ Default: `null`
 
 ### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
 
-Description: (Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Prefer Terraform's `lifecycle.ignore_changes` when the paths are static; use this variable when the paths must be derived from variables or other non-static values.
+Description: (Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Use this provider argument for paths inside the VNet's dynamic body; Terraform's static `lifecycle.ignore_changes` paths can suppress changes to the whole body.
 
 Keys follow the same naming rule as an AzAPI `resource_types` map (the snake\_case ARM resource type with the `Microsoft.` prefix dropped), scoped per resource and per submodule:
 
@@ -516,7 +517,7 @@ Paths use dot notation, for example `properties.routeTable` or the top-level `ta
 
 Supplying a **non-empty** value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument held in provider-private state; changes take effect only after an `apply`. Leaving every list empty (the default) emits no argument, so the module remains usable on earlier Terraform versions.
 
-**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot protect the very first `terraform plan` you run against a resource you just imported. The virtual network's `properties.subnets` and `properties.virtualNetworkPeerings` are instead protected by a static `lifecycle.ignore_changes` block on `azapi_resource.vnet` (see main.tf), which applies immediately, including on that first post-import plan, because this module always manages subnets and peerings as separate child resources and never sets either key on the parent body.
+**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot protect the very first `terraform plan` you run against a resource you just imported. The module instead reads an existing VNet's `properties.subnets` and `properties.virtualNetworkPeerings` before each plan and carries those collections into the parent body. This protects the first post-import plan without suppressing changes to other VNet properties.
 
 Type:
 
