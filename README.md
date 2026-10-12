@@ -130,7 +130,7 @@ module "vnet" {
 
 ## Importing an existing virtual network
 
-Importing an existing VNet brings its full `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state, including entries this module doesn't manage (for example a vWAN hub's service-managed peering). Before each plan, the module reads the existing VNet and includes any returned child collections in the parent request body. A VNet that does not yet exist has no collections to include. This preserves out-of-band subnets and peerings on the first post-import plan and on later updates while still allowing address-space and other body changes to plan normally. The read requires permission to get the VNet; a failure other than "not found" stops the plan.
+Importing an existing VNet brings its `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state, including children this module does not manage. The VNet body does not configure these collections: subnets and peerings are managed as separate resources. The first plan after import may show their removal from the *parent body in Terraform state*. Review the plan before applying it. Whether an Azure VNet PUT without these collections preserves existing children is covered by the real-Azure integration test; the provider's `ignore_body_changes` setting does not suppress this first-import plan diff because it takes effect only after apply.
 
 ## Prerequisites
 
@@ -326,7 +326,6 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
-- [azapi_resource.existing_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->

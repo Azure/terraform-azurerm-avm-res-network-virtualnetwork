@@ -1,23 +1,10 @@
-# Keep API-returned child collections in the parent PUT without masking changes
-# to the rest of the VNet body; lifecycle ignores on dynamic body mask all of it.
-data "azapi_resource" "existing_vnet" {
-  name             = var.name
-  parent_id        = var.parent_id
-  type             = "Microsoft.Network/virtualNetworks@2024-07-01"
-  ignore_not_found = true
-  response_export_values = [
-    "properties.subnets",
-    "properties.virtualNetworkPeerings",
-  ]
-}
-
 resource "azapi_resource" "vnet" {
   location  = var.location
   name      = var.name
   parent_id = var.parent_id
   type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
-    properties = merge({
+    properties = {
       addressSpace = merge(
         var.ipam_pools != null ? {
           ipamPoolPrefixAllocations = [
@@ -49,11 +36,7 @@ resource "azapi_resource" "vnet" {
         enforcement = var.encryption.enforcement
       } : null
       flowTimeoutInMinutes = var.flow_timeout_in_minutes
-      }, data.azapi_resource.existing_vnet.exists ? {
-      for collection in ["subnets", "virtualNetworkPeerings"] :
-      collection => data.azapi_resource.existing_vnet.output.properties[collection]
-      if try(data.azapi_resource.existing_vnet.output.properties[collection] != null, false)
-    } : {})
+    }
     extendedLocation = var.extended_location != null ? {
       name = var.extended_location.name
       type = var.extended_location.type
