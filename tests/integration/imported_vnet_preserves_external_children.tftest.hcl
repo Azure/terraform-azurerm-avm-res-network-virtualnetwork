@@ -75,7 +75,7 @@ run "plan_again_after_import" {
 
   assert {
     condition     = output.subnet_names == toset(["external"]) && output.peering_names == toset(["external"])
-    error_message = "A subsequent plan must still see both subnets and the external peering."
+    error_message = "A subsequent plan must still see the external subnet and peering."
   }
 }
 

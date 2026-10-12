@@ -130,7 +130,7 @@ module "vnet" {
 
 ## Importing an existing virtual network
 
-Importing an existing VNet brings its `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state, including children this module does not manage. The VNet body does not configure these collections: subnets and peerings are managed as separate resources. The first plan after import may show their removal from the *parent body in Terraform state*. Review the plan before applying it. Whether an Azure VNet PUT without these collections preserves existing children is covered by the real-Azure integration test; the provider's `ignore_body_changes` setting does not suppress this first-import plan diff because it takes effect only after apply.
+Importing an existing VNet brings Azure's `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state. This module does not send those arrays, so the first plan after import can show them removed from the parent VNet's `body`. For a subnet and peering created outside the module, that diff affected only the parent resource's state: Azure kept both children when the imported VNet's address space was updated without the arrays. vWAN hub peerings and IPAM VNets have not been tested. `ignore_body_changes` cannot suppress this first plan because it takes effect only after an apply.
 
 ## Prerequisites
 
@@ -500,7 +500,7 @@ Default: `null`
 
 ### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
 
-Description: (Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Use this provider argument for paths inside the VNet's dynamic body; Terraform's static `lifecycle.ignore_changes` paths can suppress changes to the whole body.
+Description: (Optional) Paths in each resource's `body` whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift. Use this provider argument for paths inside the VNet's dynamic body; static `lifecycle.ignore_changes` paths into `body.properties` freeze the entire `properties` object, including unrelated VNet settings (see https://github.com/hashicorp/terraform/pull/27141).
 
 Keys follow the same naming rule as an AzAPI `resource_types` map (the snake\_case ARM resource type with the `Microsoft.` prefix dropped), scoped per resource and per submodule:
 
@@ -516,7 +516,7 @@ Paths use dot notation, for example `properties.routeTable` or the top-level `ta
 
 Supplying a **non-empty** value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument held in provider-private state; changes take effect only after an `apply`. Leaving every list empty (the default) emits no argument, so the module remains usable on earlier Terraform versions.
 
-**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot suppress the very first `terraform plan` you run against a resource you just imported. The parent body omits `properties.subnets` and `properties.virtualNetworkPeerings`; the first plan after import may therefore show those collections removed from the parent body in Terraform state. Subnets and peerings are managed as separate resources.
+**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot suppress the very first `terraform plan` you run against a resource you just imported. The parent body omits `properties.subnets` and `properties.virtualNetworkPeerings`; the first plan after import may therefore show those collections removed from the parent body in Terraform state. Subnets and peerings are managed as separate resources; in the tested case, Azure kept both children created outside the module when the imported VNet was updated.
 
 Type:
 

@@ -128,7 +128,7 @@ module "vnet" {
 
 ## Importing an existing virtual network
 
-Importing an existing VNet brings its `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state, including children this module does not manage. The VNet body does not configure these collections: subnets and peerings are managed as separate resources. The first plan after import may show their removal from the *parent body in Terraform state*. Review the plan before applying it. Whether an Azure VNet PUT without these collections preserves existing children is covered by the real-Azure integration test; the provider's `ignore_body_changes` setting does not suppress this first-import plan diff because it takes effect only after apply.
+Importing an existing VNet brings Azure's `properties.subnets` and `properties.virtualNetworkPeerings` arrays into state. This module does not send those arrays, so the first plan after import can show them removed from the parent VNet's `body`. For a subnet and peering created outside the module, that diff affected only the parent resource's state: Azure kept both children when the imported VNet's address space was updated without the arrays. vWAN hub peerings and IPAM VNets have not been tested. `ignore_body_changes` cannot suppress this first plan because it takes effect only after an apply.
 
 ## Prerequisites
 
