@@ -22,8 +22,15 @@ run "preview_first_import_plan" {
   }
 
   assert {
-    condition     = !can(module.vnet.resource.body.properties.subnets) && !can(module.vnet.resource.body.properties.virtualNetworkPeerings)
-    error_message = "The first import plan must omit both child arrays from the configured parent PUT."
+    condition = (
+      toset(data.azapi_resource.before_import.output.properties.addressSpace.addressPrefixes) == toset(["10.70.0.0/16"]) &&
+      toset([for subnet in data.azapi_resource.before_import.output.properties.subnets : lower(element(reverse(split("/", subnet.id)), 0))]) == toset(["external"]) &&
+      toset([for peering in data.azapi_resource.before_import.output.properties.virtualNetworkPeerings : lower(element(reverse(split("/", peering.id)), 0))]) == toset(["external"]) &&
+      one(module.vnet.resource.body.properties.addressSpace.addressPrefixes) == "10.70.0.0/15" &&
+      !can(module.vnet.resource.body.properties.subnets) &&
+      !can(module.vnet.resource.body.properties.virtualNetworkPeerings)
+    )
+    error_message = "Before import Azure must have the external children and original address space, while the planned parent PUT changes the address space and omits both child arrays."
   }
 }
 
