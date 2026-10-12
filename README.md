@@ -516,7 +516,7 @@ Paths use dot notation, for example `properties.routeTable` or the top-level `ta
 
 Supplying a **non-empty** value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument held in provider-private state; changes take effect only after an `apply`. Leaving every list empty (the default) emits no argument, so the module remains usable on earlier Terraform versions.
 
-**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot protect the very first `terraform plan` you run against a resource you just imported. The module instead reads an existing VNet's `properties.subnets` and `properties.virtualNetworkPeerings` before each plan and carries those collections into the parent body. This protects the first post-import plan without suppressing changes to other VNet properties.
+**This variable is not a first-import safeguard.** Because it is write-only, a value you set here only takes effect starting with the first `apply` after you set it - it cannot suppress the very first `terraform plan` you run against a resource you just imported. The parent body omits `properties.subnets` and `properties.virtualNetworkPeerings`; the first plan after import may therefore show those collections removed from the parent body in Terraform state. Subnets and peerings are managed as separate resources.
 
 Type:
 
