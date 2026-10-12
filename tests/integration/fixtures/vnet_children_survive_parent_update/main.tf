@@ -1,5 +1,20 @@
 data "azapi_client_config" "current" {}
 
+module "regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.12.0"
+
+  enable_telemetry       = false
+  is_recommended         = true
+  region_name_regex      = "euap$"
+  region_name_regex_mode = "not_match"
+}
+
+resource "random_integer" "region_index" {
+  min = 0
+  max = length(module.regions.regions) - 1
+}
+
 resource "random_string" "suffix" {
   length  = 8
   lower   = true
@@ -12,7 +27,7 @@ resource "azapi_resource" "resource_group" {
   type      = "Microsoft.Resources/resourceGroups@2024-03-01"
   name      = "rg-avm-vnet-${random_string.suffix.result}"
   parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
-  location  = "westeurope"
+  location  = local.selected_region
   body      = {}
 
   response_export_values = []
