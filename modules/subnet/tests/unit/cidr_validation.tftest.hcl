@@ -6,7 +6,13 @@
 # a structurally invalid CIDR is rejected at plan time rather than surfacing as
 # an opaque Azure API error at apply.
 
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name      = "subnet-unit-test"
@@ -18,6 +24,7 @@ run "valid_address_prefix_accepted" {
 
   variables {
     address_prefix = "10.0.0.0/24"
+    location       = "eastus"
   }
 }
 
@@ -26,6 +33,7 @@ run "valid_address_prefixes_accepted" {
 
   variables {
     address_prefixes = ["10.0.0.0/24", "2001:db8::/64"]
+    location         = "eastus"
   }
 }
 
@@ -34,6 +42,7 @@ run "invalid_address_prefix_rejected" {
 
   variables {
     address_prefix = "totally bogus"
+    location       = "eastus"
   }
 
   expect_failures = [var.address_prefix]
@@ -44,6 +53,7 @@ run "invalid_address_prefixes_rejected" {
 
   variables {
     address_prefixes = ["10..0.0.0/25"]
+    location         = "eastus"
   }
 
   expect_failures = [var.address_prefixes]

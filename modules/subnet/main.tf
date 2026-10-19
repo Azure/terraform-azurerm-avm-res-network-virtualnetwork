@@ -80,8 +80,9 @@ resource "azapi_resource" "role_assignments" {
 # payloads via the avm-utl-interfaces utility module.
 module "interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.6.0"
+  version = "0.9.0"
 
+  location                         = var.location
   enable_telemetry                 = false
   role_assignment_definition_scope = local.role_assignment_definition_scope
   role_assignments                 = var.role_assignments

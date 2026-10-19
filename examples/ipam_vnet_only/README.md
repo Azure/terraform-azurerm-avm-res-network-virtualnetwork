@@ -176,8 +176,8 @@ provider "azurerm" {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.3"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -260,6 +260,9 @@ resource "azurerm_network_security_group" "app" {
 # VNet with IPAM address space allocation but traditional subnet addressing
 module "vnet_ipam_traditional_subnets" {
   source = "../../"
+  providers = {
+    azapi = azapi
+  }
 
   location  = azurerm_resource_group.this.location
   parent_id = azurerm_resource_group.this.id
@@ -322,11 +325,16 @@ module "vnet_ipam_traditional_subnets" {
 # Demonstrate adding subnet to IPAM VNet using subnet module
 module "additional_subnet" {
   source = "../../modules/subnet"
+  providers = {
+    azapi = azapi
+  }
 
+  location  = var.location
   name      = "subnet-additional"
   parent_id = module.vnet_ipam_traditional_subnets.resource_id
   # Use a specific address prefix within the IPAM-allocated VNet space
   address_prefixes = ["172.16.2.128/27"] # /27 in the expected IPAM range
+  enable_telemetry = var.enable_telemetry
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
@@ -380,6 +388,14 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
+
 ## Outputs
 
 No outputs.
@@ -396,15 +412,15 @@ Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.4.3
+Version: 0.2.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.12.0
+Version: 0.13.0
 
 ### <a name="module_vnet_ipam_traditional_subnets"></a> [vnet\_ipam\_traditional\_subnets](#module\_vnet\_ipam\_traditional\_subnets)
 

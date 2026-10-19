@@ -8,7 +8,13 @@
 # so that server-side ordering and Azure's implicit location expansion do not
 # produce perpetual drift.
 
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name      = "subnet-unit-test"
@@ -23,6 +29,7 @@ run "traditional_subnet_names_only" {
   variables {
     address_prefixes  = ["10.0.0.0/24"]
     service_endpoints = ["Microsoft.Storage", "Microsoft.Sql"]
+    location          = "eastus"
   }
 
   assert {
@@ -58,6 +65,7 @@ run "ipam_subnet_names_only" {
       prefix_length = 24
     }]
     service_endpoints = ["Microsoft.KeyVault"]
+    location          = "eastus"
   }
 
   assert {
@@ -84,6 +92,7 @@ run "duplicate_service_names_deduped" {
   variables {
     address_prefixes  = ["10.0.0.0/24"]
     service_endpoints = ["Microsoft.Storage", "Microsoft.Storage"]
+    location          = "eastus"
   }
 
   assert {
@@ -114,6 +123,7 @@ run "input_order_is_normalised" {
       "Microsoft.Web",
       "Microsoft.KeyVault",
     ]
+    location = "eastus"
   }
 
   assert {
@@ -142,6 +152,7 @@ run "service_endpoints_with_location_rejected" {
         service = "Microsoft.Storage"
       }
     ]
+    location = "eastus"
   }
 
   expect_failures = [var.service_endpoints_with_location]

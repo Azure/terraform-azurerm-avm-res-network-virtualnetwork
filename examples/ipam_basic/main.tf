@@ -26,8 +26,8 @@ provider "azurerm" {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.3"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -85,6 +85,9 @@ resource "azapi_resource" "ipam_pool" {
 # This should trigger the error we want to capture and handle with retry logic
 module "vnet_retry_test" {
   source = "../../"
+  providers = {
+    azapi = azapi
+  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id

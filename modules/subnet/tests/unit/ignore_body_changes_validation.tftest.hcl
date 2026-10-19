@@ -8,7 +8,13 @@
 # is an object keyed by the resource type (`virtual_networks_subnets`); each
 # entry must be a non-empty body path. These tests assert that guardrail.
 
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name      = "subnet-unit-test"
@@ -28,6 +34,7 @@ run "valid_path_accepted" {
     ignore_body_changes = {
       virtual_networks_subnets = ["properties.routeTable"]
     }
+    location = "eastus"
   }
 
   assert {
@@ -43,6 +50,7 @@ run "empty_object_accepted" {
   variables {
     address_prefixes    = ["10.0.0.0/24"]
     ignore_body_changes = {}
+    location            = "eastus"
   }
 
   assert {
@@ -61,6 +69,7 @@ run "blank_path_rejected" {
     ignore_body_changes = {
       virtual_networks_subnets = ["   "]
     }
+    location = "eastus"
   }
 
   expect_failures = [
