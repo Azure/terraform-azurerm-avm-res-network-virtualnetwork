@@ -12,8 +12,14 @@
 # input is accepted, cascades to both the standard and IPAM subnet resources,
 # and does not strip the configured body.
 
-mock_provider "azapi" {}
-mock_provider "modtm" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 mock_provider "random" {}
 
 variables {
@@ -47,6 +53,10 @@ run "standard_subnet_accepts_ignore_body_changes" {
     condition     = module.subnet["test"].resource.body.properties.routeTable.id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/routeTables/rt-test"
     error_message = "routeTable must remain in the subnet body when ignore_body_changes is set - the flag suppresses future drift, it does not strip configuration."
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # The same input must be accepted on the IPAM subnet code path.
@@ -72,6 +82,10 @@ run "ipam_subnet_accepts_ignore_body_changes" {
     condition     = length(module.subnet["test"].resource.body.properties.ipamPoolPrefixAllocations) == 1
     error_message = "IPAM subnet must still plan its pool allocation when ignore_body_changes is set."
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # The default must be an empty list so existing configurations are unaffected.
@@ -90,6 +104,10 @@ run "default_is_empty_list" {
   assert {
     condition     = var.subnets["test"].ignore_body_changes == null || length(coalesce(var.subnets["test"].ignore_body_changes, [])) == 0
     error_message = "ignore_body_changes must default to an empty list on the subnets schema."
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }
 
@@ -120,6 +138,10 @@ run "shared_subnet_slot_cascades" {
     condition     = module.subnet["test"].resource.body.properties.routeTable.id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/routeTables/rt-test"
     error_message = "routeTable must remain in the subnet body when the shared ignore_body_changes slot is set."
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # A top-level path may be ignored on the virtual network itself (for example
@@ -137,5 +159,9 @@ run "vnet_level_ignore_accepted" {
   assert {
     condition     = contains(azapi_resource.vnet.body.properties.addressSpace.addressPrefixes, "10.0.0.0/16")
     error_message = "The virtual network must still plan its address space when ignore_body_changes.virtual_networks is set."
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }

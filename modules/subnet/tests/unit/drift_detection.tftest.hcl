@@ -13,7 +13,13 @@
 # they pair this with `ignore_body_changes` (issue #61 / TFFR8) to suppress
 # the drift for that specific path only.
 
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name      = "subnet-unit-test"
@@ -26,6 +32,7 @@ run "traditional_subnet_detects_drift" {
 
   variables {
     address_prefixes = ["10.0.0.0/24"]
+    location         = "eastus"
   }
 
   assert {
@@ -43,6 +50,7 @@ run "ipam_subnet_detects_drift" {
       pool_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/networkManagers/test-nm/ipamPools/test-pool"
       prefix_length = 24
     }]
+    location = "eastus"
   }
 
   assert {

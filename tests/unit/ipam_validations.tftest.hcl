@@ -2,8 +2,14 @@
 # Runs at plan time with mocked providers - no Azure resources are deployed.
 # Execute with: ./avm tf-test-unit
 
-mock_provider "azapi" {}
-mock_provider "modtm" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 mock_provider "random" {}
 
 variables {
@@ -24,6 +30,10 @@ run "valid_number_of_ip_addresses_only" {
       number_of_ip_addresses = "256"
     }]
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 run "valid_prefix_length_only" {
@@ -34,6 +44,10 @@ run "valid_prefix_length_only" {
       id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/networkManagers/test-nm/ipamPools/test-pool"
       prefix_length = 24
     }]
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }
 
@@ -46,6 +60,10 @@ run "valid_pool_id_with_dot" {
       id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Network/networkManagers/test-nm/ipamPools/ipam-nm-10.197.0.0-16-shr"
       prefix_length = 24
     }]
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }
 
@@ -65,6 +83,10 @@ run "valid_one_ipv4_and_one_ipv6_pool" {
       }
     ]
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # --- Invalid configurations (validation must fail) ---
@@ -80,6 +102,10 @@ run "invalid_neither_field_set" {
   }
 
   expect_failures = [var.ipam_pools]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 run "invalid_two_ipv4_pools" {
@@ -99,6 +125,10 @@ run "invalid_two_ipv4_pools" {
   }
 
   expect_failures = [var.ipam_pools]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Guards the IPv6 alignment fix: /56 must be classified as IPv6 (range 48-64),
@@ -121,6 +151,10 @@ run "invalid_two_ipv6_pools" {
   }
 
   expect_failures = [var.ipam_pools]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # More than two pools, isolated to the length rule by using number_of_ip_addresses
@@ -146,6 +180,10 @@ run "invalid_more_than_two_pools" {
   }
 
   expect_failures = [var.ipam_pools]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 run "invalid_pool_id_format" {
@@ -159,4 +197,8 @@ run "invalid_pool_id_format" {
   }
 
   expect_failures = [var.ipam_pools]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }

@@ -8,7 +8,13 @@
 # a structurally invalid CIDR in any peered address space is rejected at plan
 # time rather than surfacing as an opaque Azure API error at apply.
 
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name                      = "peer-hub-to-spoke"
@@ -23,6 +29,7 @@ run "valid_peered_address_spaces_accepted" {
     peer_complete_vnets          = false
     local_peered_address_spaces  = [{ address_prefix = "10.0.0.0/24" }]
     remote_peered_address_spaces = [{ address_prefix = "2001:db8::/64" }]
+    location                     = "eastus"
   }
 }
 
@@ -33,6 +40,7 @@ run "invalid_local_peered_address_space_rejected" {
     peer_complete_vnets          = false
     local_peered_address_spaces  = [{ address_prefix = "10..0.0.0/25" }]
     remote_peered_address_spaces = [{ address_prefix = "10.1.0.0/24" }]
+    location                     = "eastus"
   }
 
   expect_failures = [var.local_peered_address_spaces]
@@ -45,6 +53,7 @@ run "invalid_remote_peered_address_space_rejected" {
     peer_complete_vnets          = false
     local_peered_address_spaces  = [{ address_prefix = "10.0.0.0/24" }]
     remote_peered_address_spaces = [{ address_prefix = "not-a-cidr" }]
+    location                     = "eastus"
   }
 
   expect_failures = [var.remote_peered_address_spaces]
@@ -59,6 +68,7 @@ run "invalid_reverse_local_peered_address_space_rejected" {
     reverse_peer_complete_vnets          = false
     reverse_local_peered_address_spaces  = [{ address_prefix = "10.0.0.0/99" }]
     reverse_remote_peered_address_spaces = [{ address_prefix = "10.2.0.0/24" }]
+    location                             = "eastus"
   }
 
   expect_failures = [var.reverse_local_peered_address_spaces]

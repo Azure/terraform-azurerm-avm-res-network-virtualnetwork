@@ -10,8 +10,14 @@
 # service endpoint from their subnets. The attribute is therefore still declared
 # and rejected by a validation, so the upgrade fails loudly and actionably.
 
-mock_provider "azapi" {}
-mock_provider "modtm" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 mock_provider "random" {}
 
 variables {
@@ -35,6 +41,10 @@ run "service_endpoints_accepted" {
       }
     }
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Omitting service endpoints entirely must also plan cleanly, proving the guard
@@ -49,6 +59,10 @@ run "service_endpoints_omitted" {
         address_prefix = "10.0.0.0/24"
       }
     }
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }
 
@@ -71,4 +85,8 @@ run "service_endpoints_with_location_rejected" {
   }
 
   expect_failures = [var.subnets]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }

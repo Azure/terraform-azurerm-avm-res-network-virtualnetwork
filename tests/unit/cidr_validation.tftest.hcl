@@ -9,8 +9,14 @@
 # rejects malformed addresses, non-numeric prefixes, and out-of-range prefix
 # lengths for both IPv4 and IPv6.
 
-mock_provider "azapi" {}
-mock_provider "modtm" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 mock_provider "random" {}
 
 variables {
@@ -38,6 +44,10 @@ run "valid_ipv4_address_space_and_subnets" {
       }
     }
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 run "valid_ipv6_address_space" {
@@ -52,6 +62,10 @@ run "valid_ipv6_address_space" {
       }
     }
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # --- Invalid configurations (validation must fail) ---
@@ -65,6 +79,10 @@ run "invalid_address_space_double_dot" {
   }
 
   expect_failures = [var.address_space]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # A value with no slash / not a CIDR at all.
@@ -76,6 +94,10 @@ run "invalid_address_space_not_a_cidr" {
   }
 
   expect_failures = [var.address_space]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Out-of-range prefix length.
@@ -87,6 +109,10 @@ run "invalid_address_space_prefix_length" {
   }
 
   expect_failures = [var.address_space]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Malformed subnet address_prefix (this is the #133 red herring).
@@ -104,6 +130,10 @@ run "invalid_subnet_address_prefix" {
   }
 
   expect_failures = [var.subnets]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Malformed entry inside subnet address_prefixes.
@@ -121,6 +151,10 @@ run "invalid_subnet_address_prefixes" {
   }
 
   expect_failures = [var.subnets]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Malformed peering peered address space.
@@ -145,4 +179,8 @@ run "invalid_peering_address_prefix" {
   }
 
   expect_failures = [var.peerings]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }

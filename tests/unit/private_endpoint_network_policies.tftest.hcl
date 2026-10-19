@@ -8,8 +8,14 @@
 # from the request body entirely, while the default (true) must keep the
 # backward-compatible `Enabled` value being sent.
 
-mock_provider "azapi" {}
-mock_provider "modtm" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 mock_provider "random" {}
 
 variables {
@@ -38,6 +44,10 @@ run "disabled_gate_omits_property" {
     condition     = !can(module.subnet["test"].resource.body.properties.privateEndpointNetworkPolicies)
     error_message = "privateEndpointNetworkPolicies must be omitted from the body when private_endpoint_network_policies_enabled is false."
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # An explicit value must be sent through unchanged when the gate is enabled (default).
@@ -58,6 +68,10 @@ run "explicit_value_is_sent" {
     condition     = module.subnet["test"].resource.body.properties.privateEndpointNetworkPolicies == "Disabled"
     error_message = "privateEndpointNetworkPolicies must equal the explicit value when set and the gate is enabled."
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 # Omitting both values must keep the backward-compatible Enabled default in the body.
@@ -76,5 +90,9 @@ run "default_is_enabled" {
   assert {
     condition     = module.subnet["test"].resource.body.properties.privateEndpointNetworkPolicies == "Enabled"
     error_message = "privateEndpointNetworkPolicies must default to Enabled when both values are omitted."
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }

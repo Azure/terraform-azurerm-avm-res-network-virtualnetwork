@@ -17,7 +17,13 @@
 # forward must carry allowGatewayTransit and the reverse useRemoteGateways, and
 # the reverse must point back at the forward peering's virtual network.
 
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name                      = "peer-hub-to-spoke"
@@ -69,5 +75,8 @@ run "gateway_transit_reverse_peering_wiring" {
   assert {
     condition     = azapi_resource.reverse[0].body.properties.remoteVirtualNetwork.id == azapi_resource.this[0].parent_id
     error_message = "Reverse peering's remoteVirtualNetwork.id must resolve to the forward peering's VNet (parent_id)"
+  }
+  variables {
+    location = "eastus"
   }
 }

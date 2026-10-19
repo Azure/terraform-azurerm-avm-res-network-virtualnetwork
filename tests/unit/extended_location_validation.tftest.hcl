@@ -6,8 +6,14 @@
 # passed a string as the first argument and crashed for any non-null
 # extended_location. It must accept a valid EdgeZone and reject other types.
 
-mock_provider "azapi" {}
-mock_provider "modtm" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 mock_provider "random" {}
 
 variables {
@@ -29,6 +35,10 @@ run "valid_extended_location_edgezone" {
       type = "EdgeZone"
     }
   }
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
 
 run "valid_extended_location_null" {
@@ -36,6 +46,10 @@ run "valid_extended_location_null" {
 
   variables {
     extended_location = null
+  }
+  providers = {
+    azapi  = azapi
+    random = random
   }
 }
 
@@ -52,4 +66,8 @@ run "invalid_extended_location_type" {
   }
 
   expect_failures = [var.extended_location]
+  providers = {
+    azapi  = azapi
+    random = random
+  }
 }
