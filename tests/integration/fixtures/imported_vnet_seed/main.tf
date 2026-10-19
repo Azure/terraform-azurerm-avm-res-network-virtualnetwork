@@ -2,8 +2,9 @@ data "azapi_client_config" "current" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.12.0"
+  version = "0.13.0"
 
+  location               = var.location
   enable_telemetry       = false
   is_recommended         = true
   region_name_regex      = "euap$"
@@ -11,8 +12,8 @@ module "regions" {
 }
 
 resource "random_integer" "region_index" {
-  min = 0
   max = length(module.regions.regions) - 1
+  min = 0
 }
 
 resource "random_string" "suffix" {
@@ -24,20 +25,19 @@ resource "random_string" "suffix" {
 }
 
 resource "azapi_resource" "resource_group" {
-  type      = "Microsoft.Resources/resourceGroups@2024-03-01"
-  name      = "rg-avm-import-${random_string.suffix.result}"
-  parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
-  location  = module.regions.regions[random_integer.region_index.result].name
-  body      = {}
-
+  location               = module.regions.regions[random_integer.region_index.result].name
+  name                   = "rg-avm-import-${random_string.suffix.result}"
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  body                   = {}
   response_export_values = []
 }
 
 resource "azapi_resource" "remote_vnet" {
-  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  location  = azapi_resource.resource_group.location
   name      = "vnet-remote-${random_string.suffix.result}"
   parent_id = azapi_resource.resource_group.id
-  location  = azapi_resource.resource_group.location
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
       addressSpace = {
@@ -45,15 +45,14 @@ resource "azapi_resource" "remote_vnet" {
       }
     }
   }
-
   response_export_values = []
 }
 
 resource "azapi_resource" "existing_vnet" {
-  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  location  = azapi_resource.resource_group.location
   name      = "vnet-import-${random_string.suffix.result}"
   parent_id = azapi_resource.resource_group.id
-  location  = azapi_resource.resource_group.location
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
       addressSpace = {
@@ -61,29 +60,26 @@ resource "azapi_resource" "existing_vnet" {
       }
     }
   }
-
   response_export_values = []
 }
 
 resource "azapi_resource" "external_subnet" {
-  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   name      = "external"
   parent_id = azapi_resource.existing_vnet.id
-  locks     = [azapi_resource.existing_vnet.id]
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {
       addressPrefix = "10.70.1.0/24"
     }
   }
-
+  locks                  = [azapi_resource.existing_vnet.id]
   response_export_values = []
 }
 
 resource "azapi_resource" "external_peering" {
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   name      = "external"
   parent_id = azapi_resource.existing_vnet.id
-  locks     = [azapi_resource.existing_vnet.id]
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -92,6 +88,6 @@ resource "azapi_resource" "external_peering" {
       allowVirtualNetworkAccess = true
     }
   }
-
+  locks                  = [azapi_resource.existing_vnet.id]
   response_export_values = []
 }

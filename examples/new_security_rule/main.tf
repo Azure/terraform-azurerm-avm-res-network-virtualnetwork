@@ -2,6 +2,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -27,8 +31,8 @@ provider "azurerm" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.3"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # This is required for resource modules
@@ -73,6 +77,9 @@ locals {
 #Creating a virtual network with specified configurations, subnets, and associated Network Security Groups.
 module "vnet" {
   source = "../../"
+  providers = {
+    azapi = azapi
+  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
