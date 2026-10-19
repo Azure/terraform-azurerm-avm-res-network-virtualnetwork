@@ -1,14 +1,19 @@
 # Create subnets using the subnet module
 module "subnet" {
-  source   = "./modules/subnet"
+  source = "./modules/subnet"
+  providers = {
+    azapi = azapi
+  }
   for_each = var.subnets
 
+  location                        = var.location
   name                            = each.value.name
   parent_id                       = azapi_resource.vnet.id
   address_prefix                  = each.value.address_prefix
   address_prefixes                = each.value.address_prefixes
   default_outbound_access_enabled = each.value.default_outbound_access_enabled
   delegations                     = each.value.delegations
+  enable_telemetry                = var.enable_telemetry
   ignore_body_changes = {
     virtual_networks_subnets = length(each.value.ignore_body_changes) > 0 ? each.value.ignore_body_changes : var.ignore_body_changes.virtual_networks_subnets.virtual_networks_subnets
   }

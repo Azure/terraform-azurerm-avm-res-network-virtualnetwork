@@ -2,6 +2,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.13.0"
 
+  location         = var.location
   enable_telemetry = var.enable_telemetry
   is_recommended   = true
   # Exclude Azure canary/EUAP regions (for example eastus2euap, centraluseuap),

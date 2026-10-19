@@ -26,8 +26,8 @@ provider "azurerm" {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -84,6 +84,9 @@ resource "azapi_resource" "ipam_pool" {
 # using data sources rather than creating a new one
 module "ipam_vnet" {
   source = "../../"
+  providers = {
+    azapi = azapi
+  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -121,9 +124,14 @@ resource "azurerm_network_security_group" "app" {
 # Test: Create IPAM subnet using the standalone subnet module
 module "ipam_subnet" {
   source = "../../modules/subnet"
+  providers = {
+    azapi = azapi
+  }
 
-  name      = "subnet-ipam-test"
-  parent_id = module.ipam_vnet.resource_id
+  location         = var.location
+  name             = "subnet-ipam-test"
+  parent_id        = module.ipam_vnet.resource_id
+  enable_telemetry = var.enable_telemetry
   # IPAM allocation
   ipam_pools = [{
     pool_id       = azapi_resource.ipam_pool.id
@@ -139,10 +147,15 @@ module "ipam_subnet" {
 # Note: Traditional subnets can coexist with IPAM subnets in IPAM-enabled VNets
 module "traditional_subnet" {
   source = "../../modules/subnet"
+  providers = {
+    azapi = azapi
+  }
 
+  location         = var.location
   name             = "subnet-traditional-test"
   parent_id        = module.ipam_vnet.resource_id
   address_prefixes = ["10.0.1.0/24"] # Must be within the IPAM-allocated VNet space
+  enable_telemetry = var.enable_telemetry
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }

@@ -2,8 +2,9 @@ data "azapi_client_config" "current" {}
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.12.0"
+  version = "0.13.0"
 
+  location               = var.location
   enable_telemetry       = false
   is_recommended         = true
   region_name_regex      = "euap$"
@@ -11,8 +12,8 @@ module "regions" {
 }
 
 resource "random_integer" "region_index" {
-  min = 0
   max = length(module.regions.regions) - 1
+  min = 0
 }
 
 resource "random_string" "suffix" {
@@ -24,20 +25,19 @@ resource "random_string" "suffix" {
 }
 
 resource "azapi_resource" "resource_group" {
-  type      = "Microsoft.Resources/resourceGroups@2024-03-01"
-  name      = "rg-avm-vnet-${random_string.suffix.result}"
-  parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
-  location  = local.selected_region
-  body      = {}
-
+  location               = local.selected_region
+  name                   = "rg-avm-vnet-${random_string.suffix.result}"
+  parent_id              = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type                   = "Microsoft.Resources/resourceGroups@2024-03-01"
+  body                   = {}
   response_export_values = []
 }
 
 resource "azapi_resource" "managed_remote" {
-  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  location  = azapi_resource.resource_group.location
   name      = "vnet-managed-${random_string.suffix.result}"
   parent_id = azapi_resource.resource_group.id
-  location  = azapi_resource.resource_group.location
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
       addressSpace = {
@@ -45,15 +45,14 @@ resource "azapi_resource" "managed_remote" {
       }
     }
   }
-
   response_export_values = []
 }
 
 resource "azapi_resource" "external_remote" {
-  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
+  location  = azapi_resource.resource_group.location
   name      = "vnet-external-${random_string.suffix.result}"
   parent_id = azapi_resource.resource_group.id
-  location  = azapi_resource.resource_group.location
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   body = {
     properties = {
       addressSpace = {
@@ -61,53 +60,51 @@ resource "azapi_resource" "external_remote" {
       }
     }
   }
-
   response_export_values = []
 }
 
 module "vnet" {
   source = "../../../.."
-
-  name             = "vnet-parent-${random_string.suffix.result}"
-  parent_id        = azapi_resource.resource_group.id
-  location         = azapi_resource.resource_group.location
-  address_space    = var.address_space
-  enable_telemetry = false
-
-  subnets = {
-    managed = {
-      name             = "managed"
-      address_prefixes = ["10.60.1.0/24"]
-    }
+  providers = {
+    azapi = azapi
   }
 
+  location         = azapi_resource.resource_group.location
+  parent_id        = azapi_resource.resource_group.id
+  address_space    = var.address_space
+  enable_telemetry = false
+  name             = "vnet-parent-${random_string.suffix.result}"
   peerings = {
     managed = {
       name                               = "managed"
       remote_virtual_network_resource_id = azapi_resource.managed_remote.id
     }
   }
+  subnets = {
+    managed = {
+      name             = "managed"
+      address_prefixes = ["10.60.1.0/24"]
+    }
+  }
 }
 
 resource "azapi_resource" "external_subnet" {
-  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   name      = "external"
   parent_id = module.vnet.resource_id
-  locks     = [module.vnet.resource_id]
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
   body = {
     properties = {
       addressPrefix = "10.60.2.0/24"
     }
   }
-
+  locks                  = [module.vnet.resource_id]
   response_export_values = []
 }
 
 resource "azapi_resource" "external_peering" {
-  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   name      = "external"
   parent_id = module.vnet.resource_id
-  locks     = [module.vnet.resource_id]
+  type      = "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01"
   body = {
     properties = {
       remoteVirtualNetwork = {
@@ -116,14 +113,14 @@ resource "azapi_resource" "external_peering" {
       allowVirtualNetworkAccess = true
     }
   }
-
+  locks                  = [module.vnet.resource_id]
   response_export_values = []
 }
 
 data "azapi_resource" "live_vnet" {
-  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   name      = "vnet-parent-${random_string.suffix.result}"
   parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualNetworks@2024-07-01"
   response_export_values = [
     "properties.addressSpace.addressPrefixes",
     "properties.subnets",

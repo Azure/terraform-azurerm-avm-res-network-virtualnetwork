@@ -26,8 +26,8 @@ provider "azurerm" {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -110,6 +110,9 @@ resource "azurerm_network_security_group" "app" {
 # VNet with IPAM address space allocation but traditional subnet addressing
 module "vnet_ipam_traditional_subnets" {
   source = "../../"
+  providers = {
+    azapi = azapi
+  }
 
   location  = azurerm_resource_group.this.location
   parent_id = azurerm_resource_group.this.id
@@ -172,11 +175,16 @@ module "vnet_ipam_traditional_subnets" {
 # Demonstrate adding subnet to IPAM VNet using subnet module
 module "additional_subnet" {
   source = "../../modules/subnet"
+  providers = {
+    azapi = azapi
+  }
 
+  location  = var.location
   name      = "subnet-additional"
   parent_id = module.vnet_ipam_traditional_subnets.resource_id
   # Use a specific address prefix within the IPAM-allocated VNet space
   address_prefixes = ["172.16.2.128/27"] # /27 in the expected IPAM range
+  enable_telemetry = var.enable_telemetry
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
