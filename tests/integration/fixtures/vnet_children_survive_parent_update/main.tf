@@ -65,9 +65,6 @@ resource "azapi_resource" "external_remote" {
 
 module "vnet" {
   source = "../../../.."
-  providers = {
-    azapi = azapi
-  }
 
   location         = azapi_resource.resource_group.location
   parent_id        = azapi_resource.resource_group.id

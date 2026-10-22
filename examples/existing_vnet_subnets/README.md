@@ -9,6 +9,7 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    # tflint-ignore: terraform_unused_required_providers
     azapi = {
       source  = "Azure/azapi"
       version = "~> 2.12"
@@ -63,10 +64,7 @@ resource "azurerm_virtual_network" "this" {
 }
 
 module "subnets" {
-  source = "../../modules/subnet"
-  providers = {
-    azapi = azapi
-  }
+  source   = "../../modules/subnet"
   for_each = local.subnets
 
   location         = var.location

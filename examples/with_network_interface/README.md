@@ -9,6 +9,7 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    # tflint-ignore: terraform_unused_required_providers
     azapi = {
       source  = "Azure/azapi"
       version = "~> 2.12"
@@ -47,9 +48,6 @@ resource "azurerm_resource_group" "this" {
 # Creating a virtual network with a unique name, telemetry settings, and in the specified resource group and location.
 module "vnet" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id

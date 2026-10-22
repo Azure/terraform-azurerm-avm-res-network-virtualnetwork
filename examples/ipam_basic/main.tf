@@ -85,9 +85,6 @@ resource "azapi_resource" "ipam_pool" {
 # This should trigger the error we want to capture and handle with retry logic
 module "vnet_retry_test" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
