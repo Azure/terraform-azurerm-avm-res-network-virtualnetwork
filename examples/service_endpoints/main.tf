@@ -2,6 +2,7 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    # tflint-ignore: terraform_unused_required_providers
     azapi = {
       source  = "Azure/azapi"
       version = "~> 2.12"
@@ -45,9 +46,6 @@ resource "azurerm_resource_group" "this" {
 # Do not specify location here as the PIN data will be used to determine the deployment region
 module "virtualnetwork" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id

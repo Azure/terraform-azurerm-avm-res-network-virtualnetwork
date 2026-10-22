@@ -47,9 +47,6 @@ resource "azurerm_resource_group" "this" {
 #Defining the first virtual network (vnet-1) with its subnets and settings.
 module "vnet1" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -74,9 +71,6 @@ module "vnet1" {
 
 module "vnet2" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id

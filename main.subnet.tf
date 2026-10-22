@@ -1,9 +1,6 @@
 # Create subnets using the subnet module
 module "subnet" {
-  source = "./modules/subnet"
-  providers = {
-    azapi = azapi
-  }
+  source   = "./modules/subnet"
   for_each = var.subnets
 
   location                        = var.location

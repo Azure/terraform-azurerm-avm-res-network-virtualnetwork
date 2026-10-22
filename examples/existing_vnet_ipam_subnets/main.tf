@@ -84,9 +84,6 @@ resource "azapi_resource" "ipam_pool" {
 # using data sources rather than creating a new one
 module "ipam_vnet" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -124,9 +121,6 @@ resource "azurerm_network_security_group" "app" {
 # Test: Create IPAM subnet using the standalone subnet module
 module "ipam_subnet" {
   source = "../../modules/subnet"
-  providers = {
-    azapi = azapi
-  }
 
   location         = var.location
   name             = "subnet-ipam-test"
@@ -147,9 +141,6 @@ module "ipam_subnet" {
 # Note: Traditional subnets can coexist with IPAM subnets in IPAM-enabled VNets
 module "traditional_subnet" {
   source = "../../modules/subnet"
-  providers = {
-    azapi = azapi
-  }
 
   location         = var.location
   name             = "subnet-traditional-test"

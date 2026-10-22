@@ -5,9 +5,6 @@ import {
 
 module "vnet" {
   source = "../../../.."
-  providers = {
-    azapi = azapi
-  }
 
   location         = var.location
   parent_id        = var.parent_id

@@ -260,9 +260,6 @@ resource "azurerm_network_security_group" "app" {
 # VNet with IPAM address space allocation but traditional subnet addressing
 module "vnet_ipam_traditional_subnets" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   location  = azurerm_resource_group.this.location
   parent_id = azurerm_resource_group.this.id
@@ -325,9 +322,6 @@ module "vnet_ipam_traditional_subnets" {
 # Demonstrate adding subnet to IPAM VNet using subnet module
 module "additional_subnet" {
   source = "../../modules/subnet"
-  providers = {
-    azapi = azapi
-  }
 
   location  = var.location
   name      = "subnet-additional"
