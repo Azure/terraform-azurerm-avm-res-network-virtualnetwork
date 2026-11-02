@@ -2,7 +2,6 @@ module "peering" {
   source   = "./modules/peering"
   for_each = var.peerings
 
-  location                              = var.location
   name                                  = each.value.name
   parent_id                             = azapi_resource.vnet.id
   remote_virtual_network_id             = each.value.remote_virtual_network_resource_id
@@ -16,6 +15,7 @@ module "peering" {
   ignore_body_changes                   = var.ignore_body_changes.virtual_networks_virtual_network_peerings
   local_peered_address_spaces           = each.value.local_peered_address_spaces
   local_peered_subnets                  = each.value.local_peered_subnets
+  location                              = var.location
   peer_complete_vnets                   = each.value.peer_complete_vnets
   remote_peered_address_spaces          = each.value.remote_peered_address_spaces
   remote_peered_subnets                 = each.value.remote_peered_subnets
