@@ -35,7 +35,7 @@ provider "azurerm" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # This is required for resource modules
@@ -61,7 +61,6 @@ resource "azurerm_virtual_network" "remote" {
 module "peering" {
   source = "../../modules/peering"
 
-  location                             = var.location
   name                                 = "${module.naming.virtual_network_peering.name_unique}-local-to-remote"
   parent_id                            = azurerm_virtual_network.local.id
   remote_virtual_network_id            = azurerm_virtual_network.remote.id
@@ -70,6 +69,7 @@ module "peering" {
   allow_virtual_network_access         = true
   create_reverse_peering               = true
   enable_telemetry                     = var.enable_telemetry
+  location                             = var.location
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true
@@ -148,7 +148,7 @@ The following Modules are called:
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_peering"></a> [peering](#module\_peering)
 
@@ -160,7 +160,7 @@ Version:
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.13.0
+Version: 0.13.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

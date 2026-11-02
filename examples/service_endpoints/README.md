@@ -155,7 +155,7 @@ The following Modules are called:
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.13.0
+Version: 0.13.2
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 

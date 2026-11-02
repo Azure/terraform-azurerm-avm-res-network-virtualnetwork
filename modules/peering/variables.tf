@@ -1,9 +1,3 @@
-variable "location" {
-  type        = string
-  description = "The Azure region for this module's resources or telemetry deployment."
-  nullable    = false
-}
-
 variable "name" {
   type        = string
   description = "The name of the Azure Virtual Network Peering"
@@ -131,6 +125,17 @@ variable "local_peered_subnets" {
   }))
   default     = []
   description = "The subnets of the local virtual network to peer. Only relevant if peer_complete_vnets is false"
+}
+
+variable "location" {
+  type        = string
+  default     = null
+  description = "The Azure region for this module's resources or telemetry deployment."
+
+  validation {
+    condition     = !var.enable_telemetry || var.location != null
+    error_message = "The location must not be null when telemetry is enabled."
+  }
 }
 
 variable "peer_complete_vnets" {
