@@ -214,7 +214,6 @@ resource "azurerm_network_security_group" "app" {
 module "ipam_subnet" {
   source = "../../modules/subnet"
 
-  location         = var.location
   name             = "subnet-ipam-test"
   parent_id        = module.ipam_vnet.resource_id
   enable_telemetry = var.enable_telemetry
@@ -223,6 +222,7 @@ module "ipam_subnet" {
     pool_id       = azapi_resource.ipam_pool.id
     prefix_length = 24 # /24 subnet (256 IP addresses)
   }]
+  location = var.location
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }
@@ -234,11 +234,11 @@ module "ipam_subnet" {
 module "traditional_subnet" {
   source = "../../modules/subnet"
 
-  location         = var.location
   name             = "subnet-traditional-test"
   parent_id        = module.ipam_vnet.resource_id
   address_prefixes = ["10.0.1.0/24"] # Must be within the IPAM-allocated VNet space
   enable_telemetry = var.enable_telemetry
+  location         = var.location
   network_security_group = {
     id = azurerm_network_security_group.app.id
   }

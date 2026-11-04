@@ -3,7 +3,6 @@ module "subnet" {
   source   = "./modules/subnet"
   for_each = var.subnets
 
-  location                        = var.location
   name                            = each.value.name
   parent_id                       = azapi_resource.vnet.id
   address_prefix                  = each.value.address_prefix
@@ -15,6 +14,7 @@ module "subnet" {
     virtual_networks_subnets = length(each.value.ignore_body_changes) > 0 ? each.value.ignore_body_changes : var.ignore_body_changes.virtual_networks_subnets.virtual_networks_subnets
   }
   ipam_pools                                    = each.value.ipam_pools
+  location                                      = var.location
   nat_gateway                                   = each.value.nat_gateway
   network_security_group                        = each.value.network_security_group
   private_endpoint_network_policies             = each.value.private_endpoint_network_policies
