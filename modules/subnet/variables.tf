@@ -1,9 +1,3 @@
-variable "location" {
-  type        = string
-  description = "The Azure region for this module's resources or telemetry deployment."
-  nullable    = false
-}
-
 variable "name" {
   type        = string
   description = <<DESCRIPTION
@@ -164,6 +158,17 @@ DESCRIPTION
   validation {
     condition     = var.ipam_pools == null ? true : alltrue([for pool in var.ipam_pools : pool.number_of_ip_addresses != null || (pool.prefix_length != null && pool.prefix_length >= 16 && pool.prefix_length <= 30)])
     error_message = "Either number_of_ip_addresses or a prefix_length between 16 and 30 must be specified for each IPAM pool."
+  }
+}
+
+variable "location" {
+  type        = string
+  default     = null
+  description = "The Azure region for this module's resources or telemetry deployment."
+
+  validation {
+    condition     = !var.enable_telemetry || var.location != null
+    error_message = "The location must not be null when telemetry is enabled."
   }
 }
 
