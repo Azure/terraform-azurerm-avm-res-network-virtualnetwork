@@ -182,13 +182,6 @@ variable "nat_gateway" {
 DESCRIPTION
 }
 
-variable "network_security_group_managed_externally" {
-  type        = bool
-  default     = false
-  nullable    = false
-  description = "Whether the subnet NSG association is managed externally. Requires the AzAPI fix in Azure/terraform-provider-azapi#1277 and an explicit Terraform state move when changed for an existing subnet. The value must be known during planning."
-}
-
 variable "network_security_group" {
   type = object({
     id = string
@@ -197,6 +190,13 @@ variable "network_security_group" {
   description = <<DESCRIPTION
 (Optional) The ID of the Network Security Group to associate with the subnet. Changing this forces a new resource to be created.
 DESCRIPTION
+}
+
+variable "network_security_group_managed_externally" {
+  type        = bool
+  default     = false
+  description = "Whether the subnet NSG association is managed externally. Requires the AzAPI fix in Azure/terraform-provider-azapi#1277 and an explicit Terraform state move when changed for an existing subnet. The value must be known during planning."
+  nullable    = false
 }
 
 variable "private_endpoint_network_policies" {

@@ -137,6 +137,12 @@ With this pairing, every other managed property still benefits from drift detect
 - **"Pool not found"**: Verify IPAM pool exists in the same region as the target VNet
 - **"Prefix length invalid"**: Use values between 16-30 for IPv4 subnets
 ```
+
+### External NSG associations
+
+Set `network_security_group_managed_externally` to `true` when another resource manages the subnet NSG. Leave `network_security_group` unset. The option must be known during planning and requires the AzAPI fix in [PR #1277](https://github.com/Azure/terraform-provider-azapi/pull/1277).
+
+Enabling this option for an existing subnet changes its Terraform resource address. Add a caller-owned `moved` block from `azapi_resource.subnet[0]` to `azapi_resource.subnet_nsg_external[0]`, or from `azapi_resource.subnet_ipam[0]` to `azapi_resource.subnet_ipam_nsg_external[0]` for IPAM. Reverse the move to disable the option. Review the plan for unintended subnet replacement or NSG removal before applying.
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -155,6 +161,8 @@ The following resources are used by this module:
 - [azapi_resource.role_assignments](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.subnet_ipam](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_ipam_nsg_external](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.subnet_nsg_external](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.telemetry](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [terraform_data.telemetry](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/client_config) (data source)
@@ -346,6 +354,14 @@ object({
 ```
 
 Default: `null`
+
+### <a name="input_network_security_group_managed_externally"></a> [network\_security\_group\_managed\_externally](#input\_network\_security\_group\_managed\_externally)
+
+Description: Whether the subnet NSG association is managed externally. Requires the AzAPI fix in Azure/terraform-provider-azapi#1277 and an explicit Terraform state move when changed for an existing subnet. The value must be known during planning.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_private_endpoint_network_policies"></a> [private\_endpoint\_network\_policies](#input\_private\_endpoint\_network\_policies)
 

@@ -52,15 +52,6 @@ resource "azapi_resource" "subnet" {
 }
 
 resource "azapi_resource" "subnet_nsg_external" {
-  lifecycle {
-    ignore_changes = [body.properties.networkSecurityGroup]
-
-    precondition {
-      condition     = var.network_security_group == null
-      error_message = "network_security_group must be unset when the NSG association is managed externally."
-    }
-  }
-
   count = !local.ipam_enabled && local.ignore_external_nsg ? 1 : 0
 
   name      = var.name
@@ -110,6 +101,15 @@ resource "azapi_resource" "subnet_nsg_external" {
     delete = var.timeouts.delete
     read   = var.timeouts.read
     update = var.timeouts.update
+  }
+
+  lifecycle {
+    ignore_changes = [body.properties.networkSecurityGroup]
+
+    precondition {
+      condition     = var.network_security_group == null
+      error_message = "network_security_group must be unset when the NSG association is managed externally."
+    }
   }
 }
 
