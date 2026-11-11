@@ -1,5 +1,5 @@
 resource "azapi_resource" "subnet_ipam" {
-  count = local.ipam_enabled ? 1 : 0
+  count = local.ipam_enabled && !local.ignore_external_nsg ? 1 : 0
 
   name      = var.name
   parent_id = var.parent_id
@@ -58,5 +58,77 @@ resource "azapi_resource" "subnet_ipam" {
     delete = var.timeouts.delete
     read   = var.timeouts.read
     update = var.timeouts.update
+  }
+}
+
+resource "azapi_resource" "subnet_ipam_nsg_external" {
+  count = local.ipam_enabled && local.ignore_external_nsg ? 1 : 0
+
+  name      = var.name
+  parent_id = var.parent_id
+  type      = "Microsoft.Network/virtualNetworks/subnets@2024-07-01"
+  body = {
+    properties = merge({
+      ipamPoolPrefixAllocations = [
+        for pool in var.ipam_pools : {
+          pool = {
+            id = pool.pool_id
+          }
+          numberOfIpAddresses = pool.number_of_ip_addresses != null ? pool.number_of_ip_addresses : tostring(
+            pool.prefix_length <= 32
+            ? pow(2, 32 - pool.prefix_length) # IPv4 calculation
+            : 0                               # IPv6 - Azure uses 0 for IPv6 pools
+          )
+        }
+      ]
+      delegations           = local.delegations
+      defaultOutboundAccess = var.default_outbound_access_enabled
+      natGateway = var.nat_gateway != null ? {
+        id = var.nat_gateway.id
+      } : null
+      networkSecurityGroup = var.network_security_group != null ? {
+        id = var.network_security_group.id
+      } : null
+      privateLinkServiceNetworkPolicies = var.private_link_service_network_policies_enabled == false ? "Disabled" : "Enabled"
+      routeTable = var.route_table != null ? {
+        id = var.route_table.id
+      } : null
+      serviceEndpoints = var.service_endpoints != null ? [
+        for service_endpoint in var.service_endpoints : {
+          service = service_endpoint
+        }
+      ] : null
+      serviceEndpointPolicies = var.service_endpoint_policies != null ? [
+        for service_endpoint_policy in var.service_endpoint_policies : {
+          id = service_endpoint_policy.id
+        }
+      ] : null
+      sharingScope = var.sharing_scope
+      }, var.private_endpoint_network_policies_enabled ? {
+      privateEndpointNetworkPolicies = var.private_endpoint_network_policies
+    } : {})
+  }
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_subnets) > 0 ? var.ignore_body_changes.virtual_networks_subnets : null
+  ignore_missing_property   = false
+  list_unique_id_property   = { "properties.serviceEndpoints" = "service" }
+  locks                     = [var.parent_id]
+  response_export_values    = ["properties.addressPrefixes"]
+  retry                     = var.retry
+  schema_validation_enabled = true
+
+  timeouts {
+    create = var.timeouts.create
+    delete = var.timeouts.delete
+    read   = var.timeouts.read
+    update = var.timeouts.update
+  }
+
+  lifecycle {
+    ignore_changes = [body.properties.networkSecurityGroup]
+
+    precondition {
+      condition     = var.network_security_group == null
+      error_message = "network_security_group must be unset when the NSG association is managed externally."
+    }
   }
 }

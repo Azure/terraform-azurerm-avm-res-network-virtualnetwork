@@ -192,6 +192,13 @@ variable "network_security_group" {
 DESCRIPTION
 }
 
+variable "network_security_group_managed_externally" {
+  type        = bool
+  default     = false
+  description = "Whether the subnet NSG association is managed externally. Requires an explicit Terraform state move when changed for an existing subnet. The value must be known during planning."
+  nullable    = false
+}
+
 variable "private_endpoint_network_policies" {
   type        = string
   default     = "Enabled"
