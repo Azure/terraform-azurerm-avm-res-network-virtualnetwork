@@ -140,7 +140,7 @@ With this pairing, every other managed property still benefits from drift detect
 
 ### External NSG associations
 
-Set `network_security_group_managed_externally` to `true` when another resource manages the subnet NSG. Leave `network_security_group` unset. The option must be known during planning and requires the AzAPI fix in [PR #1277](https://github.com/Azure/terraform-provider-azapi/pull/1277).
+Set `network_security_group_managed_externally` to `true` when another resource manages the subnet NSG. Leave `network_security_group` unset. The option must be known during planning. It uses a native Terraform lifecycle exclusion without adding the NSG path to AzAPI `ignore_body_changes`.
 
 Enabling this option for an existing subnet changes its Terraform resource address. Add a caller-owned `moved` block from `azapi_resource.subnet[0]` to `azapi_resource.subnet_nsg_external[0]`, or from `azapi_resource.subnet_ipam[0]` to `azapi_resource.subnet_ipam_nsg_external[0]` for IPAM. Reverse the move to disable the option. Review the plan for unintended subnet replacement or NSG removal before applying.
 ```
@@ -357,7 +357,7 @@ Default: `null`
 
 ### <a name="input_network_security_group_managed_externally"></a> [network\_security\_group\_managed\_externally](#input\_network\_security\_group\_managed\_externally)
 
-Description: Whether the subnet NSG association is managed externally. Requires the AzAPI fix in Azure/terraform-provider-azapi#1277 and an explicit Terraform state move when changed for an existing subnet. The value must be known during planning.
+Description: Whether the subnet NSG association is managed externally. Requires an explicit Terraform state move when changed for an existing subnet. The value must be known during planning.
 
 Type: `bool`
 

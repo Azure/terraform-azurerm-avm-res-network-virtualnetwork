@@ -45,7 +45,7 @@ resource "azapi_resource" "subnet_ipam" {
       privateEndpointNetworkPolicies = var.private_endpoint_network_policies
     } : {})
   }
-  ignore_body_changes       = length(local.effective_ignored_paths) > 0 ? local.effective_ignored_paths : null
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_subnets) > 0 ? var.ignore_body_changes.virtual_networks_subnets : null
   ignore_missing_property   = false
   list_unique_id_property   = { "properties.serviceEndpoints" = "service" }
   locks                     = [var.parent_id]
@@ -108,7 +108,7 @@ resource "azapi_resource" "subnet_ipam_nsg_external" {
       privateEndpointNetworkPolicies = var.private_endpoint_network_policies
     } : {})
   }
-  ignore_body_changes       = length(local.effective_ignored_paths) > 0 ? local.effective_ignored_paths : null
+  ignore_body_changes       = length(var.ignore_body_changes.virtual_networks_subnets) > 0 ? var.ignore_body_changes.virtual_networks_subnets : null
   ignore_missing_property   = false
   list_unique_id_property   = { "properties.serviceEndpoints" = "service" }
   locks                     = [var.parent_id]

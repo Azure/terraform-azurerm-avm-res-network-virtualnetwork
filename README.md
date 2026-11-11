@@ -303,7 +303,7 @@ module "avm-res-network-subnet" {
 
 ### Managing a subnet NSG association externally
 
-Set `network_security_group_managed_externally = true` on a subnet when a separate resource or controller owns its NSG association. Leave `network_security_group` unset. The option must be known at plan time and adds `properties.networkSecurityGroup` to the AzAPI ignored paths. It requires the provider fix in [Azure/terraform-provider-azapi#1277](https://github.com/Azure/terraform-provider-azapi/pull/1277); without that fix an unrelated subnet update can remove an externally attached association.
+Set `network_security_group_managed_externally = true` on a subnet when a separate resource or controller owns its NSG association. Leave `network_security_group` unset. The option must be known at plan time. It applies a native Terraform lifecycle exclusion; it does not add the NSG path to AzAPI `ignore_body_changes`.
 
 For an existing static-address subnet, enabling the option changes the Terraform resource address. Add a `moved` block in the caller for each affected subnet key before planning. For example, when the module is called `vnet` and the subnet key is `example`:
 
@@ -759,7 +759,7 @@ Description: (Optional) A map of subnets to create
    - `number_of_ip_addresses`: (Optional) The number of IP addresses to request from the IPAM pool. If not specified, it will be calculated based on the `prefix_length`.
    - `prefix_length`: (Optional) The CIDR prefix length for this subnet (e.g., 24 for /24, 26 for /26)
    - `allocation_type`: Type of allocation - "Static" (default) or "Dynamic"
- - `network_security_group_managed_externally` - (Optional) Keep the subnet NSG association under external management. Requires AzAPI PR #1277 and an explicit state move for existing subnets. The value must be known during planning and `network_security_group` must be unset. Defaults to `false`.
+ - `network_security_group_managed_externally` - (Optional) Keep the subnet NSG association under external management. Requires an explicit state move for existing subnets. The value must be known during planning and `network_security_group` must be unset. Defaults to `false`.
  - `ignore_body_changes` - (Optional) A per-subnet list of body property paths (dot notation, relative to the request body) whose changes the `azapi` provider should ignore after creation, letting an out-of-band controller own those properties without perpetual drift. This is the **per-item override** for this subnet and takes precedence over the module-wide `ignore_body_changes.virtual_networks_subnets.virtual_networks_subnets` value. The canonical use case is AVNM `ManagedOnly` routing or Azure Policy DINE attaching a route table out-of-band: set `["properties.routeTable"]`. Other common paths: `properties.networkSecurityGroup`, `properties.serviceEndpoints`, `properties.delegations`; a top-level `tags` path is also valid. Uses dot notation and cannot target individual list items (ignore the whole list). **Important:** these properties are also settable via dedicated inputs (`route_table`, `network_security_group`, `service_endpoints`, `delegations`) - when you ignore a path so an external controller can own it, leave the matching input unset so the module and the controller don't fight over it. Supplying a non-empty value is a write-only argument (requires Terraform >= 1.11); changes take effect only after an `apply`. Defaults to `[]`.
  - `enforce_private_link_endpoint_network_policies` -
  - `enforce_private_link_service_network_policies` -

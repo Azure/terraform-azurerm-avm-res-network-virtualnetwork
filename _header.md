@@ -301,7 +301,7 @@ module "avm-res-network-subnet" {
 
 ### Managing a subnet NSG association externally
 
-Set `network_security_group_managed_externally = true` on a subnet when a separate resource or controller owns its NSG association. Leave `network_security_group` unset. The option must be known at plan time and adds `properties.networkSecurityGroup` to the AzAPI ignored paths. It requires the provider fix in [Azure/terraform-provider-azapi#1277](https://github.com/Azure/terraform-provider-azapi/pull/1277); without that fix an unrelated subnet update can remove an externally attached association.
+Set `network_security_group_managed_externally = true` on a subnet when a separate resource or controller owns its NSG association. Leave `network_security_group` unset. The option must be known at plan time. It applies a native Terraform lifecycle exclusion; it does not add the NSG path to AzAPI `ignore_body_changes`.
 
 For an existing static-address subnet, enabling the option changes the Terraform resource address. Add a `moved` block in the caller for each affected subnet key before planning. For example, when the module is called `vnet` and the subnet key is `example`:
 

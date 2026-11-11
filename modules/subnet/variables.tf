@@ -195,7 +195,7 @@ DESCRIPTION
 variable "network_security_group_managed_externally" {
   type        = bool
   default     = false
-  description = "Whether the subnet NSG association is managed externally. Requires the AzAPI fix in Azure/terraform-provider-azapi#1277 and an explicit Terraform state move when changed for an existing subnet. The value must be known during planning."
+  description = "Whether the subnet NSG association is managed externally. Requires an explicit Terraform state move when changed for an existing subnet. The value must be known during planning."
   nullable    = false
 }
 
