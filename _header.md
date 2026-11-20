@@ -298,3 +298,18 @@ module "avm-res-network-subnet" {
 - **`SubnetPoolsMustBeSubsetOfVnetPools`**: A subnet references a pool that its virtual network does not use. Reference the pool on the VNet first.
 - **A single pool shows multiple or changing address prefixes**: Expected behavior. One allocation is resolved into one or more CIDRs (summarized when contiguous, split when fragmented). These resolved prefixes are read-only and do not cause Terraform drift.
 ```
+
+### Managing a subnet NSG association externally
+
+Set `network_security_group_managed_externally = true` on a subnet when a separate resource or controller owns its NSG association. Leave `network_security_group` unset. The option must be known at plan time. It applies a native Terraform lifecycle exclusion; it does not add the NSG path to AzAPI `ignore_body_changes`.
+
+For an existing static-address subnet, enabling the option changes the Terraform resource address. Add a `moved` block in the caller for each affected subnet key before planning. For example, when the module is called `vnet` and the subnet key is `example`:
+
+```hcl
+moved {
+  from = module.vnet.module.subnet["example"].azapi_resource.subnet[0]
+  to   = module.vnet.module.subnet["example"].azapi_resource.subnet_nsg_external[0]
+}
+```
+
+For IPAM subnets, move `azapi_resource.subnet_ipam[0]` to `azapi_resource.subnet_ipam_nsg_external[0]` under the same module path. Reverse the move when disabling the option. Review the plan and do not apply a plan that replaces the subnet or removes its NSG association.
