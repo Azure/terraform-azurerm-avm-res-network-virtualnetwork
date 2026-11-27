@@ -23,3 +23,8 @@ locals {
     }
   ] : []
 }
+
+locals {
+  ignore_external_nsg = var.network_security_group_managed_externally
+  subnet_resource     = one(concat(azapi_resource.subnet, azapi_resource.subnet_nsg_external, azapi_resource.subnet_ipam, azapi_resource.subnet_ipam_nsg_external))
+}

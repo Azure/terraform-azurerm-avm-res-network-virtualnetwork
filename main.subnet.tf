@@ -17,6 +17,7 @@ module "subnet" {
   location                                      = var.location
   nat_gateway                                   = each.value.nat_gateway
   network_security_group                        = each.value.network_security_group
+  network_security_group_managed_externally     = each.value.network_security_group_managed_externally
   private_endpoint_network_policies             = each.value.private_endpoint_network_policies
   private_endpoint_network_policies_enabled     = each.value.private_endpoint_network_policies_enabled
   private_link_service_network_policies_enabled = each.value.private_link_service_network_policies_enabled
